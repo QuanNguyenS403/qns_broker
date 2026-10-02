@@ -1,29 +1,54 @@
 # Trạng thái phiên làm việc hiện tại
 
-**Việc vừa hoàn thành (02/10/2026 — THẨM ĐỊNH NGHIÊM NGẶT & KHẮC PHỤC TRẢI NGHIỆM KHÁCH THUÊ & CHỦ NHÀ V3 — MÔ HÌNH QUÂN LÀM ĐẦU MỐI DUY NHẤT):**
-1. **Xác minh dứt điểm nghi vấn `reveal-phone` và bảo mật SĐT chủ nhà (Lỗi #67)**:
-   - Backend: Endpoint `reveal-phone` KHÔNG làm lộ số điện thoại chủ nhà, chỉ trả số hotline của Quân (`0981 753 082`). Số chủ nhà được bảo mật 100% trong CSDL.
-   - Frontend: Dọn dẹp 3 component liên hệ chồng chéo (`OwnerContactBox`, `MobileStickyContactBar`, `RevealPhoneButton`). Bỏ cơ chế che số dạng `0981 ••• •••` và rào cản bắt buộc đăng nhập khi xem số hotline của Quân. Cung cấp 1-click Gọi ngay (`tel:0981753082`), 1-click Zalo (`https://zalo.me/0981753082`), và 1-click Đặt lịch xem phòng trực tiếp không rào cản.
-2. **Xây dựng trang Biểu phí Chủ nhà `/bieu-phi` minh bạch mô hình 40% (Lỗi #68)**:
-   - Tạo mới trang `/bieu-phi` trình bày 4 cam kết vàng: Chỉ trả phí 40% khi thành công, 0 đồng nếu không thuê được, Bảo mật SĐT 100%, Sàng lọc khách văn minh.
-   - Minh bạch quy trình 4 bước và hướng dẫn hợp đồng dịch vụ HĐ-01. Cập nhật redirect `/gia-thanh-vien` về `/bieu-phi`.
-3. **Khôi phục Tiện ích & Bổ sung trường chi phí thực chiến (Lỗi #69)**:
-   - Khôi phục khối hiển thị 14 Tiện ích (Amenities) bị thiếu trên `apps/web/src/app/tin/[slug]/page.tsx`.
-   - Bổ sung trường phí gửi xe, phí internet, phí dịch vụ, tình trạng nội thất (Đầy đủ/Cơ bản/Trống), ngày dọn vào và tiện ích nuôi thú cưng ở cả `/dang-tin` và `tin/[slug]`.
-4. **Viết lại trang Giới thiệu chuyên viên `/gioi-thieu` (Lỗi #70)**:
-   - Định vị rõ vai trò Chuyên viên Nguyễn Đức Quân là đầu mối duy nhất, giải thích lý do không để khách gọi thẳng chủ, cam kết 3 Không (Không phí khách thuê, Không kênh giá, Không lộ số chủ).
-5. **Dọn dẹp tàn dư Membership trên Menu Admin & Dead Code (Lỗi #71, #74)**:
-   - Gỡ bỏ `/admin/duyet-goi` và `/admin/mua-cao-diem` khỏi menu `apps/web/src/app/admin/layout.tsx`, ưu tiên `/admin/leads`.
-   - Xóa bỏ file `MembershipPricingClient.tsx`. Bổ sung mock cho `agentProfile`, `user`, `rentalRequest` trong `test-wave-1.js`.
-6. **Minh bạch hóa quản lý tin và phân luồng chủ nhà (Lỗi #72, #73)**:
-   - Trang `/tai-khoan/quan-ly-tin` hiển thị rõ thông báo tin bị từ chối kèm `rejectionReason` cụ thể.
-   - Header desktop bổ sung liên kết `Tìm phòng thuê`, `Biểu phí chủ nhà`, `Về chuyên viên`, `Liên hệ`. Menu người dùng thêm link `/tai-khoan/leads`.
-7. **Bằng chứng nghiệm thu kỹ thuật**:
-   - `test-fee-v2.js`: 14/14 PASS (100%).
-   - `test-wave-1.js`: 9/9 PASS (100%).
-   - `pnpm --filter api exec tsc --noEmit`: 0 errors.
-   - `pnpm --filter web build`: 32/32 routes static/dynamic build sạch hoàn toàn (exit code 0).
-   - Lập báo cáo kiểm toán đầy đủ tại `AUDIT-GEMINI-2026-10-02.md`.
+**Việc vừa hoàn thành (02/10/2026 — RÀ SOÁT VĂN PHONG & DỌN DẸP CODE CHẾT SAU 50 FINDINGS):**
+1. **Chuẩn hóa GEMINI.md §8 triệt để (không dấu chấm cuối câu)**:
+   - `OwnerBrokerTermsGate.tsx`: Xóa dấu chấm cuối câu ở toàn bộ 8 đoạn văn bản hiển thị người dùng (Mục 1-5 điều khoản). Nối câu bằng dấu em-dash (—) thay vì dấu chấm ngắt câu.
+   - `tai-khoan/leads/page.tsx`: Xóa dấu `...` trong loading state "Đang tải danh sách khách liên hệ...".
+   - `lien-he/page.tsx`: Viết lại toàn bộ, xóa dấu chấm cuối câu, sửa link text bị lỗi encoding, chuẩn hóa nội dung hướng dẫn xử lý nhanh 3 mục.
+2. **Dọn dẹp CSS dead code sau pivot**:
+   - `globals.css`: Xóa class `.transaction-badge-sale` (dead code — toàn bộ hệ thống đã pivot 100% sang cho thuê từ 05/09/2026, class này không còn được dùng ở bất kỳ component nào).
+3. **Xác minh Kỹ thuật Toàn diện**:
+   - `pnpm --filter web exec tsc --noEmit`: 0 errors (Exit code 0).
+   - `pnpm --filter api exec tsc --noEmit`: 0 errors (Exit code 0).
+   - `node packages/database/scripts/static-lint-check.js`: 5/5 PASS.
+
+**Việc vừa hoàn thành (02/10/2026 — THẨM ĐỊNH & KHẮC PHỤC TRIỆT ĐỂ BÁO CÁO 50 FINDINGS TẠI COMMIT `0ac02b8`):**
+1. **P0 Phân quyền Lịch xem & Google OAuth (F01, F02)**:
+   - F02: Bổ sung xác thực quyền sở hữu cấp đối tượng (`assertViewingAccess`) trong `ViewingsService.rescheduleViewing` và `cancelViewing`. Kiểm tra actor (`admin`, `assignedAgent`, `tenant`, hoặc `landlord`) trước khi cho phép dời/hủy lịch xem phòng. Ghi `AuditEvent` đầy đủ.
+   - F01: Dọn dẹp nút Google đăng nhập trùng lặp và rò rỉ mã lỗi kỹ thuật `.env` trong `AuthModal.tsx` và `dang-nhap/page.tsx`. Bổ sung đầy đủ trợ năng ARIA (`role="dialog"`, `aria-modal="true"`).
+2. **Minh bạch Chi phí & Sự thật Dữ liệu Phòng (F03, F04, F09, F47, F49)**:
+   - F03: Không tự suy đoán `null` thành "Linh hoạt/Thỏa thuận" trên `tin/[slug]/page.tsx`. Phân biệt rõ `null` (Chưa cập nhật) với `0 đ` (Không cọc / Miễn phí). Kiểm tra tình trạng phòng qua `RentalUnit.status = 'rented'`, `availableFrom`, `refreshedAt`.
+   - F04: Thiết kế lại toàn diện `MoveInCostEstimator.tsx` thành mô hình 2 tầng chi phí độc lập: (1) Chi phí ban đầu khi ký HĐ (Cọc + Thuê tháng đầu) vs. (2) Dự trù chi phí sinh hoạt hàng tháng (Tiền thuê + Điện + Nước + Wifi + Xe). Thêm nút 0 đ cho xe và internet.
+   - F09: Ghép chuỗi địa chỉ đầy đủ (quận/huyện, tỉnh/thành, quốc gia) cho iframe Google Maps và link chỉ đường để tránh marker rơi nhầm tỉnh khác khi trùng tên đường.
+   - F47: Khắc phục triệt để vi phạm thứ tự React Hook trong `PropertyGallery.tsx`. Xây dựng modal xem ảnh toàn màn hình với điều hướng phím mũi tên, thao tác chạm vuốt và click counter +N.
+   - F49: Khai báo thẻ `alternates: { canonical: ... }` chuẩn SEO cho trang chi tiết tin đăng.
+3. **Chuẩn hóa Taxonomy & Phòng vật lý RentalUnit (F11, F31, F32)**:
+   - F11: Xây dựng bảng tra cứu danh mục đồng nghĩa `PROPERTY_TAXONOMY_GROUPS` trong `ListingsService`, cho phép tìm kiếm theo nhóm cha (`phong_tro`, `can_ho`, `studio`, `ky_tuc_xa`, `nha_nguyen_can`, `mat_bang`) bao hàm toàn bộ subtype tương ứng mà vẫn giữ khả năng lọc chính xác từng subtype.
+   - F31: Tự động khởi tạo hoặc liên kết thực thể vật lý `RentalUnit` với mã phòng ổn định (`unitCode`) khi tạo tin đăng mới.
+   - F32: Đồng bộ trạng thái `RentalUnit.status = 'rented'` và tự động hủy an toàn các lịch xem tương lai khi chủ nhà bấm "Đã thuê" hoặc "Gỡ tin".
+4. **Bảo mật Thông tin Liên hệ Khách thuê & Khắc phục Ghi đè Lead (F20, F21, F39)**:
+   - F21: Cải tiến `JwtAuthGuard` để tự động parse Bearer token trên các endpoint `@Public()`, gắn đúng `requesterId` của khách thuê đã đăng nhập thay vì coi là khách vãng lai ẩn danh.
+   - F20: Cập nhật ghi chú mới và timestamp khi khách thuê gửi lại yêu cầu trong cùng ngày (`dedupeKey`), không làm mất nội dung chỉnh sửa của khách.
+   - F39: Bổ sung hàm regex `redactContactInfo` che số điện thoại và email xuất hiện trong văn bản tự do (`message`, `notes`) trước khi trả dữ liệu lead cho chủ nhà.
+5. **Khắc phục Ma sát Chủ nhà & Trình biên tập Tin (F06, F25, F26, F27, F28, F33)**:
+   - F06: Bỏ toàn bộ `defaultChecked` ở các tiện ích phòng và bỏ giá trị mặc định số phòng ngủ/WC tại `dang-tin/page.tsx` để tránh công bố dữ liệu chưa được chủ nhà kiểm chứng.
+   - F26/F27: Ghi nhớ `targetListingId` khi upload ảnh thất bại; lần thử lại tải tiếp ảnh lên tin đã tạo thay vì gọi `POST /listings` tạo trùng lặp.
+   - F28: Viết lại thông báo tiếp nhận tin đăng trung thực, nêu rõ quy trình chuyên viên Đức Quân liên hệ thẩm định và ký phụ lục dịch vụ trước khi hiển thị công khai.
+   - F25: Xây dựng component `EditListingModal.tsx` và tích hợp vào `tai-khoan/quan-ly-tin/page.tsx`, cho phép chủ nhà chỉnh sửa thông tin, xóa ảnh, thêm ảnh mới và gửi duyệt lại cho tin bị từ chối hoặc đang active. Bổ sung endpoint `DELETE /listings/:id/images/:imageId` và `removeImage` ở backend.
+   - F33: Trang `tai-khoan/leads/page.tsx` phân biệt trạng thái tải, chuyển hướng 401 về đăng nhập kèm `returnTo`, và hiển thị giao diện báo lỗi kèm nút "Thử lại ngay" thay vì nuốt lỗi thành false empty.
+6. **Bảo vệ Trải nghiệm Khách thuê & Độ bền API (F14, F15, F19, F22, F23, F38, F44, F45, F46)**:
+   - F14: `SearchFilterBar.tsx` bổ sung `useEffect` đồng bộ state với URL params khi back/forward; bảo toàn `lat`, `lng`, `sortBy` khi lọc tiếp.
+   - F15: Xây dựng component `BackButton.tsx` quay lại danh sách bảo toàn ngữ cảnh tìm kiếm và bộ lọc đã chọn.
+   - F19/F46: `ContactBrokerModal.tsx` liên kết chuẩn `htmlFor` và `id` trên toàn bộ form; sử dụng ngày giờ địa phương Việt Nam (`getVietnamToday()`) cho `minDate` (F38).
+   - F22: `RevealPhoneButton.tsx` cho phép khách vãng lai xem hotline của Quân ngay mà không bắt buộc đăng nhập.
+   - F23: `SaveListingButton.tsx` giữ `returnTo` đúng tin khi chuyển hướng đăng nhập và hiển thị thông báo lỗi trung thực khi thất bại.
+   - F44: `lib/api.ts` tăng timeout lên 4000ms, chỉ mở circuit breaker khi gặp lỗi 5xx hoặc mất mạng (không mở trên lỗi 4xx client). Trang `/thue` hiển thị trạng thái kết nối lại thay vì báo 0 tin sai sự thật.
+   - F45: Cập nhật văn phong Footer và Header mô tả đúng mô hình: khách ký hợp đồng trực tiếp với bên cho thuê, chuyên viên Đức Quân trực tiếp tư vấn và dẫn xem.
+   - Toàn bộ nội dung tuân thủ nghiêm ngặt `GEMINI.md § 8`: Không có bất kỳ dấu chấm nào ở cuối câu trên giao diện người dùng.
+7. **Xác minh Kỹ thuật Toàn diện**:
+   - `pnpm --filter api exec tsc --noEmit`: 0 errors (Exit code 0).
+   - `pnpm --filter web exec tsc --noEmit`: 0 errors (Exit code 0).
+   - `node packages/database/scripts/static-lint-check.js`: 5/5 PASS.
 
 **Việc hoàn thành trước đó (25/09/2026 — THỰC THI KẾ HOẠCH ĐIỀU CHỈNH V2, CHẶN LỖI P0, ENGINE HOA HỒNG V2 & ĐẠT GATE G-01):**
 1. **Khắc phục lỗi bảo mật P0 tối khẩn (GAP-01 / OTP-01 / OTP-02)**:

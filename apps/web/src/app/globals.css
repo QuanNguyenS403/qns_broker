@@ -91,9 +91,6 @@
   }
 
   /* Badge giao dịch */
-  .transaction-badge-sale {
-    @apply inline-flex items-center rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-bold text-white;
-  }
   .transaction-badge-rent {
     @apply inline-flex items-center rounded-full bg-blue-500 px-2 py-0.5 text-xs font-bold text-white;
   }

@@ -63,32 +63,41 @@ export default function MyLeadsPage() {
   const router = useRouter();
   const [leads, setLeads] = useState<SellerLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
+  const loadMyLeads = async () => {
     if (!isLoggedIn()) {
-      router.push('/dang-nhap');
+      router.push('/dang-nhap?returnTo=/tai-khoan/leads');
       return;
     }
 
-    async function loadMyLeads() {
-      setLoading(true);
-      try {
-        const res = await authFetch(`/leads/mine?page=${page}&pageSize=20`);
-        if (!res.ok) throw new Error('Không thể tải danh sách liên hệ');
-        const data = await res.json();
-        setLeads(data.items || []);
-        setTotal(data.pagination?.total || 0);
-        setTotalPages(data.pagination?.totalPages || 1);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await authFetch(`/leads/mine?page=${page}&pageSize=20`);
+      if (res.status === 401) {
+        router.push('/dang-nhap?returnTo=/tai-khoan/leads');
+        return;
       }
+      if (!res.ok) {
+        throw new Error('Hệ thống tạm thời không thể tải danh sách khách liên hệ, vui lòng thử lại sau');
+      }
+      const data = await res.json();
+      setLeads(data.items || []);
+      setTotal(data.pagination?.total || 0);
+      setTotalPages(data.pagination?.totalPages || 1);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Không thể kết nối đến máy chủ, vui lòng thử lại sau');
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     loadMyLeads();
   }, [page, router]);
 
@@ -106,7 +115,13 @@ export default function MyLeadsPage() {
           <div>
             <h1 className="text-2xl font-bold text-text-primary">Tiến độ khách thuê quan tâm phòng</h1>
             <p className="text-sm text-text-muted mt-1">
-              Có <span className="font-semibold text-brand">{total}</span> yêu cầu đang được {SITE_CONFIG.agentName} ({SITE_CONFIG.agentRole}) trực tiếp điều phối và dẫn xem
+              {error ? (
+                <span className="text-danger font-medium">{error}</span>
+              ) : (
+                <>
+                  Có <span className="font-semibold text-brand">{total}</span> yêu cầu đang được {SITE_CONFIG.agentName} ({SITE_CONFIG.agentRole}) trực tiếp điều phối và dẫn xem
+                </>
+              )}
             </p>
           </div>
           <Link
@@ -121,7 +136,20 @@ export default function MyLeadsPage() {
         <div className="space-y-4">
           {loading ? (
             <div className="rounded-2xl border border-surface-border bg-white p-12 text-center text-sm text-text-muted">
-              Đang tải danh sách khách liên hệ...
+              Đang tải danh sách khách liên hệ
+            </div>
+          ) : error ? (
+            <div className="rounded-2xl border border-danger/20 bg-danger/5 p-8 text-center">
+              <span className="text-3xl">⚠️</span>
+              <p className="mt-2 font-semibold text-danger">{error}</p>
+              <p className="mt-1 text-xs text-text-muted">Vui lòng kiểm tra lại đường truyền hoặc thử lại sau ít phút</p>
+              <button
+                type="button"
+                onClick={loadMyLeads}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark transition-colors shadow-sm"
+              >
+                Thử lại ngay
+              </button>
             </div>
           ) : leads.length === 0 ? (
             <div className="rounded-2xl border border-surface-border bg-white p-12 text-center">

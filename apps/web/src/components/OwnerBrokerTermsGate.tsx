@@ -116,10 +116,10 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
               <span>Mô hình môi giới chuyên biệt & Đầu mối phục vụ thực tế</span>
             </h3>
             <p>
-              Hệ thống QNS BROKER hoạt động theo mô hình môi giới chuyên biệt cho thuê bất động sản (phòng trọ, studio, căn hộ mini, căn hộ chung cư và mặt bằng kinh doanh).
+              Hệ thống QNS BROKER hoạt động theo mô hình môi giới chuyên biệt cho thuê bất động sản (phòng trọ, studio, căn hộ mini, căn hộ chung cư và mặt bằng kinh doanh)
             </p>
             <p>
-              Chuyên viên Đức Quân trực tiếp tiếp nhận tin đăng, liên hệ chủ nhà để xác minh thông tin, khảo sát thực tế và điều phối dẫn khách thuê tới xem phòng trực tiếp tại địa chỉ BĐS.
+              Chuyên viên Đức Quân trực tiếp tiếp nhận tin đăng, liên hệ chủ nhà để xác minh thông tin, khảo sát thực tế và điều phối dẫn khách thuê tới xem phòng trực tiếp tại địa chỉ BĐS
             </p>
             <p className="font-medium text-emerald-800 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200/60">
               Khách thuê phòng được phục vụ hoàn toàn miễn phí 0 đồng, không phải trả bất kỳ chi phí dịch vụ môi giới nào
@@ -133,13 +133,13 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
               <span>Biểu phí dịch vụ môi giới minh bạch & Điều kiện thanh toán</span>
             </h3>
             <p>
-              Đăng tin, khảo sát và dẫn khách xem phòng hoàn toàn miễn phí. Chủ nhà / Người cho thuê chỉ thanh toán phí dịch vụ môi giới khi giao dịch cho thuê thành công (hợp đồng thuê được ký kết và khách thuê nhận bàn giao phòng thực tế).
+              Đăng tin, khảo sát và dẫn khách xem phòng hoàn toàn miễn phí — Chủ nhà / Người cho thuê chỉ thanh toán phí dịch vụ môi giới khi giao dịch cho thuê thành công (hợp đồng thuê được ký kết và khách thuê nhận bàn giao phòng thực tế)
             </p>
             <p>
-              Mức phí dịch vụ môi giới tiêu chuẩn là <strong>40%</strong> giá trị hợp đồng thuê trung bình một tháng theo toàn kỳ hạn thuê (tính theo công thức bình quân có trọng số thời hạn hợp đồng).
+              Mức phí dịch vụ môi giới tiêu chuẩn là <strong>40%</strong> giá trị hợp đồng thuê trung bình một tháng theo toàn kỳ hạn thuê (tính theo công thức bình quân có trọng số thời hạn hợp đồng)
             </p>
             <p className="text-slate-600 italic bg-slate-50 p-2.5 rounded-xl border border-surface-border">
-              Ví dụ: Hợp đồng 24 tháng (3 tháng đầu giá 5 triệu/tháng, 21 tháng sau giá 7 triệu/tháng), mức phí môi giới bằng 40% × 6,75 triệu = 2,7 triệu đồng duy nhất một lần cho toàn bộ hợp đồng
+              Ví dụ: Hợp đồng 24 tháng (3 tháng đầu giá 5 tr/tháng, 21 tháng sau giá 7 tr/tháng) → phí môi giới = 40% × 6,75 tr = 2,7 triệu đồng, một lần duy nhất cho toàn kỳ hợp đồng
             </p>
             <p className="font-semibold text-slate-800">
               Trong trường hợp không có khách thuê chốt hợp đồng thành công: Chủ nhà không phải thanh toán bất kỳ chi phí nào (0 đồng)
@@ -153,13 +153,13 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
               <span>Nguyên tắc tài chính trực tiếp — Không thu cọc & không thanh toán trực tuyến</span>
             </h3>
             <p>
-              Website QNS BROKER tuyệt đối không tích hợp thanh toán trực tuyến, không thu tiền cọc phòng và không giữ hộ tiền của các bên nhằm loại bỏ hoàn toàn rủi ro gian lận mạng.
+              Website QNS BROKER tuyệt đối không tích hợp thanh toán trực tuyến, không thu tiền cọc phòng và không giữ hộ tiền của các bên nhằm loại bỏ hoàn toàn rủi ro gian lận mạng
             </p>
             <p>
-              Mọi khoản tiền đặt cọc và tiền thuê phòng do Khách thuê và Chủ nhà giao dịch, ký nhận trực tiếp tại địa điểm thuê bằng hợp đồng và biên bản bàn giao thực tế.
+              Mọi khoản tiền đặt cọc và tiền thuê phòng do Khách thuê và Chủ nhà giao dịch, ký nhận trực tiếp tại địa điểm thuê bằng hợp đồng và biên bản bàn giao thực tế
             </p>
             <p>
-              Phí dịch vụ môi giới được Chủ nhà thanh toán trực tiếp hoặc chuyển khoản cho chuyên viên Đức Quân sau khi giao dịch chốt thuê hoàn tất.
+              Phí dịch vụ môi giới được Chủ nhà thanh toán trực tiếp hoặc chuyển khoản cho chuyên viên Đức Quân sau khi giao dịch chốt thuê hoàn tất
             </p>
           </section>
 
@@ -185,7 +185,7 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
               <span>Bảo mật thông tin & Xử lý hỗ trợ</span>
             </h3>
             <p>
-              QNS BROKER cam kết bảo mật thông tin liên hệ và hình ảnh của quý khách theo quy định pháp luật. Số điện thoại cá nhân không hiển thị công khai tùy tiện để tránh tin nhắn rác hoặc cuộc gọi làm phiền.
+              QNS BROKER cam kết bảo mật thông tin liên hệ và hình ảnh của quý khách theo quy định pháp luật — Số điện thoại cá nhân không hiển thị công khai tùy tiện để tránh tin nhắn rác hoặc cuộc gọi làm phiền
             </p>
             <p>
               Hotline tiếp nhận hỗ trợ, thẩm định và phản ánh dịch vụ hoạt động 24/7 qua số điện thoại: <strong>{SITE_CONFIG.hotline}</strong>
