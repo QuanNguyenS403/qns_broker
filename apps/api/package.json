@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "nest build",
-    "dev": "nest start --watch",
+    "dev": "node scripts/dev.js",
+    "dev:nest": "nest start --watch",
     "start": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\"",
     "test:wave0": "ts-node --transpile-only -r dotenv/config ../../packages/database/scripts/test-wave-0.ts dotenv_config_path=../../.env"

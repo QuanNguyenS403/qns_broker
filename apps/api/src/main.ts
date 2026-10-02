@@ -77,5 +77,14 @@ async function bootstrap() {
   }
   console.log('=============================================================\n');
 }
-bootstrap();
+
+bootstrap().catch((err) => {
+  if (err?.code === 'EADDRINUSE') {
+    console.error(`\n❌ CỔNG ${process.env.API_PORT ?? 4000} ĐANG BỊ CHIẾM DỤNG (EADDRINUSE)!`);
+    console.error(`👉 Đang có tiến trình khác chạy trên cổng này. Hãy giải phóng cổng trước khi chạy lại.\n`);
+  } else {
+    console.error('❌ Lỗi khởi động API:', err);
+  }
+  process.exit(1);
+});
 
