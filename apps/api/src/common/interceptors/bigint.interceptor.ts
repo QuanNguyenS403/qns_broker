@@ -9,9 +9,10 @@ import { map } from 'rxjs/operators';
 
 /**
  * Đệ quy biến đổi mọi giá trị kiểu bigint thành string trong đối tượng hoặc mảng kết quả
+ * Có cơ chế WeakSet chống circular reference và giới hạn độ sâu
  */
-function serializeBigInt(obj: any): any {
-  if (obj === null || obj === undefined) {
+function serializeBigInt(obj: any, seen = new WeakSet(), depth = 0): any {
+  if (obj === null || obj === undefined || depth > 20) {
     return obj;
   }
 
@@ -19,19 +20,33 @@ function serializeBigInt(obj: any): any {
     return obj.toString();
   }
 
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (obj instanceof Date || obj instanceof RegExp || (typeof Buffer !== 'undefined' && Buffer.isBuffer(obj))) {
+    return obj;
+  }
+
+  // Bỏ qua các đối tượng hệ thống Express Response/Request/Socket
+  if (obj.socket || obj._readableState || obj._httpMessage) {
+    return obj;
+  }
+
+  if (seen.has(obj)) {
+    return obj;
+  }
+  seen.add(obj);
+
   if (Array.isArray(obj)) {
-    return obj.map(serializeBigInt);
+    return obj.map((item) => serializeBigInt(item, seen, depth + 1));
   }
 
-  if (typeof obj === 'object' && !(obj instanceof Date)) {
-    const serialized: Record<string, any> = {};
-    for (const key of Object.keys(obj)) {
-      serialized[key] = serializeBigInt(obj[key]);
-    }
-    return serialized;
+  const serialized: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    serialized[key] = serializeBigInt(obj[key], seen, depth + 1);
   }
-
-  return obj;
+  return serialized;
 }
 
 /**
