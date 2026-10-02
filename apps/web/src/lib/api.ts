@@ -75,7 +75,7 @@ export interface ListingListResponse {
 // Circuit breaker: bảo vệ SSR khi máy chủ backend gặp sự cố 5xx hoặc mất mạng
 let isCircuitOpen = false;
 let lastFailureTimestamp = 0;
-const CIRCUIT_BREAKER_COOLDOWN_MS = 15000; // 15 giây thăm dò lại nếu backend gặp lỗi 5xx
+const CIRCUIT_BREAKER_COOLDOWN_MS = 5000; // 5 giây thăm dò lại nếu backend gặp lỗi 5xx
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {

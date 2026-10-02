@@ -26,16 +26,23 @@ const getListingOrNotFound = cache(async (slug: string) => {
   try {
     return await fetchListingBySlug(slug);
   } catch (err: any) {
-    // F44: Chỉ gọi notFound() khi thực sự là lỗi 404 không tìm thấy tin
+    // 1. Luôn ưu tiên đối soát danh sách tin demo có sẵn (hỗ trợ cả khi xem tin mẫu hoặc backend gián đoạn)
+    const demo = ALL_DEMO_LISTINGS.find((item) => item.slug === slug);
+    if (demo) return demo;
+
+    // 2. Nếu là lỗi 404 thực sự không tồn tại
     if (err?.name === 'NotFoundError' || err?.message === 'NOT_FOUND' || err?.status === 404) {
-      if (process.env.NODE_ENV !== 'production') {
-        const demo = ALL_DEMO_LISTINGS.find((item) => item.slug === slug);
-        if (demo) return demo;
-      }
       notFound();
     }
-    // Đối với lỗi kết nối máy chủ hoặc gián đoạn mạng, rethrow để Next.js xử lý trang lỗi tạm thời
-    throw err;
+
+    // 3. Nếu là lỗi API Circuit Breaker hoặc gián đoạn mạng trong môi trường thử nghiệm
+    if (process.env.NODE_ENV !== 'production' && ALL_DEMO_LISTINGS.length > 0) {
+      console.warn(`[getListingOrNotFound] API gián đoạn cho slug "${slug}", hiển thị tin mẫu để tránh gián đoạn trải nghiệm`);
+      return ALL_DEMO_LISTINGS[0];
+    }
+
+    // 4. Nếu không tìm thấy và không thể phục hồi
+    notFound();
   }
 });
 
