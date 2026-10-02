@@ -158,6 +158,16 @@ export class ListingsController {
   }
 
   @ApiBearerAuth()
+  @Delete(':id/images/:imageId')
+  removeImage(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Param('imageId', ParseBigIntPipe) imageId: bigint,
+  ) {
+    return this.listingsService.removeImage(id, imageId, user);
+  }
+
+  @ApiBearerAuth()
   @Post(':id/save')
   toggleSave(@CurrentUser() user: AuthUser, @Param('id', ParseBigIntPipe) id: bigint) {
     return this.listingsService.toggleSave(id, user.id);

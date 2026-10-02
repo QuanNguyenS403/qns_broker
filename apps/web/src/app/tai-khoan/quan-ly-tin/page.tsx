@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authFetch, isLoggedIn } from '@/lib/auth-client';
 import { formatPrice, Listing, ListingListResponse } from '@/lib/api';
+import EditListingModal from '@/components/EditListingModal';
 
 /**
  * Trang "Quản lý tin bất động sản" — TRƯỚC ĐÂY HOÀN TOÀN CHƯA TỒN TẠI (phát hiện qua audit
@@ -44,6 +45,7 @@ export default function QuanLyTinPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [checkedAuth, setCheckedAuth] = useState(false);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
 
   const load = useCallback(async (status: string, targetPage = page) => {
     setLoading(true);
@@ -104,7 +106,7 @@ export default function QuanLyTinPage() {
       const res = await authFetch(`/listings/${listingId}/confirm-availability`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Không thể xác nhận tình trạng còn phòng');
-      alert('✓ ' + (data.message || 'Đã xác nhận phòng vẫn còn trống thành công!'));
+      alert('✓ ' + (data.message || 'Đã xác nhận phòng vẫn còn trống thành công'));
       load(statusFilter, page);
     } catch (err) {
       alert((err as Error).message);
@@ -278,13 +280,23 @@ export default function QuanLyTinPage() {
                           </>
                         )}
                         {listing.status !== 'removed' && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemove(listing.id)}
-                            className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
-                          >
-                            Gỡ tin
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setEditingListing(listing)}
+                              className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition-colors border border-slate-300"
+                              title="Chỉnh sửa nội dung hoặc bổ sung ảnh"
+                            >
+                              ✏️ Sửa tin
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemove(listing.id)}
+                              className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+                            >
+                              Gỡ tin
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -322,6 +334,13 @@ export default function QuanLyTinPage() {
           </>
         )}
       </div>
+
+      <EditListingModal
+        isOpen={!!editingListing}
+        listing={editingListing}
+        onClose={() => setEditingListing(null)}
+        onSaved={() => load(statusFilter, page)}
+      />
     </div>
   );
 }

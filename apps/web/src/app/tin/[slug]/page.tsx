@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { fetchListingBySlug, fetchListings, formatPrice, formatExactPrice } from '@/lib/api';
 import { ALL_DEMO_LISTINGS } from '@/lib/demo-data';
 import { PropertyGallery } from './PropertyGallery';
+import BackButton from '@/components/BackButton';
 import { ReportListingModal } from '@/components/ReportListingModal';
 import { OwnerContactBox } from './OwnerContactBox';
 import { MobileStickyContactBar } from './MobileStickyContactBar';
@@ -25,12 +26,16 @@ const getListingOrNotFound = cache(async (slug: string) => {
   try {
     return await fetchListingBySlug(slug);
   } catch (err: any) {
-    // FE-N04: Tuyệt đối không fallback demo data trên production
-    if (process.env.NODE_ENV !== 'production') {
-      const demo = ALL_DEMO_LISTINGS.find((item) => item.slug === slug);
-      if (demo) return demo;
+    // F44: Chỉ gọi notFound() khi thực sự là lỗi 404 không tìm thấy tin
+    if (err?.name === 'NotFoundError' || err?.message === 'NOT_FOUND' || err?.status === 404) {
+      if (process.env.NODE_ENV !== 'production') {
+        const demo = ALL_DEMO_LISTINGS.find((item) => item.slug === slug);
+        if (demo) return demo;
+      }
+      notFound();
     }
-    notFound();
+    // Đối với lỗi kết nối máy chủ hoặc gián đoạn mạng, rethrow để Next.js xử lý trang lỗi tạm thời
+    throw err;
   }
 });
 
@@ -38,9 +43,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const listing = await getListingOrNotFound(params.slug);
     const desc = listing.description?.slice(0, 160) ?? `${listing.title} tại ${listing.location.name}`;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://qnsbroker.com';
     return {
       title: `${listing.title} | QNS BROKER`,
       description: desc,
+      alternates: {
+        canonical: `${siteUrl}/tin/${params.slug}`,
+      },
       openGraph: {
         title: listing.title,
         description: desc,
@@ -190,6 +199,12 @@ export default async function ListingDetailPage({ params }: Props) {
     def.keys.some((k) => amenitiesData[k] === true || amenitiesData[k] === 'true'),
   );
 
+  const fullMapAddress = [
+    listing.addressDetail,
+    listing.location?.name,
+    'Việt Nam',
+  ].filter(Boolean).join(', ');
+
   return (
     <div className="min-h-screen bg-surface-muted">
       <div className="container-max py-6">
@@ -210,12 +225,7 @@ export default async function ListingDetailPage({ params }: Props) {
             <span className="text-text-secondary font-medium line-clamp-1 max-w-xs">{displayTitle}</span>
           </nav>
 
-          <Link
-            href="/thue"
-            className="inline-flex items-center gap-1 font-semibold text-brand hover:underline"
-          >
-            ‹ Về danh sách
-          </Link>
+          <BackButton fallbackHref="/thue" label="‹ Quay lại danh sách" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -293,10 +303,16 @@ export default async function ListingDetailPage({ params }: Props) {
                 <InfoRow
                   label="Tình trạng phòng"
                   value={(() => {
+                    if ((listing as any).unit?.status === 'rented' || listing.status === 'rented') {
+                      return '🔴 Đã cho thuê';
+                    }
+                    if ((listing as any).unit?.availableFrom) {
+                      return `🟢 Trống từ ${new Date((listing as any).unit.availableFrom).toLocaleDateString('vi-VN')}`;
+                    }
                     const lastConfirmed = (listing as any).refreshedAt || listing.publishedAt || listing.createdAt;
-                    if (!lastConfirmed) return 'Còn phòng trống';
+                    if (!lastConfirmed) return '🟡 Cần kiểm tra lại trước khi xem';
                     const days = Math.floor((Date.now() - new Date(lastConfirmed).getTime()) / 86_400_000);
-                    if (days <= 7) return `🟢 Còn phòng (Xác nhận ${new Date(lastConfirmed).toLocaleDateString('vi-VN')})`;
+                    if (days <= 7) return `🟢 Còn phòng (Xác nhận ngày ${new Date(lastConfirmed).toLocaleDateString('vi-VN')})`;
                     return `🟡 Cần xác nhận lại (cập nhật ${days} ngày trước)`;
                   })()}
                 />
@@ -307,32 +323,42 @@ export default async function ListingDetailPage({ params }: Props) {
                 <InfoRow label="Mã BĐS" value={`#${listing.id}`} mono />
                 <InfoRow
                   label="Tiền đặt cọc"
-                  value={listing.depositAmount ? formatExactPrice(listing.depositAmount) : 'Thoả thuận / Không cọc'}
+                  value={(() => {
+                    if (listing.depositAmount === 0 || listing.depositAmount === '0') {
+                      return '0 đ (Không yêu cầu cọc)';
+                    }
+                    if (listing.depositAmount != null && Number(listing.depositAmount) > 0) {
+                      return formatExactPrice(listing.depositAmount);
+                    }
+                    return 'Chưa cập nhật (Liên hệ chuyên viên)';
+                  })()}
                 />
                 <InfoRow
                   label="Thời hạn hợp đồng"
-                  value={listing.minLeaseMonths ? `Tối thiểu ${listing.minLeaseMonths} tháng` : 'Linh hoạt'}
+                  value={listing.minLeaseMonths ? `Tối thiểu ${listing.minLeaseMonths} tháng` : 'Chưa xác nhận (Hỏi chuyên viên)'}
                 />
                 <InfoRow
                   label="Chi phí điện"
                   value={
                     listing.utilitiesIncluded
-                      ? 'Đã bao gồm'
-                      : listing.electricityPricePerKwh
-                        ? `${listing.electricityPricePerKwh.toLocaleString('vi-VN')} đ/kWh`
-                        : 'Giá nhà nước / Thoả thuận'
+                      ? 'Đã bao gồm trong tiền thuê'
+                      : listing.electricityPricePerKwh != null && Number(listing.electricityPricePerKwh) > 0
+                        ? `${Number(listing.electricityPricePerKwh).toLocaleString('vi-VN')} đ/kWh`
+                        : listing.electricityPricePerKwh === 0
+                          ? 'Miễn phí'
+                          : 'Chưa cập nhật đơn giá'
                   }
                 />
                 <InfoRow
                   label="Chi phí nước"
                   value={
                     listing.utilitiesIncluded
-                      ? 'Đã bao gồm'
-                      : listing.waterPriceFlat
-                        ? `${listing.waterPriceFlat.toLocaleString('vi-VN')} đ/người/tháng`
-                        : listing.waterPricePerM3
-                          ? `${listing.waterPricePerM3.toLocaleString('vi-VN')} đ/m³`
-                          : 'Giá nhà nước / Thoả thuận'
+                      ? 'Đã bao gồm trong tiền thuê'
+                      : listing.waterPriceFlat != null && Number(listing.waterPriceFlat) > 0
+                        ? `${Number(listing.waterPriceFlat).toLocaleString('vi-VN')} đ/người/tháng`
+                        : listing.waterPricePerM3 != null && Number(listing.waterPricePerM3) > 0
+                          ? `${Number(listing.waterPricePerM3).toLocaleString('vi-VN')} đ/m³`
+                          : 'Chưa cập nhật đơn giá'
                   }
                 />
                 {listing.bedrooms != null && <InfoRow label="Phòng ngủ" value={`${listing.bedrooms} phòng`} />}
@@ -363,15 +389,15 @@ export default async function ListingDetailPage({ params }: Props) {
                 />
                 <InfoRow
                   label="Phí gửi xe"
-                  value={amenitiesData.parkingFee || 'Có chỗ để xe riêng'}
+                  value={amenitiesData.parkingFee ? `${amenitiesData.parkingFee}` : 'Chưa cập nhật'}
                 />
                 <InfoRow
                   label="Internet / Wifi"
-                  value={amenitiesData.internetFee || 'Thoả thuận / Tốc độ cao'}
+                  value={amenitiesData.internetFee ? `${amenitiesData.internetFee}` : 'Chưa cập nhật'}
                 />
                 <InfoRow
                   label="Dịch vụ / Vệ sinh"
-                  value={amenitiesData.serviceFee || 'Đã bao gồm hoặc theo người'}
+                  value={amenitiesData.serviceFee ? `${amenitiesData.serviceFee}` : 'Chưa cập nhật'}
                 />
               </div>
             </div>
@@ -429,6 +455,9 @@ export default async function ListingDetailPage({ params }: Props) {
               waterPricePerM3={listing.waterPricePerM3}
               waterPriceFlat={listing.waterPriceFlat}
               utilitiesIncluded={listing.utilitiesIncluded}
+              parkingFee={amenitiesData.parkingFee}
+              internetFee={amenitiesData.internetFee}
+              serviceFee={amenitiesData.serviceFee}
             />
 
             {/* Khối Giới thiệu (Chuẩn mẫu Mogi) */}
@@ -490,7 +519,7 @@ export default async function ListingDetailPage({ params }: Props) {
                     href={getGoogleMapsDirectionsUrl(
                       listing.lat != null && listing.lng != null
                         ? { lat: listing.lat, lng: listing.lng }
-                        : { address: listing.addressDetail ?? listing.location.name },
+                        : { address: fullMapAddress },
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -503,7 +532,7 @@ export default async function ListingDetailPage({ params }: Props) {
                     href={getGoogleMapsViewUrl(
                       listing.lat != null && listing.lng != null
                         ? { lat: listing.lat, lng: listing.lng }
-                        : { address: listing.addressDetail ?? listing.location.name },
+                        : { address: fullMapAddress },
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -517,11 +546,11 @@ export default async function ListingDetailPage({ params }: Props) {
 
               <div className="relative aspect-[16/9] md:aspect-[21/9] w-full overflow-hidden rounded-xl border border-surface-border bg-slate-100 shadow-inner">
                 <iframe
-                  title={`Bản đồ vị trí ${listing.addressDetail ?? listing.location.name}`}
+                  title={`Bản đồ vị trí ${fullMapAddress}`}
                   src={getGoogleMapsEmbedUrl(
                     listing.lat != null && listing.lng != null
                       ? { lat: listing.lat, lng: listing.lng }
-                      : { address: listing.addressDetail ?? listing.location.name },
+                      : { address: fullMapAddress },
                   )}
                   className="h-full w-full border-0"
                   loading="lazy"

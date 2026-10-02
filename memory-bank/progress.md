@@ -2,6 +2,7 @@
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
+| Khắc phục triệt để Báo cáo Thẩm định 50 Findings (02/10/2026) | ✅ Xong | Đóng các lỗi P0 (phân quyền dời/hủy lịch xem F02, Google OAuth F01); sự thật dữ liệu cọc/điện/nước (F03); tách 2 tầng chi phí dọn vào & sinh hoạt (F04); gallery ảnh toàn màn hình & sửa thứ tự hook (F47); taxonomy danh mục đồng nghĩa (F11); RentalUnit vật lý & hủy lịch khi đã thuê (F31, F32); ẩn thông tin liên hệ trong text lead (F39); update lead trùng ngày (F20); optional auth JWT (F21); EditListingModal & API ảnh (F25); chống duplicate listing khi upload fail (F26, F27); xử lý lỗi lead chủ trọ (F33); circuit breaker & timeout 4s (F44); BackButton giữ ngữ cảnh search (F15); tsc API & Web PASS 100%. |
 | Thẩm định & Khắc phục Trải nghiệm Khách thuê & Chủ nhà V3 (02/10/2026) | ✅ Xong | Rà soát kép Khách thuê & Chủ nhà theo mô hình Broker Quân làm đầu mối duy nhất; xóa bỏ rào cản login & che số hotline; dựng trang /bieu-phi 40% cho chủ nhà; khôi phục tiện ích & trường chi phí dọn vào; dọn dẹp tàn dư menu membership; khắc phục triệt để lỗi #67–#74; build Next.js 32 routes & tsc sạch 100%. |
 | 01 - Khởi tạo monorepo | ✅ Xong | Cấu trúc monorepo hoàn chỉnh, `pnpm install` thành công |
 | 02 - Database schema & Prisma Client | ✅ Xong | 9 model, `pnpm db:generate` tạo Prisma Client v5.22.0, `pnpm db:migrate` đã chạy migration `init` vào Postgres |

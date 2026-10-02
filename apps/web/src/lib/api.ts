@@ -72,41 +72,58 @@ export interface ListingListResponse {
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
 }
 
-// Circuit breaker: bảo vệ SSR và giảm thời gian tải trang từ 4s xuống 0ms khi DB/API ngoại tuyến
+// Circuit breaker: bảo vệ SSR khi máy chủ backend gặp sự cố 5xx hoặc mất mạng
 let isCircuitOpen = false;
 let lastFailureTimestamp = 0;
-const CIRCUIT_BREAKER_COOLDOWN_MS = 20000; // 20 giây thăm dò lại 1 lần nếu backend lỗi
+const CIRCUIT_BREAKER_COOLDOWN_MS = 15000; // 15 giây thăm dò lại nếu backend gặp lỗi 5xx
+
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+export class NotFoundError extends ApiError {
+  constructor(message = 'NOT_FOUND') {
+    super(404, message);
+    this.name = 'NotFoundError';
+  }
+}
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const now = Date.now();
   if (isCircuitOpen && now - lastFailureTimestamp < CIRCUIT_BREAKER_COOLDOWN_MS) {
-    throw new Error('API_CIRCUIT_OPEN: Backend tạm thời ngoại tuyến');
+    throw new ApiError(503, 'API_CIRCUIT_OPEN: Backend tạm thời ngoại tuyến');
   }
 
-  // Chống treo SSR nếu backend phản hồi chậm (timeout 1.2s tối đa thay vì 3.5s)
-  const signal = init?.signal ?? AbortSignal.timeout(1200);
+  // F44: Tăng timeout từ 1.2s lên 4.0s để tránh ngắt nhầm khi mạng có độ trễ hoặc khởi động
+  const signal = init?.signal ?? AbortSignal.timeout(4000);
   try {
     const res = await fetch(`${API_URL}${path}`, {
       ...init,
       signal,
       headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-      // Trang danh sách/chi tiết cần dữ liệu tương đối mới — cache ngắn 60s (ISR-style) thay vì always dynamic hoàn toàn.
       next: { revalidate: 60 },
     });
 
     if (!res.ok) {
-      if (res.status === 404) throw new Error('NOT_FOUND');
+      if (res.status === 404) throw new NotFoundError();
       if (res.status >= 500) {
         isCircuitOpen = true;
         lastFailureTimestamp = Date.now();
       }
-      throw new Error(`API lỗi (${res.status})`);
+      throw new ApiError(res.status, `API lỗi (${res.status})`);
     }
 
     isCircuitOpen = false;
     return (await res.json()) as T;
   } catch (err: any) {
-    if (err?.message !== 'NOT_FOUND') {
+    if (err instanceof NotFoundError) {
+      throw err;
+    }
+    // F44: Chỉ mở circuit breaker khi lỗi mạng hoặc 5xx, không ngắt trên lỗi 4xx của client
+    if (!(err instanceof ApiError) || err.status >= 500) {
       isCircuitOpen = true;
       lastFailureTimestamp = Date.now();
     }

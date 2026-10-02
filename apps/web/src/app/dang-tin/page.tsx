@@ -6,6 +6,7 @@ import { authFetch, isLoggedIn } from '@/lib/auth-client';
 import { AuthModal } from '@/components/AuthModal';
 import { OwnerBrokerTermsGate } from '@/components/OwnerBrokerTermsGate';
 import { GoogleMapAddressPicker, type SelectedUniversityDistance } from '@/components/GoogleMapAddressPicker';
+import { SITE_CONFIG } from '@/lib/constants';
 
 interface LocationItem {
   id: number;
@@ -69,6 +70,7 @@ export default function DangTinPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [persistedListingId, setPersistedListingId] = useState<string | null>(null);
 
   // Quản lý định vị Google Maps & trường Đại học lân cận
   const [addressDetail, setAddressDetail] = useState('');
@@ -241,32 +243,35 @@ export default function DangTinPage() {
     };
 
     setLoading(true);
-    let createdListingId: string | null = null;
+    let targetListingId = persistedListingId;
 
     try {
-      const res = await authFetch('/listings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      if (!targetListingId) {
+        const res = await authFetch('/listings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message ?? 'Đăng tin thất bại, vui lòng kiểm tra lại thông tin');
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message ?? 'Đăng tin thất bại, vui lòng kiểm tra lại thông tin');
+        }
+
+        const newListing = await res.json();
+        targetListingId = newListing?.id ? String(newListing.id) : null;
+        setPersistedListingId(targetListingId);
       }
 
-      const newListing = await res.json();
-      createdListingId = newListing?.id ? String(newListing.id) : null;
-
-      // FE-06 / FE-N19: Upload ảnh trực tiếp qua FormData tới API /listings/:id/images
-      if (selectedFiles.length > 0 && createdListingId) {
+      // FE-06 / FE-N19 / F26: Upload ảnh trực tiếp qua FormData tới API /listings/:id/images
+      if (selectedFiles.length > 0 && targetListingId) {
         setUploadStatus(`Đang tải lên ${selectedFiles.length} ảnh thực tế...`);
         const formData = new FormData();
         selectedFiles.forEach((file) => {
           formData.append('files', file);
         });
 
-        const imgRes = await authFetch(`/listings/${newListing.id}/images`, {
+        const imgRes = await authFetch(`/listings/${targetListingId}/images`, {
           method: 'POST',
           body: formData,
         });
@@ -274,12 +279,13 @@ export default function DangTinPage() {
         if (!imgRes.ok) {
           const errData = await imgRes.json().catch(() => ({}));
           throw new Error(
-            `Tin đăng #${createdListingId} đã tạo thành công, nhưng tải ảnh gặp sự cố: ${errData.message ?? 'Lỗi tải ảnh'}. Bạn có thể vào "Quản lý tin" để bổ sung ảnh sau mà không sợ mất tin!`,
+            `Tin đăng #${targetListingId} đã tạo thành công, nhưng tải ảnh gặp sự cố: ${errData.message ?? 'Lỗi tải ảnh'}. Bạn có thể bấm gửi lại để tiếp tục tải ảnh cho tin này mà không bị tạo trùng tin`,
           );
         }
       }
 
       setMessage('success');
+      setPersistedListingId(null);
       setSelectedFiles([]);
       setPreviewUrls([]);
       (e.target as HTMLFormElement).reset();
@@ -591,11 +597,11 @@ export default function DangTinPage() {
           </span>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 text-xs">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="amenity_dieuHoa" defaultChecked className="rounded text-brand" />
+              <input type="checkbox" name="amenity_dieuHoa" className="rounded text-brand" />
               <span>❄️ Điều hòa</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="amenity_nongLanh" defaultChecked className="rounded text-brand" />
+              <input type="checkbox" name="amenity_nongLanh" className="rounded text-brand" />
               <span>🚿 Nóng lạnh</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -607,11 +613,11 @@ export default function DangTinPage() {
               <span>🧺 Máy giặt</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="amenity_giuongNem" defaultChecked className="rounded text-brand" />
+              <input type="checkbox" name="amenity_giuongNem" className="rounded text-brand" />
               <span>🛏️ Giường & nệm</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="amenity_tuQuanAo" defaultChecked className="rounded text-brand" />
+              <input type="checkbox" name="amenity_tuQuanAo" className="rounded text-brand" />
               <span>🚪 Tủ quần áo</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -631,11 +637,11 @@ export default function DangTinPage() {
               <span>🔐 Khóa vân tay</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="amenity_gioTuDo" defaultChecked className="rounded text-brand" />
+              <input type="checkbox" name="amenity_gioTuDo" className="rounded text-brand" />
               <span>🕒 Giờ giấc tự do</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="amenity_choDeXe" defaultChecked className="rounded text-brand" />
+              <input type="checkbox" name="amenity_choDeXe" className="rounded text-brand" />
               <span>🛵 Chỗ để xe</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -667,7 +673,6 @@ export default function DangTinPage() {
               name="bedrooms"
               type="number"
               placeholder="VD: 1"
-              defaultValue={1}
               className="input-field"
             />
           </div>
@@ -677,7 +682,6 @@ export default function DangTinPage() {
               name="bathrooms"
               type="number"
               placeholder="VD: 1"
-              defaultValue={1}
               className="input-field"
             />
           </div>
@@ -736,17 +740,20 @@ export default function DangTinPage() {
         )}
 
         {message === 'success' && (
-          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-center">
+          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-5 text-center">
             <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold">
               ✓
             </div>
-            <p className="font-bold text-emerald-800">Đăng tin thành công</p>
-            <p className="mt-1 text-xs text-emerald-600">
-              Tin của bạn đang được kiểm duyệt tự động và sẽ hiển thị công khai sớm
+            <p className="font-bold text-emerald-800 text-base">Tiếp nhận thông tin phòng thành công</p>
+            <p className="mt-1.5 text-xs text-emerald-700 max-w-md mx-auto leading-relaxed">
+              Chuyên viên {SITE_CONFIG.agentName} ({SITE_CONFIG.agentRole}) sẽ liên hệ với bạn để kiểm tra hồ sơ, khảo sát thực tế phòng và hoàn tất thủ tục trước khi tin được duyệt hiển thị công khai
             </p>
-            <div className="mt-3 flex justify-center gap-3">
+            <div className="mt-4 flex justify-center gap-3">
+              <Link href="/tai-khoan/quan-ly-tin" className="btn-primary text-xs">
+                Xem trong Quản lý tin
+              </Link>
               <Link href="/thue" className="btn-secondary text-xs">
-                Xem danh sách tin
+                Xem kho phòng
               </Link>
             </div>
           </div>

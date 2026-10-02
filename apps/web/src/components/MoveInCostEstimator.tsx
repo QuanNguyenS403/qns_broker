@@ -9,42 +9,58 @@ interface MoveInCostEstimatorProps {
   waterPricePerM3?: number | null;
   waterPriceFlat?: number | null;
   utilitiesIncluded?: boolean;
+  parkingFee?: number | string | null;
+  internetFee?: number | string | null;
+  serviceFee?: number | string | null;
 }
 
 export function MoveInCostEstimator({
   initialRentPrice,
   depositAmount,
-  electricityPricePerKwh = 3500,
-  waterPricePerM3 = 18000,
+  electricityPricePerKwh,
+  waterPricePerM3,
   waterPriceFlat,
   utilitiesIncluded = false,
+  parkingFee,
+  internetFee,
+  serviceFee,
 }: MoveInCostEstimatorProps) {
   const rent = typeof initialRentPrice === 'string' ? Number(initialRentPrice) || 0 : initialRentPrice;
-  
-  // F11 / FE-N17: Phân biệt rõ cọc 0đ (không cọc) với trường hợp chưa khai báo cọc (null/undefined)
+
+  // F03 / F04: Phân biệt rõ cọc 0đ, có cọc cụ thể hay chưa khai báo
   const isDepositDeclared = depositAmount !== undefined && depositAmount !== null && depositAmount !== '';
   const parsedDeposit = isDepositDeclared ? Number(depositAmount) : NaN;
-  const initialDeposit = !isNaN(parsedDeposit) ? Math.max(0, parsedDeposit) : rent;
+  const hasExactDeposit = !isNaN(parsedDeposit);
+  const initialDeposit = hasExactDeposit ? Math.max(0, parsedDeposit) : rent;
 
   const [customDeposit, setCustomDeposit] = useState<number>(initialDeposit);
-  const [electricityKwh, setElectricityKwh] = useState<number>(80); // Trung bình phòng trọ dùng 80 kWh/tháng
-  const [waterAmount, setWaterAmount] = useState<number>(waterPriceFlat ? 1 : 4); // Nếu tính khoán thì mặc định 1 người, nếu m3 thì 4m3
-  const [internetFee, setInternetFee] = useState<number>(100000); // 100k/tháng
+  const [electricityKwh, setElectricityKwh] = useState<number>(80);
+  const [waterAmount, setWaterAmount] = useState<number>(waterPriceFlat ? 1 : 4);
+  const [customInternet, setCustomInternet] = useState<number>(
+    internetFee != null && !isNaN(Number(internetFee)) ? Number(internetFee) : 100000
+  );
+  const [customParking, setCustomParking] = useState<number>(
+    parkingFee != null && !isNaN(Number(parkingFee)) ? Number(parkingFee) : 0
+  );
 
-  // Tính tiền điện
-  const elecCost = utilitiesIncluded ? 0 : (electricityPricePerKwh ?? 3500) * electricityKwh;
-  // Tính tiền nước: tách rõ khoán theo người vs theo m3
+  const hasElecRate = electricityPricePerKwh != null && Number(electricityPricePerKwh) >= 0;
+  const effectiveElecRate = hasElecRate ? Number(electricityPricePerKwh) : 3500;
+  const elecCost = utilitiesIncluded ? 0 : effectiveElecRate * electricityKwh;
+
+  const hasWaterRate = (waterPriceFlat != null && Number(waterPriceFlat) >= 0) || (waterPricePerM3 != null && Number(waterPricePerM3) >= 0);
+  const effectiveWaterRate = waterPriceFlat != null ? Number(waterPriceFlat) : (waterPricePerM3 != null ? Number(waterPricePerM3) : 18000);
   const waterCost = utilitiesIncluded
     ? 0
-    : waterPriceFlat
-      ? waterPriceFlat * Math.max(1, waterAmount)
-      : (waterPricePerM3 ?? 18000) * waterAmount;
+    : waterPriceFlat != null
+      ? effectiveWaterRate * Math.max(1, waterAmount)
+      : effectiveWaterRate * waterAmount;
 
-  // Chi phí phát sinh tháng đầu
-  const monthlyUtilitiesEstimate = elecCost + waterCost + internetFee;
+  // Dự trù chi phí sinh hoạt hàng tháng
+  const monthlyLivingEstimate = elecCost + waterCost + customInternet + customParking;
+  const totalMonthlyCost = rent + monthlyLivingEstimate;
 
-  // Tổng tiền cần chuẩn bị dọn vào = Tiền cọc + Tiền thuê tháng đầu + Dự trù điện nước tháng đầu
-  const totalMoveInCost = customDeposit + rent + monthlyUtilitiesEstimate;
+  // Tiền cần chuẩn bị lúc ký (Cọc + Tiền thuê tháng đầu)
+  const initialSignPayment = customDeposit + rent;
 
   return (
     <div id="move-in-estimator" className="rounded-2xl border border-teal-200 bg-white p-6 shadow-card scroll-mt-28">
@@ -54,30 +70,35 @@ export function MoveInCostEstimator({
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand/10 text-brand text-sm">
               💰
             </span>
-            Ước tính chi phí dọn vào ở
+            Ước tính chi phí minh bạch
           </h3>
           <p className="mt-0.5 text-xs text-text-muted">
-            Minh bạch chi phí tháng đầu: Tiền cọc + Tiền thuê + Dự trù điện nước
+            Tách biệt khoản trả khi ký hợp đồng và dự trù chi phí sinh hoạt hàng tháng
           </p>
         </div>
         {utilitiesIncluded && (
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-            ✓ Đã bao điện nước
+            ✓ Đã bao gồm điện nước
           </span>
         )}
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-        {/* Cột trái: Điều chỉnh thông số */}
+        {/* Cột trái: Điều chỉnh thông số sinh hoạt */}
         <div className="space-y-4">
           <div>
             <div className="flex justify-between text-xs font-medium text-text-secondary mb-1.5">
-              <span>Tiền đặt cọc phòng</span>
-              <span className="font-bold text-text-primary">{customDeposit.toLocaleString('vi-VN')} đ</span>
+              <span>Tiền đặt cọc</span>
+              <span className="font-bold text-text-primary">
+                {customDeposit.toLocaleString('vi-VN')} đ
+                {hasExactDeposit && customDeposit === initialDeposit && (
+                  <span className="ml-1 text-[11px] font-normal text-emerald-600">(Chủ nhà yêu cầu)</span>
+                )}
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Cọc 1 tháng', val: rent },
+                { label: hasExactDeposit && initialDeposit === rent ? 'Theo yêu cầu (1T)' : 'Cọc 1 tháng', val: rent },
                 { label: 'Cọc 2 tháng', val: rent * 2 },
                 { label: 'Không cọc', val: 0 },
               ].map((item, idx) => (
@@ -101,8 +122,13 @@ export function MoveInCostEstimator({
             <>
               <div>
                 <div className="flex justify-between text-xs font-medium text-text-secondary mb-1">
-                  <span>Ước tính số điện ({electricityPricePerKwh?.toLocaleString('vi-VN') ?? '3.500'} đ/kWh)</span>
-                  <span className="font-semibold text-text-primary">{electricityKwh} kWh (~{elecCost.toLocaleString('vi-VN')} đ)</span>
+                  <span>
+                    Ước tính số điện ({effectiveElecRate.toLocaleString('vi-VN')} đ/kWh
+                    {!hasElecRate && ' - giá tham khảo'})
+                  </span>
+                  <span className="font-semibold text-text-primary">
+                    {electricityKwh} kWh (~{elecCost.toLocaleString('vi-VN')} đ)
+                  </span>
                 </div>
                 <input
                   type="range"
@@ -116,32 +142,34 @@ export function MoveInCostEstimator({
                 <div className="flex justify-between text-[11px] text-text-muted">
                   <span>Ít (20 kWh)</span>
                   <span>Trung bình (80 kWh)</span>
-                  <span>Bật máy lạnh nhiều (200+ kWh)</span>
+                  <span>Dùng nhiều (200+ kWh)</span>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-xs font-medium text-text-secondary mb-1">
                   <span>
-                    Ước tính nước ({waterPriceFlat ? `${waterPriceFlat.toLocaleString('vi-VN')} đ/người` : `${waterPricePerM3?.toLocaleString('vi-VN') ?? '18.000'} đ/m³`})
+                    Ước tính nước ({waterPriceFlat != null
+                      ? `${Number(waterPriceFlat).toLocaleString('vi-VN')} đ/người/tháng`
+                      : `${effectiveWaterRate.toLocaleString('vi-VN')} đ/m³${!hasWaterRate ? ' - giá tham khảo' : ''}`})
                   </span>
                   <span className="font-semibold text-text-primary">
-                    {waterPriceFlat ? `${waterAmount} người` : `${waterAmount} m³`} (~{waterCost.toLocaleString('vi-VN')} đ)
+                    {waterPriceFlat != null ? `${waterAmount} người` : `${waterAmount} m³`} (~{waterCost.toLocaleString('vi-VN')} đ)
                   </span>
                 </div>
                 <input
                   type="range"
                   min="1"
-                  max={waterPriceFlat ? 6 : 20}
+                  max={waterPriceFlat != null ? 6 : 20}
                   step="1"
                   value={waterAmount}
                   onChange={(e) => setWaterAmount(Number(e.target.value))}
                   className="w-full accent-brand cursor-pointer"
                 />
                 <div className="flex justify-between text-[11px] text-text-muted">
-                  <span>{waterPriceFlat ? '1 người ở' : 'Tiết kiệm (2-4 m³)'}</span>
-                  <span>{waterPriceFlat ? '2-3 người' : 'Trung bình (6-8 m³)'}</span>
-                  <span>{waterPriceFlat ? '4+ người' : 'Nhiều (15+ m³)'}</span>
+                  <span>{waterPriceFlat != null ? '1 người ở' : 'Tiết kiệm (2-4 m³)'}</span>
+                  <span>{waterPriceFlat != null ? '2-3 người' : 'Trung bình (6-8 m³)'}</span>
+                  <span>{waterPriceFlat != null ? '4+ người' : 'Nhiều (15+ m³)'}</span>
                 </div>
               </div>
             </>
@@ -149,67 +177,111 @@ export function MoveInCostEstimator({
 
           <div>
             <div className="flex justify-between text-xs font-medium text-text-secondary mb-1">
-              <span>Phí dịch vụ & Internet dự kiến</span>
-              <span className="font-semibold text-text-primary">{internetFee.toLocaleString('vi-VN')} đ</span>
+              <span>Internet / Wifi</span>
+              <span className="font-semibold text-text-primary">{customInternet.toLocaleString('vi-VN')} đ</span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[50000, 100000, 150000].map((fee) => (
+            <div className="grid grid-cols-4 gap-1.5">
+              {[0, 50000, 100000, 150000].map((fee) => (
                 <button
                   key={fee}
                   type="button"
-                  onClick={() => setInternetFee(fee)}
+                  onClick={() => setCustomInternet(fee)}
                   className={`rounded-lg py-1.5 text-xs font-medium transition-colors border ${
-                    internetFee === fee
+                    customInternet === fee
                       ? 'border-brand bg-brand/10 text-brand font-semibold'
                       : 'border-surface-border bg-surface hover:bg-surface-muted text-text-secondary'
                   }`}
                 >
-                  {fee.toLocaleString('vi-VN')} đ
+                  {fee === 0 ? 'Miễn phí' : `${fee.toLocaleString('vi-VN')} đ`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-xs font-medium text-text-secondary mb-1">
+              <span>Phí gửi xe máy</span>
+              <span className="font-semibold text-text-primary">{customParking.toLocaleString('vi-VN')} đ</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {[0, 100000, 150000, 200000].map((fee) => (
+                <button
+                  key={fee}
+                  type="button"
+                  onClick={() => setCustomParking(fee)}
+                  className={`rounded-lg py-1.5 text-xs font-medium transition-colors border ${
+                    customParking === fee
+                      ? 'border-brand bg-brand/10 text-brand font-semibold'
+                      : 'border-surface-border bg-surface hover:bg-surface-muted text-text-secondary'
+                  }`}
+                >
+                  {fee === 0 ? 'Không gửi' : `${fee.toLocaleString('vi-VN')} đ`}
                 </button>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Cột phải: Bảng kết quả tổng hợp */}
+        {/* Cột phải: Bảng kết quả tổng hợp 2 tầng minh bạch */}
         <div className="rounded-xl bg-gradient-to-br from-teal-50 to-emerald-50/50 border border-teal-200 p-5 flex flex-col justify-between">
-          <div>
-            <span className="text-xs uppercase tracking-wider font-semibold text-teal-800">
-              Tổng chi phí cần chuẩn bị (Tháng đầu)
-            </span>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-brand tracking-tight">
-                {totalMoveInCost.toLocaleString('vi-VN')}
+          <div className="space-y-4">
+            {/* Tầng 1: Khoản trả khi ký */}
+            <div>
+              <span className="text-xs uppercase tracking-wider font-bold text-teal-800">
+                1. Khoản thanh toán khi ký hợp đồng
               </span>
-              <span className="text-sm font-semibold text-brand-800">VNĐ</span>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold text-brand tracking-tight">
+                  {initialSignPayment.toLocaleString('vi-VN')}
+                </span>
+                <span className="text-sm font-semibold text-brand-800">VNĐ</span>
+              </div>
+              <div className="mt-2 space-y-1.5 text-xs">
+                <div className="flex justify-between text-text-secondary">
+                  <span>• Tiền đặt cọc (hoàn lại khi trả phòng):</span>
+                  <span className="font-semibold text-text-primary">{customDeposit.toLocaleString('vi-VN')} đ</span>
+                </div>
+                <div className="flex justify-between text-text-secondary">
+                  <span>• Tiền thuê tháng đầu tiên:</span>
+                  <span className="font-semibold text-text-primary">{rent.toLocaleString('vi-VN')} đ</span>
+                </div>
+              </div>
             </div>
-            <p className="mt-1 text-xs text-text-muted">
-              Đã bao gồm tiền cọc hoàn lại khi trả phòng.
-            </p>
 
-            <div className="mt-4 space-y-2 border-t border-teal-200/80 pt-3 text-xs">
-              <div className="flex justify-between text-text-secondary">
-                <span>1. Tiền cọc (hoàn lại):</span>
-                <span className="font-semibold text-text-primary">{customDeposit.toLocaleString('vi-VN')} đ</span>
+            {/* Tầng 2: Dự trù hàng tháng */}
+            <div className="border-t border-teal-200/80 pt-3">
+              <span className="text-xs uppercase tracking-wider font-bold text-teal-800">
+                2. Tổng chi phí ước tính hằng tháng
+              </span>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold text-slate-800 tracking-tight">
+                  ~{totalMonthlyCost.toLocaleString('vi-VN')}
+                </span>
+                <span className="text-sm font-semibold text-slate-600">VNĐ/tháng</span>
               </div>
-              <div className="flex justify-between text-text-secondary">
-                <span>2. Tiền thuê tháng đầu:</span>
-                <span className="font-semibold text-text-primary">{rent.toLocaleString('vi-VN')} đ</span>
-              </div>
-              <div className="flex justify-between text-text-secondary">
-                <span>3. Dự trù điện/nước/wifi tháng đầu:</span>
-                <span className="font-semibold text-text-primary">{monthlyUtilitiesEstimate.toLocaleString('vi-VN')} đ</span>
+              <div className="mt-2 space-y-1.5 text-xs text-text-secondary">
+                <div className="flex justify-between">
+                  <span>• Tiền thuê phòng:</span>
+                  <span className="font-medium text-text-primary">{rent.toLocaleString('vi-VN')} đ</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>• Tiền điện dự kiến:</span>
+                  <span className="font-medium text-text-primary">{elecCost.toLocaleString('vi-VN')} đ</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>• Tiền nước dự kiến:</span>
+                  <span className="font-medium text-text-primary">{waterCost.toLocaleString('vi-VN')} đ</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>• Internet & xe máy:</span>
+                  <span className="font-medium text-text-primary">{(customInternet + customParking).toLocaleString('vi-VN')} đ</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-5 pt-3 border-t border-teal-200/80">
-            <div className="flex justify-between text-xs font-bold text-teal-900">
-              <span>Các tháng tiếp theo chỉ trả:</span>
-              <span className="text-sm text-brand-800">
-                ~{(rent + monthlyUtilitiesEstimate).toLocaleString('vi-VN')} đ/tháng
-              </span>
-            </div>
+          <div className="mt-4 pt-3 border-t border-teal-200/80 text-[11px] text-text-muted">
+            Lưu ý: Tiền thuê và tiền cọc được thanh toán trực tiếp cho bên cho thuê khi ký hợp đồng, chuyên viên Đức Quân hỗ trợ kiểm tra pháp lý miễn phí
           </div>
         </div>
       </div>

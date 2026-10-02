@@ -82,6 +82,10 @@ function DangNhapContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? 'Đăng nhập Google thất bại');
 
+      if (data.needEmailOtp) {
+        throw new Error('Tài khoản Google này chưa liên kết với hệ thống, vui lòng đăng nhập bằng số điện thoại để tiếp tục');
+      }
+
       setTokens(data.accessToken, data.refreshToken);
       const safeUrl = getSafeReturnUrl(returnToParam);
       router.push(safeUrl);
@@ -95,13 +99,13 @@ function DangNhapContent() {
   function triggerGoogleSignIn() {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      setError('Vui lòng cấu hình NEXT_PUBLIC_GOOGLE_CLIENT_ID để kích hoạt đăng nhập Google');
+      setError('Tính năng đăng nhập Google hiện chưa khả dụng, vui lòng tiếp tục với số điện thoại');
       return;
     }
     if ((window as any).google?.accounts?.id) {
       (window as any).google.accounts.id.prompt();
     } else {
-      setError('Đang tải thư viện Google, vui lòng thử lại sau 2 giây');
+      setError('Đang tải thư viện Google, vui lòng thử lại sau giây lát');
     }
   }
 

@@ -20,6 +20,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+
 @ApiTags('Viewings')
 @Controller('viewings')
 export class ViewingsController {
@@ -47,17 +49,22 @@ export class ViewingsController {
   @ApiOperation({ summary: 'Đổi giờ lịch xem phòng' })
   async rescheduleViewing(
     @Param('id') id: string,
-    @Body() dto: RescheduleViewingDto
+    @Body() dto: RescheduleViewingDto,
+    @CurrentUser() user: { id: bigint; role: string; phone?: string }
   ) {
-    return this.viewingsService.rescheduleViewing(id, dto);
+    return this.viewingsService.rescheduleViewing(id, dto, user);
   }
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Patch(':id/cancel')
   @ApiOperation({ summary: 'Hủy lịch xem phòng' })
-  async cancelViewing(@Param('id') id: string, @Body() dto: CancelViewingDto) {
-    return this.viewingsService.cancelViewing(id, dto);
+  async cancelViewing(
+    @Param('id') id: string,
+    @Body() dto: CancelViewingDto,
+    @CurrentUser() user: { id: bigint; role: string; phone?: string }
+  ) {
+    return this.viewingsService.cancelViewing(id, dto, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

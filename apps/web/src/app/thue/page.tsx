@@ -17,9 +17,9 @@ import {
 } from '@/lib/demo-data';
 
 export const metadata: Metadata = {
-  title: 'Cho thuê Căn hộ & Studio giá tốt — QNS BROKER',
+  title: 'Cho thuê Căn hộ, Studio & Phòng trọ giá tốt — QNS BROKER',
   description:
-    'Danh sách tin cho thuê căn hộ và studio minh bạch chi phí mới nhất, phân tách rõ ràng chuyên mục Căn hộ và Studio riêng biệt, tư vấn và trực tiếp dẫn xem tận nơi miễn phí',
+    'Danh sách tin cho thuê căn hộ, studio và phòng trọ minh bạch chi phí mới nhất, chuyên viên Đức Quân trực tiếp tư vấn và dẫn xem tận nơi miễn phí',
 };
 
 const CATEGORY_NAMES: Record<string, string> = {
@@ -106,11 +106,6 @@ export default async function ThuePage({ searchParams }: Props) {
   return (
     <div className="min-h-screen bg-surface-muted">
       <div className="container-max py-8">
-        {isApiError && isProduction && (
-          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-700">
-            ⚠️ Đang có gián đoạn kết nối tới máy chủ dữ liệu. Danh sách tin đăng tạm thời chưa tải được
-          </div>
-        )}
         {/* Breadcrumb */}
         <nav className="mb-4 flex items-center gap-2 text-xs text-text-muted">
           <Link href="/" className="hover:text-brand transition-colors">Trang chủ</Link>
@@ -122,7 +117,11 @@ export default async function ThuePage({ searchParams }: Props) {
           {pageTitle}{filterSummary} mới nhất {month}
         </h1>
         <p className="mt-1 text-sm text-text-muted">
-          {pagination.total.toLocaleString('vi-VN')} tin cho thuê {categoryLabel.toLowerCase()} phù hợp
+          {isApiError ? (
+            <span className="text-amber-700 font-medium">Hệ thống đang kết nối lại dữ liệu</span>
+          ) : (
+            `${pagination.total.toLocaleString('vi-VN')} tin cho thuê ${categoryLabel.toLowerCase()} phù hợp`
+          )}
         </p>
 
         <div className="mt-5">
@@ -136,7 +135,21 @@ export default async function ThuePage({ searchParams }: Props) {
           />
         </div>
 
-        {items.length === 0 ? (
+        {isApiError ? (
+          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-10 text-center">
+            <span className="text-4xl">⚠️</span>
+            <p className="mt-3 font-semibold text-amber-900 text-base">Kết nối máy chủ dữ liệu đang được đồng bộ lại</p>
+            <p className="mt-1 text-xs text-amber-700 max-w-md mx-auto">
+              Hệ thống đang kết nối tới kho dữ liệu phòng, vui lòng tải lại trang sau ít giây để cập nhật danh sách mới nhất
+            </p>
+            <Link
+              href={currentCategoryGroup ? `/thue?categoryGroup=${currentCategoryGroup}` : '/thue'}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-600 transition-colors shadow-sm"
+            >
+              🔄 Tải lại danh sách
+            </Link>
+          </div>
+        ) : items.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-surface-border bg-white p-10 text-center">
             <span className="text-4xl">🔍</span>
             <p className="mt-3 font-semibold text-text-primary">Không tìm thấy tin cho thuê phù hợp</p>

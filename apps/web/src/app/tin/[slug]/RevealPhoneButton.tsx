@@ -34,8 +34,10 @@ export function RevealPhoneButton({
       return;
     }
     if (!isLoggedIn()) {
-      if (onRequireAuth) {
-        onRequireAuth();
+      // F22: Khách vãng lai không cần đăng nhập vẫn xem được hotline công khai của chuyên viên dẫn xem
+      setPhone(SITE_CONFIG.hotline);
+      if (onPhoneRevealed) {
+        onPhoneRevealed(SITE_CONFIG.hotline);
       }
       return;
     }

@@ -93,13 +93,13 @@ export function AuthModal({
   function triggerGoogleSignIn() {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      setError('Vui lòng thêm NEXT_PUBLIC_GOOGLE_CLIENT_ID vào file .env để kích hoạt đăng nhập Google');
+      setError('Tính năng đăng nhập Google hiện chưa khả dụng, vui lòng tiếp tục với số điện thoại');
       return;
     }
     if ((window as any).google?.accounts?.id) {
       (window as any).google.accounts.id.prompt();
     } else {
-      setError('Đang tải thư viện Google, vui lòng thử lại sau 2 giây');
+      setError('Đang tải thư viện Google, vui lòng thử lại sau giây lát');
     }
   }
 
@@ -246,12 +246,18 @@ export function AuthModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="auth-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in"
+    >
       <div className="relative w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl transition-all">
         {/* Nút đóng góc trên bên phải */}
         <button
           type="button"
           onClick={handleClose}
+          aria-label="Đóng cửa sổ đăng nhập"
           className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -259,10 +265,10 @@ export function AuthModal({
           </svg>
         </button>
 
-        {/* Tiêu đề chuẩn Ảnh 1 */}
+        {/* Tiêu đề Modal */}
         <div>
           <p className="text-sm font-medium text-slate-700">Xin chào bạn!</p>
-          <h2 className="mt-1 text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h2 id="auth-modal-title" className="mt-1 text-2xl font-extrabold text-slate-900 tracking-tight">
             Đăng ký / đăng nhập để tiếp tục
           </h2>
           <p className="mt-2 text-sm text-slate-500">
@@ -270,15 +276,13 @@ export function AuthModal({
           </p>
         </div>
 
-        {/* Giao diện Bước 1: Nhập số điện thoại (Khớp 100% Ảnh 1) */}
+        {/* Giao diện Bước 1: Nhập số điện thoại */}
         {step === 'phone' && (
           <div className="mt-6 space-y-5">
-            {/* Nút Đăng nhập với Google */}
+            {/* Nút Tiếp tục với Google duy nhất */}
             <button
               type="button"
-              onClick={() => {
-                setError('Hệ thống khuyến khích đăng nhập/đăng ký bằng số điện thoại bên dưới để xác thực tài khoản bên cho thuê');
-              }}
+              onClick={triggerGoogleSignIn}
               className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3 px-4 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[0.99] transition-all"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -299,24 +303,25 @@ export function AuthModal({
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>Đăng nhập với Google</span>
+              <span>Tiếp tục với Google</span>
             </button>
 
             {/* Phân cách 'Hoặc' */}
             <div className="relative flex items-center justify-center">
               <div className="w-full border-t border-slate-200" />
               <span className="absolute bg-white px-3 text-xs font-medium text-slate-400">
-                Hoặc
+                Hoặc sử dụng số điện thoại
               </span>
             </div>
 
             {/* Form nhập số điện thoại */}
             <form onSubmit={handleContinuePhone} className="space-y-4">
               <div className="relative rounded-2xl border-2 border-slate-300 focus-within:border-[#4ecbc4] focus-within:ring-2 focus-within:ring-[#4ecbc4]/20 p-3 transition-all">
-                <label className="block text-[11px] font-semibold text-slate-500">
+                <label htmlFor="auth-phone-input" className="block text-[11px] font-semibold text-slate-500">
                   Số điện thoại *
                 </label>
                 <input
+                  id="auth-phone-input"
                   type="tel"
                   autoFocus
                   required
@@ -331,47 +336,13 @@ export function AuthModal({
                 <p className="text-xs text-red-500 font-medium">{error}</p>
               )}
 
-              {/* Nút Tiếp tục màu ngọc/teal */}
+              {/* Nút Tiếp tục */}
               <button
                 type="submit"
                 disabled={loading}
                 className="flex w-full items-center justify-center rounded-2xl bg-[#7cd8ce] hover:bg-[#68cdc3] text-white py-3.5 px-4 text-base font-bold shadow-sm transition-all disabled:opacity-60 active:scale-[0.99]"
               >
                 {loading ? 'Đang kiểm tra...' : 'Tiếp tục'}
-              </button>
-
-              <div className="relative my-4 flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
-                </div>
-                <div className="relative bg-white px-3 text-xs text-slate-400">hoặc</div>
-              </div>
-
-              {/* Nút Đăng nhập 1-Click bằng Google (0đ) */}
-              <button
-                type="button"
-                onClick={triggerGoogleSignIn}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-slate-200 bg-white py-3 px-4 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.99]"
-              >
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.15z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.99 0 12s.45 3.85 1.24 5.42l4.04-3.15z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                  />
-                </svg>
-                <span>Đăng nhập nhanh bằng Google (0đ)</span>
               </button>
             </form>
           </div>

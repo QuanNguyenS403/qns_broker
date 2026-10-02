@@ -11,6 +11,12 @@ interface ContactBrokerModalProps {
   listingTitle?: string;
 }
 
+const getVietnamToday = () => {
+  const d = new Date();
+  const vnTime = new Date(d.getTime() + 7 * 60 * 60 * 1000);
+  return vnTime.toISOString().split('T')[0];
+};
+
 export function ContactBrokerModal({
   isOpen,
   onClose,
@@ -207,10 +213,11 @@ export function ContactBrokerModal({
 
             {/* Họ & Tên */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="contact-fullname" className="block text-xs font-semibold text-slate-700 mb-1">
                 Họ và tên của bạn <span className="text-rose-500">*</span>
               </label>
               <input
+                id="contact-fullname"
                 type="text"
                 required
                 placeholder="Ví dụ: Nguyễn Văn A"
@@ -222,10 +229,11 @@ export function ContactBrokerModal({
 
             {/* Số điện thoại */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="contact-phone" className="block text-xs font-semibold text-slate-700 mb-1">
                 Số điện thoại liên hệ <span className="text-rose-500">*</span>
               </label>
               <input
+                id="contact-phone"
                 type="tel"
                 required
                 placeholder="Ví dụ: 0987 654 321"
@@ -238,23 +246,25 @@ export function ContactBrokerModal({
             {/* Ngày & Giờ mong muốn xem phòng */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="contact-date" className="block text-xs font-semibold text-slate-700 mb-1">
                   Ngày xem phòng
                 </label>
                 <input
+                  id="contact-date"
                   type="date"
                   value={preferredDate}
-                  min={new Date().toISOString().split('T')[0]}
+                  min={getVietnamToday()}
                   onChange={(e) => setPreferredDate(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label htmlFor="contact-time" className="block text-xs font-semibold text-slate-700 mb-1">
                   Khung giờ thuận tiện
                 </label>
                 <select
+                  id="contact-time"
                   value={preferredTime}
                   onChange={(e) => setPreferredTime(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
@@ -268,10 +278,11 @@ export function ContactBrokerModal({
 
             {/* Ghi chú thêm */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="contact-note" className="block text-xs font-semibold text-slate-700 mb-1">
                 Ghi chú hoặc yêu cầu thêm (không bắt buộc)
               </label>
               <textarea
+                id="contact-note"
                 rows={2}
                 placeholder="Ví dụ: Cần dọn vào đầu tháng tới, ưu tiên phòng có chỗ để xe máy..."
                 value={note}

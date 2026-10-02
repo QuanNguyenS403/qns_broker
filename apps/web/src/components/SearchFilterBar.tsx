@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { VIETNAM_UNIVERSITIES } from '@/lib/vietnam-universities';
@@ -109,14 +109,44 @@ export function SearchFilterBar({
   );
   const [areaIndex, setAreaIndex] = useState(initialAreaIndex >= 0 ? initialAreaIndex : 0);
 
+  // F14: Đồng bộ state nội bộ khi URL params thay đổi (back/forward hoặc navigation từ trang khác)
+  useEffect(() => {
+    setKeyword(initialParams.keyword ?? '');
+    setPropertyType(initialParams.propertyType ?? '');
+    setUniversitySlug(initialParams.universitySlug ?? '');
+    setUtilitiesIncluded(initialParams.utilitiesIncluded === 'true');
+
+    const pIdx = pricePresets.findIndex(
+      (p) => p.min === (initialParams.priceMin ?? '') && p.max === (initialParams.priceMax ?? ''),
+    );
+    setPriceIndex(pIdx >= 0 ? pIdx : 0);
+
+    const aIdx = areaPresets.findIndex(
+      (a) => a.min === (initialParams.areaMin ?? '') && a.max === (initialParams.areaMax ?? ''),
+    );
+    setAreaIndex(aIdx >= 0 ? aIdx : 0);
+  }, [
+    initialParams.keyword,
+    initialParams.propertyType,
+    initialParams.universitySlug,
+    initialParams.utilitiesIncluded,
+    initialParams.priceMin,
+    initialParams.priceMax,
+    initialParams.areaMin,
+    initialParams.areaMax,
+  ]);
+
   function handleFilter(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
 
-    // FE-N10: Giữ nguyên location filter khi áp dụng bộ lọc hoặc đổi loại phòng
+    // FE-N10 & F14: Giữ nguyên location filter, tọa độ bản đồ lat/lng và thứ tự sắp xếp khi lọc
     if (initialParams.locationSlug) params.set('locationSlug', initialParams.locationSlug);
     if (initialParams.locationId) params.set('locationId', initialParams.locationId);
     if (initialParams.categoryGroup) params.set('categoryGroup', initialParams.categoryGroup);
+    if (initialParams.lat) params.set('lat', initialParams.lat);
+    if (initialParams.lng) params.set('lng', initialParams.lng);
+    if (initialParams.sortBy) params.set('sortBy', initialParams.sortBy);
     if (keyword.trim()) params.set('keyword', keyword.trim());
     if (propertyType) params.set('propertyType', propertyType);
     if (universitySlug) params.set('universitySlug', universitySlug);

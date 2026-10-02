@@ -42,7 +42,7 @@ export function Footer() {
             <p className="mt-3 text-sm leading-relaxed text-slate-400">
               Nền tảng cho thuê chuyên biệt — <strong className="text-white">Rõ chi phí, đúng người cho thuê</strong>
               <br />
-              Minh bạch biểu phí trọn gói, kết nối trực tiếp bên có quyền cho thuê
+              Minh bạch biểu phí trọn gói, chuyên viên {SITE_CONFIG.agentName} trực tiếp tư vấn và dẫn xem, khách ký hợp đồng trực tiếp với bên cho thuê
             </p>
             <div className="mt-4 space-y-2">
               <p className="flex items-center gap-2 text-sm text-slate-300">

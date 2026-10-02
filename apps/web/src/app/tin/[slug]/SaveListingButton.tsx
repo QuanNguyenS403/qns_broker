@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { authFetch, isLoggedIn } from '@/lib/auth-client';
 
 export function SaveListingButton({ listingId }: { listingId: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +27,7 @@ export function SaveListingButton({ listingId }: { listingId: string }) {
 
     if (!isLoggedIn()) {
       if (confirm('Vui lòng đăng nhập để lưu bất động sản vào danh sách yêu thích, chuyển đến trang đăng nhập ngay?')) {
-        router.push('/dang-nhap');
+        router.push(`/dang-nhap?returnTo=${encodeURIComponent(pathname)}`);
       }
       return;
     }
@@ -34,12 +35,14 @@ export function SaveListingButton({ listingId }: { listingId: string }) {
     setLoading(true);
     try {
       const res = await authFetch(`/listings/${listingId}/save`, { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        setSaved(data.saved);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Không thể cập nhật danh sách yêu thích');
       }
-    } catch {
-      // ignore
+      const data = await res.json();
+      setSaved(data.saved);
+    } catch (err: any) {
+      alert(err.message || 'Có lỗi xảy ra khi lưu tin, vui lòng thử lại sau');
     } finally {
       setLoading(false);
     }

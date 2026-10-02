@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,6 +16,49 @@ import * as crypto from 'crypto';
 @Injectable()
 export class ViewingsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Kiểm tra quyền truy cập lịch xem phòng (F02)
+   * Chỉ cho phép:
+   * 1. Quản trị viên (admin)
+   * 2. Chuyên viên tư vấn phụ trách (agent.userId)
+   * 3. Khách thuê đặt lịch (request.userId hoặc clientPhone)
+   * 4. Chủ nhà sở hữu phòng (unit.ownerId)
+   */
+  private assertViewingAccess(
+    viewing: any,
+    actor?: { id: bigint; role: string; phone?: string }
+  ) {
+    if (!actor) {
+      throw new ForbiddenException('Yêu cầu xác thực tài khoản để thực hiện thao tác');
+    }
+
+    if (actor.role === 'admin') {
+      return true;
+    }
+
+    const actorId = BigInt(actor.id);
+
+    // 1. Chuyên viên tư vấn được giao
+    if (viewing.agent && viewing.agent.userId && BigInt(viewing.agent.userId) === actorId) {
+      return true;
+    }
+
+    // 2. Khách thuê đặt lịch
+    if (viewing.request && viewing.request.userId && BigInt(viewing.request.userId) === actorId) {
+      return true;
+    }
+    if (actor.phone && viewing.clientPhone === actor.phone) {
+      return true;
+    }
+
+    // 3. Chủ nhà sở hữu phòng
+    if (viewing.unit && viewing.unit.ownerId && BigInt(viewing.unit.ownerId) === actorId) {
+      return true;
+    }
+
+    throw new ForbiddenException('Bạn không có quyền thao tác trên lịch xem phòng này');
+  }
 
   private async getDefaultAgent() {
     let agent = await this.prisma.agentProfile.findFirst({
@@ -67,8 +111,20 @@ export class ViewingsService {
       throw new NotFoundException('Không tìm thấy phòng cho thuê yêu cầu');
     }
 
-    if (unit.status === 'unavailable') {
+    if (unit.status === 'unavailable' || unit.status === 'rented') {
       throw new BadRequestException('Phòng hiện không khả dụng để đặt lịch xem');
+    }
+
+    const start = new Date(dto.scheduledStartTime);
+    const end = new Date(dto.scheduledEndTime);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new BadRequestException('Thời gian hẹn không hợp lệ');
+    }
+    if (start >= end) {
+      throw new BadRequestException('Thời gian bắt đầu phải trước thời gian kết thúc');
+    }
+    if (start.getTime() < Date.now() - 5 * 60 * 1000) {
+      throw new BadRequestException('Không thể đặt lịch xem sang thời gian trong quá khứ');
     }
 
     const agent = await this.getDefaultAgent();
@@ -81,8 +137,8 @@ export class ViewingsService {
         agentId: agent.id,
         clientName: dto.clientName,
         clientPhone: dto.clientPhone,
-        scheduledStartTime: new Date(dto.scheduledStartTime),
-        scheduledEndTime: new Date(dto.scheduledEndTime),
+        scheduledStartTime: start,
+        scheduledEndTime: end,
         status: 'requested',
         notes: dto.notes,
       },
@@ -183,21 +239,42 @@ export class ViewingsService {
   }
 
   /**
-   * Đổi giờ lịch xem phòng (AT-12)
+   * Đổi giờ lịch xem phòng (AT-12, F02, F36, F37)
    */
-  async rescheduleViewing(id: bigint | number | string, dto: RescheduleViewingDto) {
+  async rescheduleViewing(
+    id: bigint | number | string,
+    dto: RescheduleViewingDto,
+    actor?: { id: bigint; role: string; phone?: string }
+  ) {
     const viewingId = BigInt(id);
     const newStart = new Date(dto.newStartTime);
     const newEnd = new Date(dto.newEndTime);
 
+    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) {
+      throw new BadRequestException('Thời gian hẹn mới không hợp lệ');
+    }
+    if (newStart >= newEnd) {
+      throw new BadRequestException('Thời gian bắt đầu phải trước thời gian kết thúc');
+    }
+    if (newStart.getTime() < Date.now() - 5 * 60 * 1000) {
+      throw new BadRequestException('Không thể chuyển lịch xem sang thời gian trong quá khứ');
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const viewing = await tx.viewing.findUnique({
         where: { id: viewingId },
+        include: {
+          unit: true,
+          agent: true,
+          request: true,
+        },
       });
 
       if (!viewing) {
         throw new NotFoundException('Không tìm thấy lịch xem phòng');
       }
+
+      this.assertViewingAccess(viewing, actor);
 
       if (viewing.status === 'cancelled') {
         throw new BadRequestException('Không thể đổi lịch của một cuộc hẹn đã bị hủy');
@@ -220,11 +297,41 @@ export class ViewingsService {
             'Khung giờ mới bị trùng với một lịch hẹn khác của chuyên viên tư vấn'
           );
         }
+
+        // F37: Kiểm tra maxDailyViewings của ngày mới
+        const agent = await tx.agentProfile.findUnique({
+          where: { id: viewing.agentId },
+        });
+
+        if (agent) {
+          const startOfDay = new Date(newStart);
+          startOfDay.setHours(0, 0, 0, 0);
+          const endOfDay = new Date(newStart);
+          endOfDay.setHours(23, 59, 59, 999);
+
+          const confirmedCount = await tx.viewing.count({
+            where: {
+              id: { not: viewing.id },
+              agentId: viewing.agentId,
+              status: 'confirmed',
+              scheduledStartTime: {
+                gte: startOfDay,
+                lte: endOfDay,
+              },
+            },
+          });
+
+          if (confirmedCount >= agent.maxDailyViewings) {
+            throw new ConflictException(
+              `Đã đạt giới hạn tối đa ${agent.maxDailyViewings} lịch dẫn xem trong ngày mới của chuyên viên`
+            );
+          }
+        }
       }
 
       const historyEntry = `[Đổi lịch từ ${viewing.scheduledStartTime.toISOString()} sang ${newStart.toISOString()} lúc ${new Date().toISOString()}]: ${dto.reason || 'Khách/Agent yêu cầu đổi giờ'}`;
 
-      return tx.viewing.update({
+      const updated = await tx.viewing.update({
         where: { id: viewingId },
         data: {
           scheduledStartTime: newStart,
@@ -233,32 +340,71 @@ export class ViewingsService {
           notes: viewing.notes ? `${viewing.notes}\n${historyEntry}` : historyEntry,
         },
       });
+
+      await tx.auditEvent.create({
+        data: {
+          actorId: actor?.id ? BigInt(actor.id) : null,
+          action: 'viewing.rescheduled',
+          entityType: 'viewing',
+          entityId: viewingId.toString(),
+          reason: dto.reason || 'Đổi giờ lịch xem phòng',
+          afterState: {
+            newStart: newStart.toISOString(),
+            newEnd: newEnd.toISOString(),
+          },
+        },
+      });
+
+      return updated;
     });
   }
 
   /**
-   * Hủy lịch xem phòng (AT-12)
+   * Hủy lịch xem phòng (AT-12, F02)
    */
-  async cancelViewing(id: bigint | number | string, dto: CancelViewingDto = {}) {
+  async cancelViewing(
+    id: bigint | number | string,
+    dto: CancelViewingDto = {},
+    actor?: { id: bigint; role: string; phone?: string }
+  ) {
     const viewingId = BigInt(id);
 
     const viewing = await this.prisma.viewing.findUnique({
       where: { id: viewingId },
+      include: {
+        unit: true,
+        agent: true,
+        request: true,
+      },
     });
 
     if (!viewing) {
       throw new NotFoundException('Không tìm thấy lịch xem phòng');
     }
 
+    this.assertViewingAccess(viewing, actor);
+
     const historyEntry = `[Đã hủy lúc ${new Date().toISOString()}]: ${dto.reason || 'Khách/Chủ hủy cuộc hẹn'}`;
 
-    return this.prisma.viewing.update({
+    const updated = await this.prisma.viewing.update({
       where: { id: viewingId },
       data: {
         status: 'cancelled',
         notes: viewing.notes ? `${viewing.notes}\n${historyEntry}` : historyEntry,
       },
     });
+
+    await this.prisma.auditEvent.create({
+      data: {
+        actorId: actor?.id ? BigInt(actor.id) : null,
+        action: 'viewing.cancelled',
+        entityType: 'viewing',
+        entityId: viewingId.toString(),
+        reason: dto.reason || 'Hủy lịch xem phòng',
+      },
+    });
+
+    return updated;
   }
 
   /**

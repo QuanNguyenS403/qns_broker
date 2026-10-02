@@ -55,8 +55,21 @@ export class LeadsService {
   }
 
   /**
+   * Ẩn thông tin liên hệ (SĐT, Email) trong văn bản tự do (message, notes)
+   * nhằm bảo vệ quyền riêng tư của khách khi hiển thị cho chủ nhà (F39).
+   */
+  public redactContactInfo(text: string | null | undefined): string | null {
+    if (!text) return null;
+    const phoneRegex = /(?:\+84|0)[35789](?:[\s.-]?\d){8}\b/g;
+    const emailRegex = /[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/g;
+    return text
+      .replace(phoneRegex, '[SĐT đã ẩn bảo mật]')
+      .replace(emailRegex, '[Email đã ẩn bảo mật]');
+  }
+
+  /**
    * Format lead entity sang JSON an toàn (chuyển đổi BigInt sang string).
-   * Hỗ trợ che thông tin nhạy cảm của khách cho vai trò chủ nhà (GAP-03, AT-06).
+   * Hỗ trợ che thông tin nhạy cảm của khách cho vai trò chủ nhà (GAP-03, AT-06, F39).
    */
   private formatLead(lead: any, maskPrivateInfo = false) {
     return {
@@ -69,6 +82,8 @@ export class LeadsService {
       assignedToUserId: lead.assignedToUserId ? lead.assignedToUserId.toString() : null,
       phone: maskPrivateInfo ? this.maskPhone(lead.phone) : lead.phone,
       email: maskPrivateInfo && lead.email ? this.maskEmail(lead.email) : lead.email,
+      message: maskPrivateInfo ? this.redactContactInfo(lead.message) : lead.message,
+      notes: maskPrivateInfo ? this.redactContactInfo(lead.notes) : lead.notes,
       isPhoneMasked: maskPrivateInfo,
       assignedAgent: lead.assignedTo
         ? {
@@ -164,6 +179,26 @@ export class LeadsService {
 
     if (existing) {
       this.logger.log(`Duplicate lead prevented by dedupeKey=${dedupeKey}`);
+      // F20: Cập nhật ghi chú mới nếu khách gửi bổ sung trong cùng ngày thay vì làm mất thông tin
+      if (dto.message?.trim() && dto.message.trim() !== existing.message) {
+        const timestamp = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const updatedMessage = existing.message
+          ? `${existing.message}\n[Cập nhật lúc ${timestamp}]: ${dto.message.trim()}`
+          : dto.message.trim();
+        await this.prisma.lead.update({
+          where: { id: existing.id },
+          data: {
+            message: updatedMessage,
+            updatedAt: new Date(),
+          },
+        });
+        return {
+          success: true,
+          message: 'Yêu cầu liên hệ của bạn đã được cập nhật ghi chú mới nhất cho tin này trong hôm nay',
+          isDuplicate: true,
+          leadId: existing.id.toString(),
+        };
+      }
       return {
         success: true,
         message: 'Yêu cầu liên hệ của bạn đã được ghi nhận trước đó cho tin này trong hôm nay',

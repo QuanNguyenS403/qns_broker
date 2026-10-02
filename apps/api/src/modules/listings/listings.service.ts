@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { Prisma, ListingStatus, TransactionType } from '@batdongsan/database';
 import slugify from 'slugify';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
@@ -8,6 +9,70 @@ import { QueryListingsDto } from './dto/query-listings.dto';
 import { EmailService } from '../email/email.service';
 import { GoogleSheetsService } from '../google-sheets/google-sheets.service';
 import { OutboxService } from '../outbox/outbox.service';
+
+export const PROPERTY_TAXONOMY_GROUPS: Record<string, string[]> = {
+  phong_tro: [
+    'phong_tro',
+    'phong-tro',
+    'phong_tro_sinh_vien',
+    'phong-tro-sinh-vien',
+    'phong_tro_nguoi_di_lam',
+    'phong-tro-nguoi-di-lam',
+    'nha_tro',
+    'nha-tro',
+  ],
+  can_ho: [
+    'can_ho',
+    'can-ho',
+    'can_ho_chung_cu',
+    'can-ho-chung-cu',
+    'can_ho_mini',
+    'can-ho-mini',
+    'can_ho_dich_vu',
+    'can-ho-dich-vu',
+    'can_ho_cao_cap',
+    'can-ho-cao-cap',
+    'chung_cu',
+    'chung-cu',
+  ],
+  studio: [
+    'studio',
+    'can_ho_studio',
+    'can-ho-studio',
+    'studio_ban_cong',
+    'studio-ban-cong',
+    'studio_gac_lung',
+    'studio-gac-lung',
+    'studio_full_noi_that',
+    'studio-full-noi-that',
+  ],
+  ky_tuc_xa: [
+    'ky_tuc_xa',
+    'ky-tuc-xa',
+    'ky_tuc_xa_tu_nhan',
+    'ky-tuc-xa-tu-nhan',
+    'sleepbox',
+    'sleep_box',
+    'homestay',
+  ],
+  nha_nguyen_can: [
+    'nha_nguyen_can',
+    'nha-nguyen-can',
+    'nha_rieng',
+    'nha-rieng',
+  ],
+  mat_bang: [
+    'mat_bang',
+    'mat-bang',
+    'mat_bang_kinh_doanh',
+    'mat-bang-kinh-doanh',
+    'cua_hang',
+    'cua-hang',
+    'shophouse',
+    'kho_xuong',
+    'kho-xuong',
+  ],
+};
 
 const PUBLIC_LISTING_SELECT = {
   id: true,
@@ -40,7 +105,7 @@ const PUBLIC_LISTING_SELECT = {
   refreshedAt: true,
   viewCount: true,
   createdAt: true,
-  images: { select: { imageUrl: true, sortOrder: true }, orderBy: { sortOrder: 'asc' as const } },
+  images: { select: { id: true, imageUrl: true, sortOrder: true }, orderBy: { sortOrder: 'asc' as const } },
   location: { select: { id: true, name: true, slug: true, level: true } },
   project: { select: { id: true, name: true, slug: true } },
   contactAgent: {
@@ -234,16 +299,22 @@ export class ListingsService {
       };
     }
 
-    // Nếu có propertyType cụ thể, ưu tiên lấy theo cả dạng kebab-case lẫn snake_case
+    // F11: Phân giải nhóm loại hình (VD: phong_tro -> bao gồm toàn bộ subtype) hoặc subtype cụ thể
     if (query.propertyType) {
-      const variants = Array.from(
-        new Set([
-          query.propertyType,
-          query.propertyType.replace(/-/g, '_'),
-          query.propertyType.replace(/_/g, '-'),
-        ]),
-      );
-      where.propertyType = { in: variants };
+      const normalizedKey = query.propertyType.replace(/-/g, '_');
+      const groupSubtypes = PROPERTY_TAXONOMY_GROUPS[normalizedKey];
+      if (groupSubtypes) {
+        where.propertyType = { in: groupSubtypes };
+      } else {
+        const variants = Array.from(
+          new Set([
+            query.propertyType,
+            query.propertyType.replace(/-/g, '_'),
+            query.propertyType.replace(/_/g, '-'),
+          ]),
+        );
+        where.propertyType = { in: variants };
+      }
     }
 
     // Loại trừ các loại hình không mong muốn nếu được yêu cầu
@@ -791,10 +862,32 @@ export class ListingsService {
         );
       }
 
-      // 2. Tạo bản ghi tin đăng
+      // 2. Liên kết hoặc tự động tạo phòng vật lý RentalUnit chuẩn (F31)
+      let unitId: bigint | undefined = dto.unitId ? BigInt(dto.unitId) : undefined;
+      if (!unitId) {
+        const unitCode = `UNT-${ownerId}-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+        const newUnit = await tx.rentalUnit.create({
+          data: {
+            unitCode,
+            ownerId,
+            locationId: dto.locationId,
+            projectId: dto.projectId ? BigInt(dto.projectId) : undefined,
+            addressDetail: dto.addressDetail || 'Đang cập nhật địa chỉ',
+            propertyType: dto.propertyType,
+            areaM2: dto.areaM2,
+            bedrooms: dto.bedrooms,
+            bathrooms: dto.bathrooms,
+            status: 'available',
+          },
+        });
+        unitId = newUnit.id;
+      }
+
+      // 3. Tạo bản ghi tin đăng
       const created = await tx.listing.create({
         data: {
           ownerId,
+          unitId,
           locationId: dto.locationId,
           projectId: dto.projectId ? BigInt(dto.projectId) : undefined,
           transactionType: dto.transactionType ?? TransactionType.rent,
@@ -921,6 +1014,7 @@ export class ListingsService {
     const updateData: Prisma.ListingUncheckedUpdateInput = {
       ...dto,
       projectId: dto.projectId !== undefined ? (dto.projectId ? BigInt(dto.projectId) : null) : undefined,
+      unitId: dto.unitId !== undefined ? (dto.unitId ? BigInt(dto.unitId) : null) : undefined,
       price: dto.price !== undefined ? BigInt(dto.price) : undefined,
       depositAmount: dto.depositAmount !== undefined ? BigInt(dto.depositAmount) : undefined,
       amenities: dto.amenities as Prisma.InputJsonValue | undefined,
@@ -937,8 +1031,9 @@ export class ListingsService {
     ];
     const isCoreModified = coreFields.some((f) => (dto as any)[f] !== undefined);
 
-    if (requester.role !== 'admin' && listing.status === ListingStatus.active && isCoreModified) {
+    if (requester.role !== 'admin' && (listing.status === ListingStatus.active || listing.status === ListingStatus.rejected) && isCoreModified) {
       updateData.status = ListingStatus.pending;
+      updateData.rejectionReason = null;
       updateData.verificationStatus = 'chua_xac_thuc';
       updateData.verifiedAt = null;
       updateData.verifiedByUserId = null;
@@ -961,6 +1056,37 @@ export class ListingsService {
     const listing = await this.assertOwnership(id, requester);
     await this.prisma.$transaction(async (tx) => {
       await tx.listing.update({ where: { id: listing.id }, data: { status: ListingStatus.removed } });
+
+      // F32: Đồng bộ trạng thái RentalUnit và tự động hủy lịch xem tương lai
+      if (listing.unitId) {
+        const otherActiveCount = await tx.listing.count({
+          where: {
+            id: { not: listing.id },
+            unitId: listing.unitId,
+            status: ListingStatus.active,
+          },
+        });
+
+        if (otherActiveCount === 0) {
+          await tx.rentalUnit.update({
+            where: { id: listing.unitId },
+            data: { status: 'unavailable' },
+          });
+
+          await tx.viewing.updateMany({
+            where: {
+              unitId: listing.unitId,
+              status: { in: ['requested', 'confirmed'] },
+              scheduledStartTime: { gte: new Date() },
+            },
+            data: {
+              status: 'cancelled',
+              notes: `[Tự động hủy lúc ${new Date().toISOString()}]: Tin đăng phòng đã được gỡ`,
+            },
+          });
+        }
+      }
+
       await tx.auditEvent.create({
         data: {
           action: 'listing.removed',
@@ -973,14 +1099,35 @@ export class ListingsService {
         },
       });
     });
-    return { message: 'Đã gỡ tin đăng.' };
+    return { message: 'Đã gỡ tin đăng' };
   }
 
-  /** Đánh dấu phòng đã cho thuê thành công (FE-N09) */
+  /** Đánh dấu phòng đã cho thuê thành công (FE-N09, F32) */
   async markAsRented(id: bigint, requester: { id: bigint; role: string }) {
     const listing = await this.assertOwnership(id, requester);
     await this.prisma.$transaction(async (tx) => {
       await tx.listing.update({ where: { id: listing.id }, data: { status: ListingStatus.rented } });
+
+      // F32: Đồng bộ RentalUnit sang rented và tự động hủy các lịch hẹn tương lai
+      if (listing.unitId) {
+        await tx.rentalUnit.update({
+          where: { id: listing.unitId },
+          data: { status: 'rented' },
+        });
+
+        await tx.viewing.updateMany({
+          where: {
+            unitId: listing.unitId,
+            status: { in: ['requested', 'confirmed'] },
+            scheduledStartTime: { gte: new Date() },
+          },
+          data: {
+            status: 'cancelled',
+            notes: `[Tự động hủy lúc ${new Date().toISOString()}]: Phòng đã được đánh dấu cho thuê thành công`,
+          },
+        });
+      }
+
       await tx.auditEvent.create({
         data: {
           action: 'listing.mark_rented',
@@ -993,7 +1140,7 @@ export class ListingsService {
         },
       });
     });
-    return { message: 'Đã đánh dấu phòng cho thuê thành công.' };
+    return { message: 'Đã đánh dấu phòng cho thuê thành công' };
   }
 
   /**
@@ -1049,12 +1196,13 @@ export class ListingsService {
       data: imageUrls.map((url) => ({ listingId: id, imageUrl: url, sortOrder: nextOrder++ })),
     });
 
-    // BE-03: Thêm ảnh mới vào tin đang active cần kiểm duyệt lại để tránh tráo ảnh lừa đảo
-    if (requester.role !== 'admin' && listing.status === ListingStatus.active) {
+    // BE-03 & F25: Thêm ảnh mới vào tin đang active hoặc rejected cần đưa về pending để kiểm duyệt
+    if (requester.role !== 'admin' && (listing.status === ListingStatus.active || listing.status === ListingStatus.rejected)) {
       await this.prisma.listing.update({
         where: { id },
         data: {
           status: ListingStatus.pending,
+          rejectionReason: null,
           verificationStatus: 'chua_xac_thuc',
           verifiedAt: null,
           verifiedByUserId: null,
@@ -1063,6 +1211,20 @@ export class ListingsService {
     }
 
     return this.findOneForOwner(id, requester);
+  }
+
+  async removeImage(listingId: bigint, imageId: bigint, requester: { id: bigint; role: string }) {
+    await this.assertOwnership(listingId, requester);
+    const img = await this.prisma.listingImage.findFirst({
+      where: { id: imageId, listingId },
+    });
+    if (!img) {
+      throw new NotFoundException('Ảnh không tồn tại hoặc không thuộc tin đăng này');
+    }
+    await this.prisma.listingImage.delete({
+      where: { id: imageId },
+    });
+    return { success: true, message: 'Đã xóa ảnh thành công' };
   }
 
   async revealPhone(id: bigint, requesterId: bigint) {
