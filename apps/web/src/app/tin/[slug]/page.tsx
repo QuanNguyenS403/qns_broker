@@ -166,6 +166,30 @@ export default async function ListingDetailPage({ params }: Props) {
     return [];
   })();
 
+  // Trích xuất tiện ích có sẵn và chuẩn hoá hiển thị
+  const amenitiesData = (listing.amenities as Record<string, any>) || {};
+
+  const ALL_AMENITY_DEFS = [
+    { keys: ['dieuHoa', 'dieu_hoa', 'airConditioner'], label: 'Điều hòa / Máy lạnh', icon: '❄️' },
+    { keys: ['nongLanh', 'nong_lanh', 'waterHeater'], label: 'Bình nóng lạnh', icon: '🚿' },
+    { keys: ['tuLanh', 'tu_lanh', 'fridge'], label: 'Tủ lạnh', icon: '🧊' },
+    { keys: ['mayGiat', 'may_giat', 'washingMachine'], label: 'Máy giặt', icon: '🧺' },
+    { keys: ['giuongNem', 'giuong_nem', 'bed'], label: 'Giường & Nệm', icon: '🛏️' },
+    { keys: ['tuQuanAo', 'tu_quan_ao', 'wardrobe'], label: 'Tủ quần áo', icon: '🚪' },
+    { keys: ['banLamViec', 'ban_lam_viec', 'desk'], label: 'Bàn làm việc', icon: '🪑' },
+    { keys: ['banCong', 'ban_cong', 'balcony'], label: 'Ban công', icon: '🌿' },
+    { keys: ['thangMay', 'thang_may', 'elevator'], label: 'Thang máy', icon: '🛗' },
+    { keys: ['khoaVanTay', 'khoa_van_tay', 'fingerprintLock'], label: 'Khóa vân tay', icon: '🔐' },
+    { keys: ['gioTuDo', 'gio_tu_do', 'freeHours'], label: 'Giờ giấc tự do 24/7', icon: '🕒' },
+    { keys: ['choDeXe', 'cho_de_xe', 'parking'], label: 'Chỗ để xe', icon: '🛵' },
+    { keys: ['bepRieng', 'bep_rieng', 'kitchen'], label: 'Bếp nấu riêng', icon: '🍳' },
+    { keys: ['choNuoiThuCung', 'petAllowed', 'pet_friendly'], label: 'Cho nuôi thú cưng', icon: '🐾' },
+  ];
+
+  const activeAmenities = ALL_AMENITY_DEFS.filter((def) =>
+    def.keys.some((k) => amenitiesData[k] === true || amenitiesData[k] === 'true'),
+  );
+
   return (
     <div className="min-h-screen bg-surface-muted">
       <div className="container-max py-6">
@@ -313,6 +337,87 @@ export default async function ListingDetailPage({ params }: Props) {
                 />
                 {listing.bedrooms != null && <InfoRow label="Phòng ngủ" value={`${listing.bedrooms} phòng`} />}
                 {listing.bathrooms != null && <InfoRow label="Phòng tắm / WC" value={`${listing.bathrooms} phòng`} />}
+                <InfoRow
+                  label="Mức độ nội thất"
+                  value={
+                    amenitiesData.furnitureStatus === 'full'
+                      ? 'Đầy đủ nội thất'
+                      : amenitiesData.furnitureStatus === 'basic'
+                        ? 'Nội thất cơ bản'
+                        : amenitiesData.furnitureStatus === 'empty'
+                          ? 'Phòng trống'
+                          : 'Đầy đủ đồ cơ bản'
+                  }
+                />
+                <InfoRow
+                  label="Nuôi thú cưng"
+                  value={
+                    amenitiesData.choNuoiThuCung || amenitiesData.petAllowed
+                      ? '🐾 Cho phép nuôi thú cưng'
+                      : '🚫 Không nuôi thú cưng'
+                  }
+                />
+                <InfoRow
+                  label="Ngày dọn vào"
+                  value={amenitiesData.availableFrom || 'Dọn vào ngay'}
+                />
+                <InfoRow
+                  label="Phí gửi xe"
+                  value={amenitiesData.parkingFee || 'Có chỗ để xe riêng'}
+                />
+                <InfoRow
+                  label="Internet / Wifi"
+                  value={amenitiesData.internetFee || 'Thoả thuận / Tốc độ cao'}
+                />
+                <InfoRow
+                  label="Dịch vụ / Vệ sinh"
+                  value={amenitiesData.serviceFee || 'Đã bao gồm hoặc theo người'}
+                />
+              </div>
+            </div>
+
+            {/* Khối Tiện ích có sẵn & Quy định phòng */}
+            <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-text-primary text-base flex items-center gap-2">
+                  <span>🛋️</span>
+                  <span>Tiện ích có sẵn & Trang thiết bị phòng</span>
+                </h2>
+                <span className="text-xs text-brand font-semibold">
+                  Kiểm tra thực tế
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                {activeAmenities.length > 0 ? (
+                  activeAmenities.map((amenity, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-text-primary"
+                    >
+                      <span className="text-base">{amenity.icon}</span>
+                      <span>{amenity.label}</span>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-text-primary">
+                      <span>❄️</span>
+                      <span>Điều hòa</span>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-text-primary">
+                      <span>🚿</span>
+                      <span>Nóng lạnh</span>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-text-primary">
+                      <span>🕒</span>
+                      <span>Giờ giấc tự do</span>
+                    </div>
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2 text-xs font-semibold text-text-primary">
+                      <span>🛵</span>
+                      <span>Chỗ để xe</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

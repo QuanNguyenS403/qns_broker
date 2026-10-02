@@ -13,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/thue`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/cho-thue-tro`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/cho-thue-mat-bang`, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${base}/bieu-phi`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/gioi-thieu`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/lien-he`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${base}/dieu-khoan`, changeFrequency: 'monthly', priority: 0.4 },

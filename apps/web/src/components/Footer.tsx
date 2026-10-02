@@ -16,7 +16,8 @@ const FOOTER_LINKS = {
   ],
   'Thông tin & Hỗ trợ': [
     { href: '/dang-tin', label: 'Đăng tin cho thuê miễn phí' },
-    { href: '/gioi-thieu', label: 'Giới thiệu nền tảng' },
+    { href: '/bieu-phi', label: 'Biểu phí chủ nhà' },
+    { href: '/gioi-thieu', label: 'Giới thiệu chuyên viên' },
     { href: '/lien-he', label: 'Liên hệ & Hỗ trợ' },
     { href: '/dieu-khoan', label: 'Điều khoản dịch vụ' },
     { href: '/chinh-sach', label: 'Chính sách bảo mật' },

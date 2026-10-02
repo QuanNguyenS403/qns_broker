@@ -68,6 +68,27 @@ class InMemoryDatabase {
     return arg;
   }
 
+  get agentProfile() {
+    return {
+      findFirst: async () => ({ userId: 1n, displayName: 'Đức Quân', workPhone: '0981 753 082' }),
+      findUnique: async () => ({ userId: 1n, displayName: 'Đức Quân', workPhone: '0981 753 082' }),
+    };
+  }
+
+  get user() {
+    return {
+      findFirst: async () => ({ id: 1n, fullName: 'Đức Quân', phone: '0981 753 082' }),
+      findUnique: async () => null,
+    };
+  }
+
+  get rentalRequest() {
+    return {
+      findFirst: async () => null,
+      create: async ({ data }) => ({ id: 1n, ...data }),
+    };
+  }
+
   get listing() {
     return {
       findUnique: async ({ where }) => {

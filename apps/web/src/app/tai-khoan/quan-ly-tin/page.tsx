@@ -225,10 +225,22 @@ export default function QuanLyTinPage() {
                             </span>
                           )}
                         </div>
-                        {listing.status === 'rejected' && listing.rejectionReason && (
-                          <p className="mt-1 text-xs text-rose-600 font-medium">
-                            Lý do từ chối: {listing.rejectionReason}
+                        {listing.status === 'pending' && (
+                          <p className="mt-1 text-[11px] text-amber-700 font-medium flex items-center gap-1">
+                            <span>⏳</span>
+                            <span>Đang chờ chuyên viên Quân xác minh thông tin phòng</span>
                           </p>
+                        )}
+                        {listing.status === 'rejected' && (
+                          <div className="mt-1.5 rounded-lg border border-rose-200 bg-rose-50/80 p-2 text-xs text-rose-800 space-y-0.5">
+                            <p className="font-bold flex items-center gap-1">
+                              <span>⚠️</span>
+                              <span>Tin chưa được duyệt:</span>
+                            </p>
+                            <p className="text-rose-700">
+                              {listing.rejectionReason || 'Thông tin hoặc hình ảnh chưa đáp ứng tiêu chuẩn kiểm duyệt, vui lòng liên hệ chuyên viên Quân để được hỗ trợ điều chỉnh'}
+                            </p>
+                          </div>
                         )}
                       </div>
                       <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}>

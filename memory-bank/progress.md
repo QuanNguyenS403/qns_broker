@@ -2,6 +2,7 @@
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
+| Thẩm định & Khắc phục Trải nghiệm Khách thuê & Chủ nhà V3 (02/10/2026) | ✅ Xong | Rà soát kép Khách thuê & Chủ nhà theo mô hình Broker Quân làm đầu mối duy nhất; xóa bỏ rào cản login & che số hotline; dựng trang /bieu-phi 40% cho chủ nhà; khôi phục tiện ích & trường chi phí dọn vào; dọn dẹp tàn dư menu membership; khắc phục triệt để lỗi #67–#74; build Next.js 32 routes & tsc sạch 100%. |
 | 01 - Khởi tạo monorepo | ✅ Xong | Cấu trúc monorepo hoàn chỉnh, `pnpm install` thành công |
 | 02 - Database schema & Prisma Client | ✅ Xong | 9 model, `pnpm db:generate` tạo Prisma Client v5.22.0, `pnpm db:migrate` đã chạy migration `init` vào Postgres |
 | 03 - Seed dữ liệu nền | ✅ Xong | Địa danh + 2 tài khoản demo + 2 tin `[MẪU]` đã nạp vào DB |

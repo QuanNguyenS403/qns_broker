@@ -1,6 +1,31 @@
 # Trạng thái phiên làm việc hiện tại
 
-**Việc vừa hoàn thành (25/09/2026 — THỰC THI KẾ HOẠCH ĐIỀU CHỈNH V2, CHẶN LỖI P0, ENGINE HOA HỒNG V2 & ĐẠT GATE G-01):**
+**Việc vừa hoàn thành (02/10/2026 — THẨM ĐỊNH NGHIÊM NGẶT & KHẮC PHỤC TRẢI NGHIỆM KHÁCH THUÊ & CHỦ NHÀ V3 — MÔ HÌNH QUÂN LÀM ĐẦU MỐI DUY NHẤT):**
+1. **Xác minh dứt điểm nghi vấn `reveal-phone` và bảo mật SĐT chủ nhà (Lỗi #67)**:
+   - Backend: Endpoint `reveal-phone` KHÔNG làm lộ số điện thoại chủ nhà, chỉ trả số hotline của Quân (`0981 753 082`). Số chủ nhà được bảo mật 100% trong CSDL.
+   - Frontend: Dọn dẹp 3 component liên hệ chồng chéo (`OwnerContactBox`, `MobileStickyContactBar`, `RevealPhoneButton`). Bỏ cơ chế che số dạng `0981 ••• •••` và rào cản bắt buộc đăng nhập khi xem số hotline của Quân. Cung cấp 1-click Gọi ngay (`tel:0981753082`), 1-click Zalo (`https://zalo.me/0981753082`), và 1-click Đặt lịch xem phòng trực tiếp không rào cản.
+2. **Xây dựng trang Biểu phí Chủ nhà `/bieu-phi` minh bạch mô hình 40% (Lỗi #68)**:
+   - Tạo mới trang `/bieu-phi` trình bày 4 cam kết vàng: Chỉ trả phí 40% khi thành công, 0 đồng nếu không thuê được, Bảo mật SĐT 100%, Sàng lọc khách văn minh.
+   - Minh bạch quy trình 4 bước và hướng dẫn hợp đồng dịch vụ HĐ-01. Cập nhật redirect `/gia-thanh-vien` về `/bieu-phi`.
+3. **Khôi phục Tiện ích & Bổ sung trường chi phí thực chiến (Lỗi #69)**:
+   - Khôi phục khối hiển thị 14 Tiện ích (Amenities) bị thiếu trên `apps/web/src/app/tin/[slug]/page.tsx`.
+   - Bổ sung trường phí gửi xe, phí internet, phí dịch vụ, tình trạng nội thất (Đầy đủ/Cơ bản/Trống), ngày dọn vào và tiện ích nuôi thú cưng ở cả `/dang-tin` và `tin/[slug]`.
+4. **Viết lại trang Giới thiệu chuyên viên `/gioi-thieu` (Lỗi #70)**:
+   - Định vị rõ vai trò Chuyên viên Nguyễn Đức Quân là đầu mối duy nhất, giải thích lý do không để khách gọi thẳng chủ, cam kết 3 Không (Không phí khách thuê, Không kênh giá, Không lộ số chủ).
+5. **Dọn dẹp tàn dư Membership trên Menu Admin & Dead Code (Lỗi #71, #74)**:
+   - Gỡ bỏ `/admin/duyet-goi` và `/admin/mua-cao-diem` khỏi menu `apps/web/src/app/admin/layout.tsx`, ưu tiên `/admin/leads`.
+   - Xóa bỏ file `MembershipPricingClient.tsx`. Bổ sung mock cho `agentProfile`, `user`, `rentalRequest` trong `test-wave-1.js`.
+6. **Minh bạch hóa quản lý tin và phân luồng chủ nhà (Lỗi #72, #73)**:
+   - Trang `/tai-khoan/quan-ly-tin` hiển thị rõ thông báo tin bị từ chối kèm `rejectionReason` cụ thể.
+   - Header desktop bổ sung liên kết `Tìm phòng thuê`, `Biểu phí chủ nhà`, `Về chuyên viên`, `Liên hệ`. Menu người dùng thêm link `/tai-khoan/leads`.
+7. **Bằng chứng nghiệm thu kỹ thuật**:
+   - `test-fee-v2.js`: 14/14 PASS (100%).
+   - `test-wave-1.js`: 9/9 PASS (100%).
+   - `pnpm --filter api exec tsc --noEmit`: 0 errors.
+   - `pnpm --filter web build`: 32/32 routes static/dynamic build sạch hoàn toàn (exit code 0).
+   - Lập báo cáo kiểm toán đầy đủ tại `AUDIT-GEMINI-2026-10-02.md`.
+
+**Việc hoàn thành trước đó (25/09/2026 — THỰC THI KẾ HOẠCH ĐIỀU CHỈNH V2, CHẶN LỖI P0, ENGINE HOA HỒNG V2 & ĐẠT GATE G-01):**
 1. **Khắc phục lỗi bảo mật P0 tối khẩn (GAP-01 / OTP-01 / OTP-02)**:
    - Phát hiện chính xác và sửa lỗi thiếu `await` trước lời gọi `verifyOtp` trong `AuthService.register()` (dòng ~58) và `resetPassword()` (dòng ~284). Bổ sung kiểm tra kết quả boolean nghiêm ngặt.
    - Thêm bộ kiểm thử `test-w00-p0.js` chứng minh: OTP sai/rỗng/hết hạn bị từ chối 400 Bad Request, tuyệt đối không tạo user và không đổi mật khẩu.

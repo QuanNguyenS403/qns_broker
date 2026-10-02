@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import { ContactBrokerModal } from '@/components/ContactBrokerModal';
-import { RevealPhoneButton } from './RevealPhoneButton';
-import { AuthModal } from '@/components/AuthModal';
 import { SITE_CONFIG } from '@/lib/constants';
 
 interface MobileStickyContactBarProps {
@@ -20,10 +18,7 @@ export function MobileStickyContactBar({
   depositFormatted,
 }: MobileStickyContactBarProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [phone, setPhone] = useState<string | null>(null);
-
-  const activePhone = phone || SITE_CONFIG.hotline;
+  const activePhone = SITE_CONFIG.hotline;
 
   return (
     <>
@@ -41,26 +36,16 @@ export function MobileStickyContactBar({
             )}
           </div>
 
-          {/* Cụm nút CTA bên phải */}
+          {/* Cụm nút CTA bên phải: Gọi ngay + Đặt lịch xem */}
           <div className="flex items-center gap-2 shrink-0">
-            {phone ? (
-              <a
-                href={`tel:${activePhone.replace(/\s+/g, '')}`}
-                aria-label={`Gọi điện cho người dẫn xem theo số ${activePhone}`}
-                className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-slate-800 active:scale-95 transition-all"
-              >
-                <span>📞</span>
-                <span>{activePhone}</span>
-              </a>
-            ) : (
-              <div className="scale-90 origin-right">
-                <RevealPhoneButton
-                  listingId={listingId}
-                  onPhoneRevealed={setPhone}
-                  onRequireAuth={() => setIsAuthModalOpen(true)}
-                />
-              </div>
-            )}
+            <a
+              href={`tel:${activePhone.replace(/\s+/g, '')}`}
+              aria-label={`Gọi điện tư vấn dẫn xem phòng theo hotline ${activePhone}`}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-95 transition-all"
+            >
+              <span>📞</span>
+              <span>Gọi ngay</span>
+            </a>
 
             <button
               type="button"
@@ -69,18 +54,11 @@ export function MobileStickyContactBar({
               className="flex items-center justify-center gap-1.5 rounded-xl bg-brand px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-brand-600 active:scale-95 transition-all"
             >
               <span>💬</span>
-              <span>Đề xuất lịch</span>
+              <span>Đặt lịch xem</span>
             </button>
           </div>
         </div>
       </div>
-
-      {/* Modal xác thực nếu cần đăng nhập khi xem số */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={() => setIsAuthModalOpen(false)}
-      />
 
       {/* Modal gửi liên hệ / đề xuất lịch xem phòng */}
       <ContactBrokerModal
@@ -92,3 +70,4 @@ export function MobileStickyContactBar({
     </>
   );
 }
+

@@ -198,6 +198,15 @@ export default function DangTinPage() {
       gioTuDo: form.get('amenity_gioTuDo') === 'on',
       choDeXe: form.get('amenity_choDeXe') === 'on',
       bepRieng: form.get('amenity_bepRieng') === 'on',
+      giuongNem: form.get('amenity_giuongNem') === 'on',
+      tuQuanAo: form.get('amenity_tuQuanAo') === 'on',
+      banLamViec: form.get('amenity_banLamViec') === 'on',
+      choNuoiThuCung: form.get('amenity_choNuoiThuCung') === 'on',
+      furnitureStatus: form.get('furnitureStatus') as string || 'full',
+      availableFrom: (form.get('availableFrom') as string) || 'Dọn vào ngay',
+      parkingFee: (form.get('parkingFee') as string) || undefined,
+      internetFee: (form.get('internetFee') as string) || undefined,
+      serviceFee: (form.get('serviceFee') as string) || undefined,
     };
 
     const payload = {
@@ -520,14 +529,67 @@ export default function DangTinPage() {
               />
             </div>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200/60">
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-text-secondary">Phí gửi xe máy</label>
+              <input
+                name="parkingFee"
+                placeholder="VD: Miễn phí hoặc 100.000 đ/tháng"
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-text-secondary">Phí Internet / Wifi</label>
+              <input
+                name="internetFee"
+                placeholder="VD: 100.000 đ/phòng hoặc Miễn phí"
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-text-secondary">Phí dịch vụ / Vệ sinh</label>
+              <input
+                name="serviceFee"
+                placeholder="VD: 50.000 đ/người hoặc Đã bao gồm"
+                className="input-field"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Tình trạng nội thất & Ngày dọn vào */}
+        <div className="rounded-xl border border-surface-border bg-slate-50/60 p-4 space-y-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-text-primary block">
+            Tình trạng nội thất & Ngày dọn vào
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-text-secondary">Mức độ nội thất</label>
+              <select name="furnitureStatus" defaultValue="full" className="input-field">
+                <option value="full">🛋️ Đầy đủ nội thất (chỉ việc dọn vào ở)</option>
+                <option value="basic">🪑 Nội thất cơ bản (điều hòa, nóng lạnh, kệ bếp)</option>
+                <option value="empty">📦 Phòng trống (người thuê tự mang đồ)</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-text-secondary">Ngày có thể dọn vào</label>
+              <input
+                name="availableFrom"
+                defaultValue="Dọn vào ngay"
+                placeholder="VD: Dọn vào ngay hoặc 15/10/2026"
+                className="input-field"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Tiện ích có sẵn trong phòng / căn hộ */}
         <div className="rounded-xl border border-surface-border bg-slate-50/60 p-4 space-y-2.5">
           <span className="text-xs font-bold uppercase tracking-wider text-text-primary block">
-            Tiện ích có sẵn
+            Tiện ích & Quy định phòng
           </span>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 text-xs">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_dieuHoa" defaultChecked className="rounded text-brand" />
               <span>❄️ Điều hòa</span>
@@ -543,6 +605,18 @@ export default function DangTinPage() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_mayGiat" className="rounded text-brand" />
               <span>🧺 Máy giặt</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="amenity_giuongNem" defaultChecked className="rounded text-brand" />
+              <span>🛏️ Giường & nệm</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="amenity_tuQuanAo" defaultChecked className="rounded text-brand" />
+              <span>🚪 Tủ quần áo</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="amenity_banLamViec" className="rounded text-brand" />
+              <span>🪑 Bàn làm việc</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_banCong" className="rounded text-brand" />
@@ -567,6 +641,10 @@ export default function DangTinPage() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_bepRieng" className="rounded text-brand" />
               <span>🍳 Bếp nấu riêng</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer font-semibold text-emerald-800">
+              <input type="checkbox" name="amenity_choNuoiThuCung" className="rounded text-brand" />
+              <span>🐾 Cho nuôi thú cưng</span>
             </label>
           </div>
         </div>
