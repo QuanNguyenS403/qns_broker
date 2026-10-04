@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authFetch, isLoggedIn } from '@/lib/auth-client';
+import { authFetch, clearTokens, isLoggedIn } from '@/lib/auth-client';
 
 interface Profile {
   id: string;
@@ -33,6 +33,20 @@ export default function ThongTinTaiKhoanPage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
+  // Logout state
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await authFetch('/auth/logout', { method: 'POST' });
+    } catch {
+      // Bỏ qua lỗi mạng khi logout để luôn xóa token cục bộ
+    }
+    clearTokens();
+    router.replace('/');
+  }
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -69,7 +83,7 @@ export default function ThongTinTaiKhoanPage() {
       if (!res.ok) throw new Error(data.message?.toString() ?? 'Cập nhật thất bại');
 
       setProfile((prev) => (prev ? { ...prev, fullName: data.fullName } : null));
-      setProfileSuccess('Cập nhật họ và tên thành công!');
+      setProfileSuccess('Cập nhật họ và tên thành công');
       setIsEditing(false);
     } catch (err) {
       setError((err as Error).message);
@@ -104,7 +118,7 @@ export default function ThongTinTaiKhoanPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message?.toString() ?? 'Đổi mật khẩu thất bại');
 
-      setPasswordSuccess('Đổi mật khẩu thành công!');
+      setPasswordSuccess('Đổi mật khẩu thành công');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -267,6 +281,24 @@ export default function ThongTinTaiKhoanPage() {
                 </div>
               </form>
             )}
+          </div>
+
+          {/* Phiên đăng nhập & Đăng xuất */}
+          <div className="rounded-2xl border border-surface-border bg-white p-6 shadow-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-text-primary">Phiên đăng nhập</h2>
+                <p className="mt-0.5 text-xs text-text-secondary">Đăng xuất khỏi thiết bị này và thu hồi phiên làm việc trên hệ thống</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
+              >
+                {loggingOut ? 'Đang đăng xuất...' : 'Đăng xuất tài khoản'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -222,7 +222,6 @@ export default function AdminDashboardPage() {
             className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-xl hover:bg-teal-100 transition-colors disabled:opacity-50"
             title="Quét dọn các tin quá hạn 30 ngày và thu hồi bộ nhớ OTP"
           >
-            <span>🧹</span>
             <span>{sweeping ? 'Đang quét...' : 'Quét dọn tin quá hạn & OTP'}</span>
           </button>
           <button
@@ -257,7 +256,7 @@ export default function AdminDashboardPage() {
               : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
           }`}
         >
-          💰 1. BẢNG TIỀN TỆ (MONEY)
+          1. BẢNG TIỀN TỆ (MONEY)
         </button>
         <button
           onClick={() => setActiveTab('growth')}
@@ -267,7 +266,7 @@ export default function AdminDashboardPage() {
               : 'text-teal-700 bg-teal-50 hover:bg-teal-100'
           }`}
         >
-          📈 2. BẢNG TĂNG TRƯỞNG (GROWTH)
+          2. BẢNG TĂNG TRƯỞNG (GROWTH)
         </button>
         <button
           onClick={() => setActiveTab('risk')}
@@ -277,7 +276,7 @@ export default function AdminDashboardPage() {
               : 'text-rose-700 bg-rose-50 hover:bg-rose-100'
           }`}
         >
-          🛡️ 3. BẢNG RỦI RO & BẢO VỆ (RISK)
+          3. BẢNG RỦI RO & BẢO VỆ (RISK)
         </button>
       </div>
 
@@ -285,7 +284,6 @@ export default function AdminDashboardPage() {
       {(serviceDrivers?.email?.isMock || serviceDrivers?.googleSheets?.isMock) && (
         <div className="p-4 bg-amber-50/90 border border-amber-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900 shadow-sm">
           <div className="flex items-start gap-3">
-            <span className="text-xl">⚠️</span>
             <div>
               <p className="font-bold text-amber-950 text-sm">
                 Thông báo Vận hành: Dịch vụ thông báo & đồng bộ đang chạy ở chế độ MOCK (Thử nghiệm)
@@ -305,7 +303,6 @@ export default function AdminDashboardPage() {
 
       {actionMessage && (
         <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium flex items-center gap-2">
-          <span>✅</span>
           <span>{actionMessage}</span>
         </div>
       )}
@@ -318,7 +315,7 @@ export default function AdminDashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <span>💰 1. BẢNG TIỀN TỆ (MONEY)</span>
+                <span>1. BẢNG TIỀN TỆ (MONEY)</span>
                 <span className="text-[11px] font-normal text-slate-500">
                   Câu hỏi: Thu/chi thực ở đâu, lệch gì?
                 </span>
@@ -368,7 +365,7 @@ export default function AdminDashboardPage() {
                 {money.pendingQuotedTotalFormatted}
               </p>
               <p className="text-[11px] text-amber-600 mt-1">
-                ⚠️ Gói pending chưa phải doanh thu
+                Gói pending chưa phải doanh thu
               </p>
             </div>
 
@@ -382,8 +379,8 @@ export default function AdminDashboardPage() {
               </p>
               <p className="text-[11px] text-rose-600 mt-1 font-medium">
                 {money.unverifiedTransactionsCount > 0
-                  ? `⚠️ ${money.unverifiedTransactionsCount} giao dịch thiếu bằng chứng`
-                  : '✅ 0 giao dịch lệch'}
+                  ? `${money.unverifiedTransactionsCount} giao dịch thiếu bằng chứng`
+                  : '0 giao dịch lệch'}
               </p>
             </div>
           </div>
@@ -403,7 +400,7 @@ export default function AdminDashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <span>📈 2. BẢNG TĂNG TRƯỞNG (GROWTH)</span>
+                <span>2. BẢNG TĂNG TRƯỞNG (GROWTH)</span>
                 <span className="text-[11px] font-normal text-slate-500">
                   Câu hỏi: Nguồn cung tốt và kết nối có tăng không?
                 </span>
@@ -419,7 +416,7 @@ export default function AdminDashboardPage() {
               <span className="text-xs font-semibold text-slate-500 uppercase">Tin còn phòng công khai</span>
               <p className="text-2xl font-extrabold text-slate-900 mt-1">{growth.totalActiveListings}</p>
               <p className="text-[11px] text-teal-600 mt-1">
-                ⭐ {growth.verifiedActiveListings} tin đã xác thực thực tế
+                {growth.verifiedActiveListings} tin đã xác thực thực tế
               </p>
             </div>
 
@@ -472,16 +469,16 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             <p className="text-[11px] text-slate-500 mt-2 text-center">
-              💡 {growth.disclaimer}
+              {growth.disclaimer}
             </p>
           </div>
 
-          {/* 🎯 Chỉ số KPI Pilot Nguồn cung thực tế (§4.5 & §7) */}
+          {/* Chỉ số KPI Pilot Nguồn cung thực tế (§4.5 & §7) */}
           {data?.pilot && (
             <div className="bg-slate-50/90 rounded-xl p-4 border border-slate-200">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <span>🎯 CHỈ SỐ VẬN HÀNH THỬ NGHIỆM PILOT (§4.5 & §7)</span>
+                  <span>CHỈ SỐ VẬN HÀNH THỬ NGHIỆM PILOT (§4.5 & §7)</span>
                 </h3>
                 <span className="text-[11px] text-slate-500 italic">
                   Địa bàn tập trung • Chu kỳ xác nhận 7 ngày
@@ -552,7 +549,7 @@ export default function AdminDashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <span>🛡️ 3. BẢNG RỦI RO & BẢO VỆ (RISK)</span>
+                <span>3. BẢNG RỦI RO & BẢO VỆ (RISK)</span>
                 <span className="text-[11px] font-normal text-slate-500">
                   Câu hỏi: Có vấn đề gì cần xử lý ngay?
                 </span>
@@ -590,9 +587,9 @@ export default function AdminDashboardPage() {
               <p className="text-2xl font-extrabold text-slate-900 mt-1">{risk.outboxDlqCount}</p>
               <p className="text-[11px] text-slate-500 mt-1">
                 {risk.outboxDlqCount > 0 ? (
-                  <span className="text-rose-600 font-bold">⚠️ Có sự kiện Outbox thất bại</span>
+                  <span className="text-rose-600 font-bold">Có sự kiện Outbox thất bại</span>
                 ) : (
-                  '✅ Hàng đợi an toàn'
+                  'Hàng đợi an toàn'
                 )}
               </p>
             </div>
@@ -657,7 +654,6 @@ export default function AdminDashboardPage() {
           <div className="divide-y divide-slate-100 flex-1">
             {recentListings.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-3xl mb-2">🎉</p>
                 <p className="text-sm font-semibold text-slate-700">Không có tin nào chờ duyệt</p>
                 <p className="text-xs text-slate-400 mt-1">Toàn bộ tin đăng mới đều đã được xử lý</p>
               </div>
@@ -733,15 +729,14 @@ export default function AdminDashboardPage() {
           <div className="divide-y divide-slate-100 flex-1">
             {recentReports.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-3xl mb-2">🛡️</p>
                 <p className="text-sm font-semibold text-slate-700">Không có báo cáo vi phạm mới</p>
                 <p className="text-xs text-slate-400 mt-1">Hệ thống đang hoạt động an toàn và minh bạch</p>
               </div>
             ) : (
               recentReports.map((rep) => (
                 <div key={rep.id} className="p-4 sm:p-5 flex items-start gap-3 hover:bg-slate-50/60 transition-colors">
-                  <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 text-sm">
-                    🚩
+                  <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 text-xs font-bold">
+                    !
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">

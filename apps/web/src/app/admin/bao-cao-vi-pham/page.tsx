@@ -108,7 +108,6 @@ export default function AdminReportsPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl bg-emerald-600 text-white font-semibold text-sm shadow-xl flex items-center gap-2">
-          <span>✓</span>
           <span>{toast}</span>
         </div>
       )}
@@ -118,7 +117,7 @@ export default function AdminReportsPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Xử lý Báo cáo Vi phạm</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Xem xét các phản hồi tiêu cực từ người dùng và gỡ bỏ kịp thời các nội dung gian lận.
+            Xem xét các phản hồi tiêu cực từ người dùng và gỡ bỏ kịp thời các nội dung gian lận
           </p>
         </div>
 
@@ -188,16 +187,13 @@ export default function AdminReportsPage() {
         </div>
       ) : reports.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
-          <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-            🛡️
-          </div>
           <h3 className="text-lg font-bold text-slate-900 mb-1">
             Không có báo cáo vi phạm nào
           </h3>
           <p className="text-sm text-slate-500 max-w-md mx-auto">
             {statusFilter === 'pending'
-              ? 'Tất cả báo cáo vi phạm đã được giải quyết. Sàn giao dịch đang được duy trì sạch sẽ.'
-              : 'Không có dữ liệu cho trạng thái đã chọn.'}
+              ? 'Tất cả báo cáo vi phạm đã được giải quyết. Sàn giao dịch đang được duy trì sạch sẽ'
+              : 'Không có dữ liệu cho trạng thái đã chọn'}
           </p>
         </div>
       ) : (
@@ -217,7 +213,7 @@ export default function AdminReportsPage() {
                 <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${reasonInfo.color}`}>
-                      🚩 {reasonInfo.label}
+                      {reasonInfo.label}
                     </span>
                     <span className="text-xs text-slate-400">
                       Mã báo cáo: #{rep.id}
@@ -268,7 +264,7 @@ export default function AdminReportsPage() {
                         {rep.listing.title}
                       </h4>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Chủ tin: <strong>{rep.listing.owner.fullName ?? 'Chưa đặt tên'}</strong> (📞 {rep.listing.owner.phone})
+                        Chủ tin: <strong>{rep.listing.owner.fullName ?? 'Chưa đặt tên'}</strong> ({rep.listing.owner.phone})
                       </p>
                       <p className="text-[11px] text-slate-400 mt-0.5">
                         Trạng thái tin hiện tại: <span className="font-semibold text-slate-700 uppercase">{rep.listing.status}</span>
@@ -300,7 +296,6 @@ export default function AdminReportsPage() {
                         className="w-full px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center justify-center gap-1.5"
                       >
                         <span>Gỡ bỏ tin vi phạm</span>
-                        <span>🗑️</span>
                       </button>
                       <button
                         onClick={() =>
@@ -356,10 +351,6 @@ export default function AdminReportsPage() {
       {resolvingReport && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl mx-auto bg-slate-100">
-              {resolvingReport.action === 'remove_listing' ? '⚠️' : 'ℹ️'}
-            </div>
-
             <div className="text-center">
               <h3 className="text-base font-bold text-slate-900">
                 {resolvingReport.action === 'remove_listing'
@@ -369,11 +360,11 @@ export default function AdminReportsPage() {
               <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                 {resolvingReport.action === 'remove_listing' ? (
                   <>
-                    Hành động này sẽ <strong>chuyển tin đăng sang trạng thái ĐÃ GỠ</strong> và ẩn khỏi toàn bộ trang tìm kiếm/danh mục của người dùng.
+                    Hành động này sẽ <strong>chuyển tin đăng sang trạng thái ĐÃ GỠ</strong> và ẩn khỏi toàn bộ trang tìm kiếm/danh mục của người dùng
                   </>
                 ) : (
                   <>
-                    Báo cáo này sẽ được đánh dấu là đã xem xét và đóng lại. Tin đăng vẫn tiếp tục hoạt động bình thường trên sàn.
+                    Báo cáo này sẽ được đánh dấu là đã xem xét và đóng lại. Tin đăng vẫn tiếp tục hoạt động bình thường trên sàn
                   </>
                 )}
               </p>

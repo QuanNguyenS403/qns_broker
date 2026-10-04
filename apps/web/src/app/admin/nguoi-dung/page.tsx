@@ -119,7 +119,6 @@ export default function AdminUsersPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl bg-emerald-600 text-white font-semibold text-sm shadow-xl flex items-center gap-2">
-          <span>✓</span>
           <span>{toast}</span>
         </div>
       )}
@@ -129,7 +128,7 @@ export default function AdminUsersPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Quản lý Người dùng</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Quản trị danh sách thành viên, kiểm tra số tin đăng và kiểm soát quyền truy cập tài khoản.
+            Quản trị danh sách thành viên, kiểm tra số tin đăng và kiểm soát quyền truy cập tài khoản
           </p>
         </div>
 
@@ -226,14 +225,11 @@ export default function AdminUsersPage() {
         </div>
       ) : users.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
-          <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-            👥
-          </div>
           <h3 className="text-base font-bold text-slate-900 mb-1">
             Không tìm thấy người dùng
           </h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Không có tài khoản nào phù hợp với bộ lọc hoặc từ khóa tìm kiếm đã nhập.
+            Không có tài khoản nào phù hợp với bộ lọc hoặc từ khóa tìm kiếm đã nhập
           </p>
         </div>
       ) : (
@@ -271,7 +267,7 @@ export default function AdminUsersPage() {
                               {u.fullName ?? 'Chưa cập nhật tên'}
                             </p>
                             <p className="font-mono text-slate-500 text-[11px] mt-0.5">
-                              📞 {u.phone}
+                              {u.phone}
                             </p>
                           </div>
                         </div>
@@ -296,16 +292,16 @@ export default function AdminUsersPage() {
                         <div className="flex items-center gap-1.5">
                           {u.isPhoneVerified ? (
                             <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold">
-                              SĐT ✓
+                              SĐT đã xác thực
                             </span>
                           ) : (
                             <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-400 text-[10px]">
-                              SĐT ✕
+                              SĐT chưa xác thực
                             </span>
                           )}
                           {u.isIdVerified && (
                             <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-bold">
-                              CCCD ✓
+                              CCCD đã duyệt
                             </span>
                           )}
                         </div>
@@ -384,10 +380,6 @@ export default function AdminUsersPage() {
       {userToToggle && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl mx-auto bg-slate-100">
-              {userToToggle.isBlocked ? '🔓' : '🔒'}
-            </div>
-
             <div className="text-center">
               <h3 className="text-base font-bold text-slate-900">
                 {userToToggle.isBlocked
@@ -396,8 +388,8 @@ export default function AdminUsersPage() {
               </h3>
               <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                 {userToToggle.isBlocked
-                  ? 'Sau khi mở khóa, người dùng sẽ có thể đăng nhập và đăng tin trở lại bình thường.'
-                  : 'Sau khi bị khóa, người dùng sẽ KHÔNG THỂ đăng nhập vào hệ thống và không thể thực hiện các thao tác đăng/sửa tin.'}
+                  ? 'Sau khi mở khóa, người dùng sẽ có thể đăng nhập và đăng tin trở lại bình thường'
+                  : 'Sau khi bị khóa, người dùng sẽ không thể đăng nhập vào hệ thống và không thể thực hiện các thao tác đăng hoặc sửa tin'}
               </p>
             </div>
 

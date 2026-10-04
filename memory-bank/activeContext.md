@@ -1,6 +1,222 @@
 # Trạng thái phiên làm việc hiện tại
 
-**Việc vừa hoàn thành (25/09/2026 — THỰC THI KẾ HOẠCH ĐIỀU CHỈNH V2, CHẶN LỖI P0, ENGINE HOA HỒNG V2 & ĐẠT GATE G-01):**
+**Việc vừa hoàn thành (04/10/2026 — VÁ LỖI GAP-01, SIẾT BẢO MẬT CHỦ NHÀ & ADMIN, GIỮ NGUYÊN LUỒNG KHÁCH THUÊ PUBLIC):**
+1. **Bước 0 — Khắc phục khẩn cấp GAP-01 (Bypass OTP)**:
+   - Xác nhận và củng cố `await this.otpService.verifyOtp(...)` tại cả 2 vị trí: `AuthService.register()` (dòng ~59) và `AuthService.resetPassword()` (dòng ~307).
+   - Kiểm thử tự động chứng minh 100% các ca OTP sai, rỗng, null/undefined, hoặc hết hạn đều bị từ chối thẳng thừng với HTTP 400 Bad Request, triệt tiêu hoàn toàn rủi ro vượt rào OTP.
+2. **Phần A — Frontend Chủ nhà & Admin**:
+   - `dang-nhap/page.tsx`: Phân tách 2 nhánh rõ ràng (SĐT đã có -> mật khẩu, SĐT mới -> OTP đăng ký), truyền đúng purpose `register`/`reset_password`, xử lý luồng tài khoản Google chưa có SĐT (`needPhoneVerification`).
+   - Hợp nhất lưu trữ token thống nhất qua cặp key chuẩn `accessToken` và `refreshToken` trên toàn bộ hệ thống (Header, AuthModal, tài khoản, quản lý tin).
+   - Google Sign-In: Client chỉ gửi ID token (credential) chuẩn từ Google, backend tự xác minh server-side; không nhận hay tin tưởng SĐT tự khai từ client.
+   - Quản lý tài khoản chủ nhà (`tai-khoan/thong-tin/page.tsx` & `Header.tsx`): Bổ sung khu vực "Phiên đăng nhập" và nút "Đăng xuất tài khoản" thực thụ gọi API `POST /auth/logout` để thu hồi token (`tokenVersion`) trên server trước khi xóa client storage.
+3. **Phần B — Backend OTP, OAuth, JWT, Admin MFA & Rate Limit**:
+   - `OtpService`:
+     - Lưu trữ Redis phân tán có TTL 5 phút, CSPRNG `crypto.randomInt(100000, 1000000)`.
+     - Băm bảo mật HMAC-SHA256 (`codeHash`) với secret pepper, loại bỏ hoàn toàn việc lưu trữ plaintext code trong bộ nhớ hay Redis.
+     - Phân lập mục đích OTP (`purpose isolation`: `register`, `reset_password`, `lead_verification`, `general`), ngăn chặn dùng chéo mã OTP giữa đăng ký và đặt lại mật khẩu.
+     - Ẩn toàn bộ OTP khỏi console/log ở môi trường production.
+   - `Google OAuth`: Xác thực server-side bằng thư viện chính thức, đối chiếu `aud`, `iss`, `exp`, sử dụng `sub` làm khóa định danh bất biến.
+   - `JWT & Session`: Tăng `tokenVersion` khi đổi mật khẩu, admin khóa tài khoản hoặc đăng xuất; JwtStrategy từ chối ngay lập tức token cũ.
+   - `Admin MFA`: Nâng cấp từ so khớp header tĩnh sang TOTP RFC 6238 động theo thời gian (cửa sổ 30s), loại bỏ triệt để lỗ hổng giả mạo header (Header Forgery).
+   - `Rate Limiting`: Áp dụng `@Throttle()` nghiêm ngặt cho các endpoint nhạy cảm (`/auth/otp/send`, `/auth/login`, `/auth/bootstrap-admin`, `/auth/register`, `/auth/forgot-password/reset`).
+4. **Phần C — Database & Chuẩn hóa định danh**:
+   - Chuẩn hóa định danh số điện thoại qua `normalizePhone` (chuyển đổi +84, 84, khoảng trắng, gạch nối về 1 định dạng 10 chữ số chuẩn 09xxxxxxxx), tạo chỉ mục duy nhất và hỗ trợ `googleId`, `email` trên bảng `User`.
+   - Lưu trữ nhật ký kiểm toán `AuditEvent` cho các hành động quản trị.
+5. **RÀNG BUỘC TUYỆT ĐỐI — Luồng khách thuê**:
+   - `POST /leads` và toàn bộ các endpoint tìm kiếm, xem phòng, xem chi tiết tin của khách thuê giữ nguyên 100% `@Public()`, không có rào cản đăng nhập hay JWT Guard.
+6. **Kiểm thử nghiệm thu**:
+   - `test-auth-hardening-landlord-admin.js`: 14/14 ca PASS (100%).
+   - `test-dev05-at08.js`: 5/5 ca PASS (100%).
+   - `pnpm --filter api exec tsc`: PASS (0 lỗi).
+   - `pnpm --filter web build`: PASS (31/31 routes Next.js tĩnh/động tối ưu hóa thành công).
+   - Tuân thủ quy chuẩn GEMINI.md § 8: Tuyệt đối không thêm dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc hoàn thành trước đó (04/10/2026 — ĐỒNG BỘ ĐIỀU KHOẢN, CHÍNH SÁCH BẢO MẬT & FOOTER THEO 3 ẢNH):**
+1. **Thiết kế lại trang Điều khoản sử dụng (`dieu-khoan/page.tsx` - Ảnh 1)**:
+   - Header hero chuẩn tone tím than `#2e2547`, huy hiệu "VĂN BẢN PHÁP LÝ", ngày cập nhật & phiên bản 2.1.
+   - Khối cảnh báo an toàn quan trọng chống truy cập liên kết lạ và chuyển tiền giả mạo.
+   - Bố cục 2 cột với Sidebar mục lục dính (Sticky TOC) gồm 12 điều khoản chi tiết và liên kết neo điều hướng mượt.
+   - Khối CTA liên hệ hỗ trợ chuyên viên dưới cùng trang.
+2. **Thiết kế lại trang Chính sách bảo mật (`chinh-sach/page.tsx` - Ảnh 2)**:
+   - Header hero "BẢO VỆ DỮ LIỆU", tiêu đề lớn và ngày cập nhật.
+   - Khối cam kết cốt lõi màu xanh lá: tuân thủ Nghị định 13/2023/NĐ-CP, không bán dữ liệu, mã hóa SSL/TLS 256-bit.
+   - Khối cảnh báo an toàn OTP & mật khẩu.
+   - Bố cục 2 cột với Sidebar mục lục 10 phần và nội dung chi tiết rõ ràng.
+   - Khối CTA tiếp nhận phản hồi và xử lý dữ liệu trong 24 giờ.
+3. **Cập nhật chân trang Footer (`Footer.tsx` - Ảnh 3)**:
+   - Nghiêm túc tuân thủ chỉ thị: **giữ nguyên 100% màu sắc website (`bg-slate-900`, text-white, border-slate-700)**, tuyệt đối không đổi màu.
+   - Chỉnh sửa chính xác các danh mục theo ảnh:
+     - `Liên kết nhanh`: Trang chủ, Tìm phòng, Về chúng tôi.
+     - `Hỗ trợ`: Điều khoản sử dụng, Chính sách bảo mật.
+     - `Liên hệ`: Email hỗ trợ `contact@qns.com`.
+     - Thanh phụ dưới cùng: `Điều khoản`, `Bảo mật`.
+4. **Quy chuẩn văn phong**: Tuân thủ triệt để GEMINI.md § 8, không có dấu chấm ở cuối câu trên toàn bộ giao diện.
+
+**Việc hoàn thành trước đó (04/10/2026 — THÊM THANH MARQUEE CẢNH BÁO BẢO MẬT DƯỚI HEADER):**
+1. **Tạo thanh cảnh báo bảo mật (`SecurityAnnouncementBar.tsx`)**:
+   - Vị trí: Đặt ngay bên dưới thanh điều hướng Header (`Header.tsx`), hiển thị đồng bộ trên mọi trang.
+   - Nội dung chuẩn thương hiệu: *"QNS BROKER KHÔNG bao giờ yêu cầu quý khách truy cập liên kết lạ, cung cấp mã OTP ngân hàng hoặc chuyển tiền vào tài khoản lạ"*.
+   - Hiệu ứng: Chạy chữ tự động vô tận từ phải qua trái (`animate-marquee-scroll`), tốc độ mượt mà 60 FPS qua GPU `translate3d`.
+   - Cấu hình theo đúng yêu cầu: Tuyệt đối không dừng lại khi rê chuột (không có hover pause).
+   - Màu sắc & phong cách: Tông nền tím than trầm sang trọng (`#282142`), viền ngăn cách sắc nét, chữ sáng tương phản cao như mẫu.
+2. **Quy chuẩn văn phong**: Tuân thủ triệt để GEMINI.md § 8, không có dấu chấm ở cuối câu.
+
+**Việc hoàn thành trước đó (04/10/2026 — ĐỒNG BỘ MÀU CHỦ ĐẠO CHO HỘP ĐẶT LỊCH XEM PHÒNG):**
+1. **Chuyển toàn bộ màu sắc khối liên hệ thành màu chủ đạo của website (`brand` - Teal #0d9488)**:
+   - `Giá phòng`: Đổi số tiền thành màu `text-brand` (#0d9488) chuẩn nhận diện.
+   - `Icon vị trí`: Đổi icon định vị thành màu `text-brand`.
+   - `Badge Chủ nhà`: Đổi viền và nền thành `border-brand/50 bg-brand-50 text-brand`.
+   - `Badge Uy tín`: Chuyển ribbon sang màu `bg-brand` đồng bộ hoàn toàn với thương hiệu.
+   - `Nút Đặt lịch xem phòng`: Đổi nút chính thành `bg-brand hover:bg-brand-700 text-white`.
+   - `Thanh Mobile Sticky Contact Bar`: Đồng bộ nút bấm Đặt lịch xem phòng trên mobile sang màu `bg-brand hover:bg-brand-700`.
+2. **Quy chuẩn văn phong**: Tuân thủ triệt để GEMINI.md § 8, không có dấu chấm ở cuối câu.
+
+**Việc hoàn thành trước đó (04/10/2026 — XÓA SỐ ĐIỆN THOẠI ẨN & BANNER TRỢ GIÚP THEO 2 ẢNH):**
+1. **Xóa dòng số điện thoại ẩn (`📞 0333226***`)**:
+   - Loại bỏ hoàn toàn khối hiển thị số điện thoại ẩn với icon điện thoại trong hộp liên hệ chủ nhà `OwnerContactBox.tsx`.
+2. **Xóa banner trợ giúp & khối chọn phòng trống**:
+   - Xóa bỏ banner "Tại sao tôi không xem được số điện thoại chủ nhà?" cùng nút hỏi đáp `?`.
+   - Đảm bảo khối "Chọn phòng trống:" không còn tồn tại trên mọi bề mặt.
+3. **Dọn dẹp code & tuân thủ GEMINI.md § 8**:
+   - Khắc phục các biến tham chiếu còn thiếu (`formattedPriceText`, `maskedAddress`, `listingTitle`).
+   - Đảm bảo 100% văn phong không có dấu chấm ở cuối câu.
+
+**Việc hoàn thành trước đó (04/10/2026 — XÓA MỤC HOTLINE TRÊN TOÀN BỘ CÁC BỀ MẶT TRANG):**
+1. **Gỡ bỏ Hotline trên Footer (`Footer.tsx`)**:
+   - Xóa hoàn toàn dòng "Hotline: 0981 753 082" và giờ làm việc, chỉ giữ lại Email hỗ trợ.
+2. **Gỡ bỏ Hotline trên Trang Liên hệ (`lien-he/page.tsx`)**:
+   - Xóa khối Hotline hỗ trợ, chỉ giữ lại kênh kết nối trực tiếp qua Zalo chuyên viên Đức Quân và các hướng dẫn xử lý nhanh.
+3. **Gỡ bỏ Hotline trên các trang chính sách & tài khoản**:
+   - `tai-khoan/leads/page.tsx`: Xóa thông tin Hotline của người phụ trách dẫn khách.
+   - `dieu-khoan/page.tsx`: Xóa số điện thoại Hotline trong mục Liên hệ Hỗ trợ và Điều phối.
+   - `OwnerBrokerTermsGate.tsx`: Xóa đoạn thông báo số Hotline hoạt động 24/7.
+   - `gia-thanh-vien/MembershipPricingClient.tsx`: Xóa hotline tư vấn, thay bằng kênh Zalo và nút điều hướng trang Liên hệ.
+   - `chinh-sach/page.tsx` & `RevealPhoneButton.tsx`: Chuẩn hóa câu chữ, loại bỏ từ khóa hotline.
+4. **Quy chuẩn văn phong**: Tuân thủ triệt để không có dấu chấm ở cuối câu.
+
+**Việc hoàn thành trước đó (04/10/2026 — ĐỒNG BỘ NỘI DUNG VÀ BỎ ĐỊA CHỈ, BADGE TIN THAM KHẢO TOÀN DIỆN):**
+1. **Đổi "Bất động sản tương tự" thành "Bài đăng liên quan" (Ảnh 2)**:
+   - Cập nhật tiêu đề khối bài đăng đề xuất tại `tin/[slug]/page.tsx` và skeleton tại `tin/[slug]/loading.tsx` thành "Bài đăng liên quan".
+2. **Đổi "Môi giới Demo" thành "Chủ nhà" (Ảnh 3)**:
+   - Chuẩn hóa tên hiển thị người đăng thành "Chủ nhà" tại `tin/[slug]/page.tsx`, `OwnerContactBox.tsx`, và dữ liệu mẫu seed `seed.ts`.
+3. **Xóa dòng hiển thị địa chỉ chi tiết và đồng bộ toàn bộ website (Ảnh 4)**:
+   - Xóa dòng địa chỉ `<p className="mt-2 flex items-center gap-1.5 ...">` dưới tiêu đề tại trang chi tiết tin (`tin/[slug]/page.tsx`).
+   - Xóa dòng địa chỉ trên thẻ bài đăng chung (`ListingCard.tsx`) áp dụng toàn bộ trang chủ, danh sách tìm kiếm, bài đăng liên quan.
+   - Xóa dòng địa chỉ trong danh sách tin đã lưu (`tai-khoan/tin-da-luu/page.tsx`).
+4. **Xóa badge "Tin mẫu tham khảo" / "Tin tham khảo" và đồng bộ toàn bộ website (Ảnh 5)**:
+   - Gỡ bỏ hoàn toàn badge "Tin mẫu tham khảo" phía trên tiêu đề tại `tin/[slug]/page.tsx`.
+   - Gỡ bỏ hoàn toàn badge "Tin tham khảo" trên toàn bộ thẻ bài đăng `ListingCard.tsx`.
+5. **Tinh gọn hộp đặt lịch (`OwnerContactBox.tsx`)**:
+   - Loại bỏ khối "Chọn phòng trống:" theo xác nhận xử lý ảnh trùng.
+6. **Tuân thủ quy chuẩn GEMINI.md § 8**: Không có bất kỳ dấu chấm nào ở cuối câu trên giao diện người dùng.
+
+**Việc hoàn thành trước đó (04/10/2026 — ĐỒNG BỘ THÔNG TIN CHÍNH & BIỂU PHÍ, NỘI THẤT VÀ ĐẶT LỊCH XEM PHÒNG):**
+1. **Tinh gọn mục Thông tin chính & Biểu phí**:
+   - Bỏ triệt để: Diện tích sử dụng, ngày đăng, pháp lý, phòng ngủ, phòng tắm/wc, phí gửi xe, mức độ nội thất.
+   - Sửa thành:
+     - `Tình trạng phòng`: Hiển thị "Còn phòng" hoặc "Hết phòng" (đã bỏ "xác nhận ngày xxx...").
+     - `Cọc`: Hiển thị số tiền hoặc phương thức đặt cọc do chủ tự ghi (hỗ trợ nhập cả số tiền VNĐ và văn bản như "1 tháng tiền thuê", "Thương lượng").
+     - `Điện`: Ghi rõ chi phí điện (VD: "4.000 đ/kWh" hoặc "Đã bao gồm trong giá thuê").
+     - `Nước`: Ghi rõ chi phí nước (VD: "30.000 đ/m³", "100.000 đ/người/tháng" hoặc "Đã bao gồm trong giá thuê").
+     - `Nuôi thú cưng` (optional): Chỉ hiển thị khi chủ trọ cho phép nuôi thú cưng ("Cho phép nuôi thú cưng").
+     - `Xe điện` (optional): Chỉ hiển thị khi có hỗ trợ sạc / để xe điện ("Hỗ trợ sạc / để xe điện").
+2. **Đổi mục tiện ích có sẵn và trang thiết bị phòng => "Nội Thất"**:
+   - Tạo khối giao diện riêng biệt mang tên `Nội Thất` hiển thị các thẻ tag trang thiết bị, tiện nghi (Điều hòa, Nóng lạnh, Giường nệm, Tủ quần áo, Bếp nấu riêng, Tủ lạnh, Máy giặt, Khóa vân tay, Thang máy...).
+   - Đồng bộ mục "Nội Thất" trên form Đăng tin (`dang-tin/page.tsx`) và cổng Duyệt tin admin (`admin/tin-cho-duyet/page.tsx`).
+3. **Loại bỏ hoàn toàn mục ước tính chi phí minh bạch**:
+   - Không hiển thị bất kỳ widget ước tính chi phí nào trên trang chi tiết và toàn bộ bề mặt website.
+4. **Đồng bộ hóa "Đề xuất lịch xem phòng" => "Đặt lịch xem phòng"**:
+   - Đổi toàn bộ nhãn nút bấm, tiêu đề modal, thông báo xác nhận và thanh mobile sticky bar thành "Đặt lịch xem phòng".
+5. **Tuân thủ quy chuẩn GEMINI.md § 8**: Toàn bộ nhãn, tiêu đề, modal, thông báo lỗi không có dấu chấm ở cuối câu.
+
+**Việc hoàn thành trước đó (04/10/2026 — LOẠI BỎ TOÀN BỘ ICON & EMOJI TRÊN TOÀN WEBSITE):**
+1. **Loại bỏ triệt để 100% biểu tượng Emoji & icon trang trí trên toàn bộ các bề mặt trang**:
+   - Header, Footer, Điều hướng: Gỡ bỏ `⚙️`, `📋`, `❤️`, `📞`, `✉️`, `🕐`.
+   - Chi tiết tin đăng (`tin/[slug]`): Gỡ bỏ vương miện `👑`, huy hiệu `🛡️`, ghim `📍`, la bàn `🧭`, đại học `🎓`, mũi tên `↗`, chấm `🟢`, `🟡`.
+   - Trang chủ (`page.tsx`), Tìm kiếm (`thue`), Chuyên mục (`cho-thue-tro`, `cho-thue-mat-bang`): Gỡ bỏ emoji loại hình `🏠`, `🏢`, `🛋️`, `🛏️`, `🏪`, emoji tìm kiếm `🔍`, danh sách `📋`, cảnh báo `⚠️`.
+   - Trang Đăng tin (`dang-tin/page.tsx`): Gỡ bỏ emoji tiện ích (`❄️`, `🚿`, `🧊`, `🧺`, `🌿`, `🛗`, `🔐`, `🕒`, `🛵`, `🍳`), ổ khóa `🔑`, `🔒`, ghim `📍`, thay thế con quay `⏳` bằng CSS spinner chuẩn vector.
+   - Trang Bảng giá & Dịch vụ (`gia-thanh-vien`): Gỡ bỏ ngôi sao `⭐`, thay thế checkmark `✓` thành chấm chỉ mục tinh tế `<span className="h-1.5 w-1.5 rounded-full bg-teal-600 shrink-0" />`.
+   - Trang Tài khoản thành viên (`tai-khoan/*`): Gỡ bỏ tim `❤️`, thư `📬`, tài liệu `📃`, người dùng `👤`.
+   - Cổng Quản trị (`admin/*`):
+     - Dashboard (`admin/page.tsx`): Gỡ bỏ chổi `🧹`, tiền `💰`, biểu đồ `📈`, khiên `🛡️`, cảnh báo `⚠️`, pháo hoa `🎉`, cờ `🚩`, checkmark `✅`.
+     - Duyệt tin (`admin/tin-cho-duyet`): Gỡ bỏ tab chuyên mục emoji, máy ảnh `📷`, điện `⚡`, thước `📐`, giường `🛏️`, vòi sen `🚿`, vị trí `📍`.
+     - Quản lý người dùng (`admin/nguoi-dung`): Gỡ bỏ `👥`, `📞`, `🔒`, `🔓`, chuyển nhãn xác thực thành văn bản trang nhã.
+     - Báo cáo vi phạm (`admin/bao-cao-vi-pham`) & Duyệt gói (`admin/duyet-goi`): Gỡ bỏ thùng rác `🗑️`, đồng hồ cát `⏳`, danh sách `📋`, pháo hoa `🎉`.
+     - Khóa bảo vệ quyền Admin (`admin/layout.tsx`): Gỡ bỏ ổ khóa `🔒`.
+2. **Kiểm tra tự động xác minh không còn bất kỳ emoji nào**: Đã quét toàn bộ regex `[\x{1F000}-\x{1FAFF}]` và `[\x{2300}-\x{27BF}]` đảm bảo kết quả 0 match emoji.
+3. **Tuân thủ quy chuẩn GEMINI.md § 8**: Toàn bộ nhãn, tiêu đề, modal, thông báo lỗi và chuỗi giao diện đều không có dấu chấm ở cuối câu.
+
+**Việc hoàn thành trước đó (04/10/2026 — THAY THẾ TOÀN DIỆN LOGO THƯƠNG HIỆU QNS & LOGO CHỦ NHÀ TRÊN TẤT CẢ CÁC BỀ MẶT TRANG):**
+1. **Tạo component nhận diện thương hiệu `QnsLogo` & `LandlordAvatar` chuẩn vector SVG**:
+   - Thiết kế vector chính xác theo ảnh người dùng cung cấp (`media_1791090368044.png`):
+     - Biểu tượng chữ Q lớn màu xanh ngọc biển (`#368b81`) với đuôi kính lúp bo tròn 45 độ hướng xuống phải.
+     - Khoang cắt hình ngôi nhà màu trắng tinh tế bên trong chữ Q.
+     - Cửa sổ 4 cánh (2x2) màu xanh ngọc ở tầng trên.
+     - Cửa ra vào vòm cong màu xanh ngọc ở tầng dưới kèm nút nắm cửa (doorknob) màu trắng.
+     - Dòng chữ "QNS" đậm bo tròn chuẩn nhận diện thương hiệu.
+   - Xuất file vector tĩnh [logo-qns.svg](file:///d:/BĐS/apps/web/public/logo-qns.svg) tại thư mục `public/`.
+2. **Thay thế logo cho tổng thể website**:
+   - [Header.tsx](file:///d:/BĐS/apps/web/src/components/Header.tsx): Thay thế chữ Q đơn sơ bằng biểu tượng QNS Logo sắc nét trên nền badge trắng trang nhã.
+   - [Footer.tsx](file:///d:/BĐS/apps/web/src/components/Footer.tsx): Đồng bộ biểu tượng QNS Logo tại cột nhận diện thương hiệu chân trang.
+   - [admin/layout.tsx](file:///d:/BĐS/apps/web/src/app/admin/layout.tsx): Đồng bộ QNS Logo và nhãn `QNS.Admin` tại thanh điều hướng trung tâm quản trị.
+   - [layout.tsx](file:///d:/BĐS/apps/web/src/app/layout.tsx): Thiết lập `icons` favicon trỏ về `/logo-qns.svg` cho toàn bộ trình duyệt.
+   - [constants.ts](file:///d:/BĐS/apps/web/src/lib/constants.ts): Bổ sung `logoUrl: '/logo-qns.svg'` vào cấu hình `SITE_CONFIG`.
+3. **Thay thế tất cả logo chủ nhà trên tất cả các bề mặt trang**:
+   - [OwnerContactBox.tsx](file:///d:/BĐS/apps/web/src/app/tin/[slug]/OwnerContactBox.tsx): Xóa bỏ ảnh placeholder phong cảnh Unsplash cũ, thay thế bằng `LandlordAvatar` chuẩn nhận diện QNS.
+   - [tin/[slug]/page.tsx](file:///d:/BĐS/apps/web/src/app/tin/[slug]/page.tsx): Thay thế icon chữ cái tròn dưới phần mô tả phòng bằng `LandlordAvatar` sắc nét.
+   - [admin/tin-cho-duyet/page.tsx](file:///d:/BĐS/apps/web/src/app/admin/tin-cho-duyet/page.tsx): Đồng bộ `LandlordAvatar` trên thẻ danh sách tin chờ duyệt của quản trị viên.
+   - Toàn bộ tin đăng mẫu và tin đăng thực tế tự động hiển thị logo chủ nhà QNS đồng bộ khi chưa có ảnh đại diện cá nhân riêng.
+4. **Tuân thủ quy chuẩn GEMINI.md § 8**: Toàn bộ nhãn, tiêu đề và modal không có dấu chấm ở cuối câu.
+
+**Việc hoàn thành trước đó (04/10/2026 — XÓA BỎ MỤC ĐỊA CHỈ NGÕ 622 MINH KHAI & ĐỒNG BỘ TOÀN BỘ BỀ MẶT TRANG):**
+1. **Xóa bỏ mục địa chỉ theo 2 ảnh chỉ thị**:
+   - Xóa bỏ hoàn toàn mục địa chỉ `📍 Ngõ 622, Minh Khai, Phường Vĩnh Tuy, Hà Nội` khỏi khối thông tin liên hệ của [Footer.tsx](file:///d:/BĐS/apps/web/src/components/Footer.tsx).
+   - Xóa bỏ mục địa chỉ văn phòng khỏi trang [lien-he/page.tsx](file:///d:/BĐS/apps/web/src/app/lien-he/page.tsx) để tránh lộ địa chỉ ngõ riêng tư.
+   - Cập nhật địa bàn hoạt động trong [MembershipPricingClient.tsx](file:///d:/BĐS/apps/web/src/app/gia-thanh-vien/MembershipPricingClient.tsx) thành "Thành phố Hà Nội".
+   - Thay đổi ví dụ địa chỉ mẫu trong placeholder của [GoogleMapAddressPicker.tsx](file:///d:/BĐS/apps/web/src/components/GoogleMapAddressPicker.tsx) sang địa chỉ công cộng trung lập.
+   - Cập nhật `SITE_CONFIG.address` trong [constants.ts](file:///d:/BĐS/apps/web/src/lib/constants.ts) thành `Thành phố Hà Nội`.
+2. **Tuân thủ quy chuẩn GEMINI.md § 8**: Toàn bộ nhãn, tiêu đề và modal không có dấu chấm ở cuối câu.
+
+**Việc hoàn thành trước đó (04/10/2026 — XÓA BỎ 5 PHẦN/MỤC THEO ẢNH CHỈ THỊ & ĐỒNG BỘ TOÀN DIỆN):**
+1. **Xóa bỏ triệt để 5 phần/mục theo 5 ảnh chỉ thị**:
+   - **Ảnh 1 (Badge loại hình "Căn hộ dịch vụ")**: Xóa bỏ badge `property-badge` trên trang chi tiết `tin/[slug]/page.tsx` và trên danh sách thẻ `ListingCard.tsx` để giao diện ảnh và tiêu đề thông thoáng, sạch sẽ.
+   - **Ảnh 2 (Giá thuê dưới tiêu đề "6,8 triệu / tháng")**: Đã loại bỏ khối giá trùng lặp dưới tiêu đề trang chi tiết, tập trung giá chính thức vào khối `OwnerContactBox` bên sidebar.
+   - **Ảnh 3 (Khối "Ước tính chi phí dọn vào ở")**: Xóa bỏ toàn bộ component `MoveInCostEstimator` khỏi trang chi tiết `tin/[slug]/page.tsx` và gỡ bỏ import.
+   - **Ảnh 4 (Khối "Lưu ý an toàn khi thuê phòng")**: Đã loại bỏ hoàn toàn khối ghi chú an toàn thừa bên dưới sidebar.
+   - **Ảnh 5 (Khối "ĐÃ KIỂM TRA THỰC TẾ (Trust-as-a-Service)")**: Xóa bỏ toàn bộ chứng chỉ kiểm định thực tế màu xanh lá trên trang chi tiết `tin/[slug]/page.tsx` và các huy hiệu xác thực trên thẻ `ListingCard.tsx`.
+2. **Đồng bộ hóa khung xương skeleton (`loading.tsx`)**:
+   - Gỡ bỏ placeholder skeleton của badge loại hình, khối giá trùng lặp và khối lưu ý an toàn.
+3. **Tuân thủ quy chuẩn GEMINI.md § 8**: Toàn bộ nhãn, tiêu đề và modal không có dấu chấm ở cuối câu.
+
+**Việc hoàn thành trước đó (04/10/2026 — ĐỒNG BỘ GIAO DIỆN KHỐI LIÊN HỆ & ĐẶT LỊCH XEM PHÒNG THEO ẢNH CHỈ THỊ):**
+1. **Thiết kế lại toàn diện component `OwnerContactBox.tsx` chuẩn xác theo ảnh mẫu**:
+   - Header giá phòng nổi bật: "Giá phòng" + "3.700.000 đ/tháng" (font đậm màu cam cháy `#c2410c`).
+   - 3 hàng thông tin với biểu tượng sắc nét:
+     - 📍 `***, Xã Thanh Liệt, Thành phố Hà Nội` (icon ghim cam, ẩn số nhà tự động).
+     - 📞 `0333226***` (icon điện thoại xanh dương, che 3 số cuối).
+     - ⏱️ `03/10/2026 09:12` (icon đồng hồ xám, định dạng ngày giờ chuẩn).
+   - Banner giải thích: "Tại sao tôi không xem được số điện thoại chủ nhà?" kèm nút dấu hỏi `?` accordion mở rộng.
+   - Khối "Chọn phòng trống:": Hệ thống danh sách phòng `HN237-KG4-401` (active màu cam), `HN237-KG4-502`, `HN237-KG4-602`, `HN237-KG4-801`, `HN237-KG4-503` (xám) tương tác chọn phòng linh hoạt.
+   - Thẻ con "Đặt lịch xem phòng":
+     - Tiêu đề & phụ đề giải thích: "Đặt lịch xem phòng với chủ nhà, chủ nhà sẽ liên hệ lại với bạn".
+     - Avatar tròn phong cảnh núi kèm badge outline cam viền trắng "Chủ nhà".
+     - Tên chủ nhà kèm biểu tượng vương miện "Chủ Nhà 👑" và số lượng "507 bài đăng".
+     - Huy hiệu uy tín màu xanh lá "🛡️ Uy tín" có đuôi nơ ribbon góc nhọn.
+     - Nút hành động cam toàn chiều ngang: "Liên hệ đặt lịch".
+2. **Đồng bộ trên tất cả các bề mặt trang**:
+   - `apps/web/src/app/tin/[slug]/page.tsx`:
+     - Xóa bỏ khối giá trùng lặp dưới tiêu đề chính để trang thoáng đãng, đồng bộ giá sang khối sidebar.
+     - Truyền đầy đủ props động cho `OwnerContactBox`.
+     - Xóa khối "Lưu ý an toàn khi thuê trọ" bên dưới sidebar để khớp sạch sẽ với ảnh mẫu.
+   - `apps/web/src/app/tin/[slug]/MobileStickyContactBar.tsx`:
+     - Đồng bộ nút bấm mobile thành "Liên hệ đặt lịch" với màu cam `#ea580c`.
+   - `apps/web/src/app/tin/[slug]/loading.tsx`:
+     - Đồng bộ khung xương skeleton của header và sidebar cho khớp với bố cục mới.
+   - `apps/web/src/components/ContactBrokerModal.tsx`:
+     - Đồng bộ tiêu đề modal và nút hành động thành "Đặt lịch xem phòng" / "Gửi yêu cầu đặt lịch".
+   - Tuân thủ nghiêm ngặt quy tắc GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu trong toàn bộ văn bản hiển thị.
+
+**Việc hoàn thành trước đó (25/09/2026 — THỰC THI KẾ HOẠCH ĐIỀU CHỈNH V2, CHẶN LỖI P0, ENGINE HOA HỒNG V2 & ĐẠT GATE G-01):**
 1. **Khắc phục lỗi bảo mật P0 tối khẩn (GAP-01 / OTP-01 / OTP-02)**:
    - Phát hiện chính xác và sửa lỗi thiếu `await` trước lời gọi `verifyOtp` trong `AuthService.register()` (dòng ~58) và `resetPassword()` (dòng ~284). Bổ sung kiểm tra kết quả boolean nghiêm ngặt.
    - Thêm bộ kiểm thử `test-w00-p0.js` chứng minh: OTP sai/rỗng/hết hạn bị từ chối 400 Bad Request, tuyệt đối không tạo user và không đổi mật khẩu.

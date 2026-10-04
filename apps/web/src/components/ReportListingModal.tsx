@@ -72,10 +72,9 @@ export function ReportListingModal({ listingId }: { listingId: string }) {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-surface-border bg-surface-muted/60 px-3 py-1.5 text-xs font-medium text-text-muted hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors"
+          className="inline-flex items-center rounded-lg border border-surface-border bg-surface-muted/60 px-3 py-1.5 text-xs font-medium text-text-muted hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors"
         >
           <span>Báo vi phạm</span>
-          <span className="text-amber-500">⚠️</span>
         </button>
         <span className="text-[11px] text-text-muted">Tin đăng được kiểm duyệt tự động</span>
       </div>

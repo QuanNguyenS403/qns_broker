@@ -192,8 +192,7 @@ export function AuthModal({
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? 'Đăng nhập không thành công');
 
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+      setTokens(data.accessToken, data.refreshToken);
 
       handleClose();
       if (onSuccess) onSuccess();
@@ -233,8 +232,7 @@ export function AuthModal({
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? 'Đăng ký tài khoản thất bại');
 
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+      setTokens(data.accessToken, data.refreshToken);
 
       handleClose();
       if (onSuccess) onSuccess();

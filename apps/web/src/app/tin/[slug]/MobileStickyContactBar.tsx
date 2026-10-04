@@ -47,9 +47,8 @@ export function MobileStickyContactBar({
               <a
                 href={`tel:${activePhone.replace(/\s+/g, '')}`}
                 aria-label={`Gọi điện cho người dẫn xem theo số ${activePhone}`}
-                className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-slate-800 active:scale-95 transition-all"
+                className="flex items-center justify-center rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-slate-800 active:scale-95 transition-all"
               >
-                <span>📞</span>
                 <span>{activePhone}</span>
               </a>
             ) : (
@@ -65,11 +64,10 @@ export function MobileStickyContactBar({
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
-              aria-label="Mở hộp thoại đề xuất lịch xem phòng"
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-brand px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-brand-600 active:scale-95 transition-all"
+              aria-label="Đặt lịch xem phòng"
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-brand hover:bg-brand-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
             >
-              <span>💬</span>
-              <span>Đề xuất lịch</span>
+              <span>Đặt lịch xem phòng</span>
             </button>
           </div>
         </div>
@@ -82,7 +80,7 @@ export function MobileStickyContactBar({
         onSuccess={() => setIsAuthModalOpen(false)}
       />
 
-      {/* Modal gửi liên hệ / đề xuất lịch xem phòng */}
+      {/* Modal đặt lịch xem phòng */}
       <ContactBrokerModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

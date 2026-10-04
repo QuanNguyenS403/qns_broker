@@ -157,4 +157,22 @@
       radial-gradient(circle at 20% 50%, rgba(13, 148, 136, 0.08) 0%, transparent 50%),
       radial-gradient(circle at 80% 20%, rgba(20, 184, 166, 0.06) 0%, transparent 40%);
   }
+
+  /* Hiệu ứng chạy chữ Marquee liên tục từ phải qua trái (không dừng khi hover) */
+  @keyframes marquee-scroll {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  .animate-marquee-scroll {
+    display: flex;
+    width: max-content;
+    animation: marquee-scroll 40s linear infinite;
+    will-change: transform;
+  }
 }
+

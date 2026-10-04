@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { authFetch, clearTokens, getAccessToken } from '@/lib/auth-client';
+import { QnsLogo } from '@/components/QnsLogo';
+import { SecurityAnnouncementBar } from './SecurityAnnouncementBar';
 
 interface CurrentUser {
   id: string;
@@ -66,7 +68,12 @@ export function Header() {
       .finally(() => setChecked(true));
   }, []);
 
-  function handleLogout() {
+  async function handleLogout() {
+    try {
+      await authFetch('/auth/logout', { method: 'POST' });
+    } catch {
+      // Bỏ qua lỗi mạng khi đăng xuất để đảm bảo client luôn xóa token cục bộ
+    }
     clearTokens();
     setUser(null);
     setMenuOpen(false);
@@ -82,11 +89,11 @@ export function Header() {
       }`}
     >
       <div className="container-max flex h-16 items-center justify-between gap-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-lg font-black text-white ring-1 ring-white/25 shadow-sm">
-            Q
-          </span>
+        {/* Logo QNS chuẩn nhận diện thương hiệu */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-white/30 group-hover:scale-105 transition-transform">
+            <QnsLogo variant="emblem" theme="brand" size={30} />
+          </div>
           <span className="text-lg font-bold tracking-tight text-white">
             QNS <span className="font-normal opacity-90">BROKER</span>
           </span>
@@ -101,9 +108,8 @@ export function Header() {
               {user.role === 'admin' && (
                 <Link
                   href="/admin"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm"
+                  className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm"
                 >
-                  <span>⚙️</span>
                   <span>Quản trị</span>
                 </Link>
               )}
@@ -146,24 +152,22 @@ export function Header() {
                         <Link
                           href="/admin"
                           onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-teal-700 bg-teal-50/60 hover:bg-teal-100/70 transition-colors mb-1"
+                          className="flex items-center px-4 py-2.5 text-sm font-bold text-teal-700 bg-teal-50/60 hover:bg-teal-100/70 transition-colors mb-1"
                         >
-                          <span>⚙️</span>
                           <span>Trang Quản trị Hệ thống</span>
                         </Link>
                       )}
                       {[
-                        { href: '/tai-khoan/quan-ly-tin', label: 'Quản lý tin đăng', icon: '📋' },
-                        { href: '/tai-khoan/tin-da-luu', label: 'BĐS đã lưu', icon: '❤️' },
-                        { href: '/tai-khoan/thong-tin', label: 'Thông tin tài khoản', icon: '⚙️' },
+                        { href: '/tai-khoan/quan-ly-tin', label: 'Quản lý tin đăng' },
+                        { href: '/tai-khoan/tin-da-luu', label: 'BĐS đã lưu' },
+                        { href: '/tai-khoan/thong-tin', label: 'Thông tin tài khoản' },
                       ].map((item) => (
                         <Link
                           key={item.href}
                           href={item.href}
                           onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:bg-slate-50 hover:text-text-primary transition-colors"
+                          className="flex items-center px-4 py-2.5 text-sm text-text-secondary hover:bg-slate-50 hover:text-text-primary transition-colors"
                         >
-                          <span>{item.icon}</span>
                           <span>{item.label}</span>
                         </Link>
                       ))}
@@ -220,6 +224,9 @@ export function Header() {
         </div>
       </div>
 
+      {/* Thanh cảnh báo bảo mật chạy chữ liên tục ngay bên dưới header bar */}
+      <SecurityAnnouncementBar />
+
       {/* Mobile nav drawer */}
       {mobileOpen && (
         <div className="border-t border-white/15 bg-brand-700/95 backdrop-blur-md pb-4 animate-slide-down md:hidden text-white">
@@ -259,9 +266,8 @@ export function Header() {
                 {user.role === 'admin' && (
                   <Link
                     href="/admin"
-                    className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 text-white font-bold py-2.5 text-sm mt-2"
+                    className="flex items-center justify-center rounded-xl bg-slate-900 text-white font-bold py-2.5 text-sm mt-2"
                   >
-                    <span>⚙️</span>
                     <span>Trang Quản trị</span>
                   </Link>
                 )}

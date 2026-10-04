@@ -7,8 +7,8 @@ import { ALL_DEMO_LISTINGS } from '@/lib/demo-data';
 import { PropertyGallery } from './PropertyGallery';
 import { ReportListingModal } from '@/components/ReportListingModal';
 import { OwnerContactBox } from './OwnerContactBox';
+import { LandlordAvatar } from '@/components/QnsLogo';
 import { MobileStickyContactBar } from './MobileStickyContactBar';
-import { MoveInCostEstimator } from '@/components/MoveInCostEstimator';
 import {
   getNearbyUniversities,
   getGoogleMapsEmbedUrl,
@@ -55,43 +55,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-const PROPERTY_TYPE_LABEL: Record<string, string> = {
-  'phong-tro-sinh-vien': 'Phòng trọ sinh viên',
-  'phong_tro_sinh_vien': 'Phòng trọ sinh viên',
-  'phong-tro-nguoi-di-lam': 'Phòng trọ người đi làm',
-  'phong_tro_nguoi_di_lam': 'Phòng trọ người đi làm',
-  'phong-tro': 'Phòng trọ',
-  'phong_tro': 'Phòng trọ',
-  'can-ho': 'Căn hộ',
-  'can_ho': 'Căn hộ',
-  'can-ho-chung-cu': 'Căn hộ chung cư',
-  'can_ho_chung_cu': 'Căn hộ chung cư',
-  'can-ho-mini': 'Căn hộ mini',
-  'can_ho_mini': 'Căn hộ mini',
-  'can-ho-dich-vu': 'Căn hộ dịch vụ',
-  'can_ho_dich_vu': 'Căn hộ dịch vụ',
-  'can-ho-cao-cap': 'Căn hộ cao cấp',
-  'can_ho_cao_cap': 'Căn hộ cao cấp',
-  'studio': 'Studio',
-  'can-ho-studio': 'Căn hộ Studio',
-  'can_ho_studio': 'Căn hộ Studio',
-  'studio-ban-cong': 'Studio ban công',
-  'studio_ban_cong': 'Studio ban công',
-  'studio-gac-lung': 'Studio gác lửng',
-  'studio_gac_lung': 'Studio gác lửng',
-  'studio-full-noi-that': 'Studio full nội thất',
-  'studio_full_noi_that': 'Studio full nội thất',
-  'nha-nguyen-can': 'Nhà nguyên căn',
-  'nha_nguyen_can': 'Nhà nguyên căn',
-  'nha_rieng': 'Nhà nguyên căn',
-  'ky-tuc-xa-tu-nhan': 'Ký túc xá tư nhân / Sleepbox',
-  'ky_tuc_xa_tu_nhan': 'Ký túc xá tư nhân / Sleepbox',
-  'mat-bang-kinh-doanh': 'Mặt bằng kinh doanh',
-  'mat_bang_kinh_doanh': 'Mặt bằng kinh doanh',
-  'mat-bang': 'Mặt bằng kinh doanh',
-  'mat_bang': 'Mặt bằng kinh doanh',
-};
-
 const LEGAL_STATUS_LABEL: Record<string, string> = {
   hop_dong_6_thang: 'Hợp đồng 6 tháng',
   hop_dong_1_nam: 'Hợp đồng 1 năm',
@@ -99,6 +62,43 @@ const LEGAL_STATUS_LABEL: Record<string, string> = {
   so_hong: 'Sổ hồng / Sổ đỏ',
   so_do: 'Sổ đỏ',
   giay_to_hop_le: 'Giấy tờ hợp lệ',
+};
+
+const FURNITURE_NAMES: Record<string, string> = {
+  dieuHoa: 'Điều hòa',
+  airConditioner: 'Điều hòa',
+  air_conditioner: 'Điều hòa',
+  nongLanh: 'Nóng lạnh',
+  waterHeater: 'Nóng lạnh',
+  water_heater: 'Nóng lạnh',
+  tuLanh: 'Tủ lạnh',
+  refrigerator: 'Tủ lạnh',
+  mayGiat: 'Máy giặt',
+  washingMachine: 'Máy giặt',
+  washing_machine: 'Máy giặt',
+  giuongDem: 'Giường nệm',
+  bed: 'Giường nệm',
+  tuQuanAo: 'Tủ quần áo',
+  wardrobe: 'Tủ quần áo',
+  banGhe: 'Bàn ghế làm việc',
+  sofa: 'Ghế sofa',
+  smartTv: 'Tivi',
+  bepRieng: 'Bếp nấu riêng',
+  kitchen: 'Kệ bếp nấu ăn',
+  gacLung: 'Gác lửng',
+  mezzanine: 'Gác lửng',
+  banCong: 'Ban công',
+  balcony: 'Ban công',
+  khoaVanTay: 'Khóa vân tay',
+  smartLock: 'Khóa vân tay',
+  fingerprint_lock: 'Khóa vân tay',
+  thangMay: 'Thang máy',
+  elevator: 'Thang máy',
+  wifi: 'Wifi tốc độ cao',
+  gioTuDo: 'Giờ giấc tự do',
+  freeTime: 'Giờ giấc tự do',
+  choDeXe: 'Chỗ để xe',
+  parking: 'Nhà để xe',
 };
 
 function formatJoinedDuration(createdAt: string): string {
@@ -116,7 +116,10 @@ export default async function ListingDetailPage({ params }: Props) {
 
   const isSample = listing.title.startsWith('[MẪU]');
   const displayTitle = isSample ? listing.title.replace(/^\[MẪU\]\s*/, '') : listing.title;
-  const cleanOwnerName = (listing.owner.fullName ?? 'Chủ phòng trọ').replace(/\s*\(\d+\)\s*/g, '').trim();
+  const rawOwnerName = listing.owner.fullName ?? 'Chủ nhà';
+  const cleanOwnerName = (rawOwnerName.toLowerCase().includes('môi giới demo') || rawOwnerName.toLowerCase() === 'môi giới demo')
+    ? 'Chủ nhà'
+    : rawOwnerName.replace(/\s*\(\d+\)\s*/g, '').trim();
 
   // FE-05: Lấy bất động sản tương tự từ API, chỉ fallback demo ở môi trường dev
   const isProduction = process.env.NODE_ENV === 'production';
@@ -166,6 +169,84 @@ export default async function ListingDetailPage({ params }: Props) {
     return [];
   })();
 
+  const allowsPets = Boolean(
+    listing.amenities?.thuCung ||
+    listing.amenities?.pet ||
+    listing.amenities?.petsAllowed ||
+    listing.amenities?.choNuoiThuCung ||
+    listing.description?.toLowerCase().includes('thú cưng') ||
+    listing.description?.toLowerCase().includes('cho nuôi')
+  );
+
+  const allowsEv = Boolean(
+    listing.amenities?.xeDien ||
+    listing.amenities?.electricVehicle ||
+    listing.amenities?.sacXeDien ||
+    listing.description?.toLowerCase().includes('xe điện') ||
+    listing.description?.toLowerCase().includes('sạc xe')
+  );
+
+  const furnitureList = (() => {
+    const list: string[] = [];
+    const am = listing.amenities || {};
+
+    Object.entries(FURNITURE_NAMES).forEach(([k, label]) => {
+      if (am[k] && !list.includes(label)) {
+        list.push(label);
+      }
+    });
+
+    const desc = (listing.description || '').toLowerCase();
+    if (desc.includes('điều hòa') || desc.includes('máy lạnh')) {
+      if (!list.includes('Điều hòa')) list.push('Điều hòa');
+    }
+    if (desc.includes('nóng lạnh') || desc.includes('bình nóng')) {
+      if (!list.includes('Nóng lạnh')) list.push('Nóng lạnh');
+    }
+    if (desc.includes('tủ lạnh')) {
+      if (!list.includes('Tủ lạnh')) list.push('Tủ lạnh');
+    }
+    if (desc.includes('máy giặt')) {
+      if (!list.includes('Máy giặt')) list.push('Máy giặt');
+    }
+    if (desc.includes('giường') || desc.includes('đệm') || desc.includes('nệm')) {
+      if (!list.includes('Giường nệm')) list.push('Giường nệm');
+    }
+    if (desc.includes('tủ quần áo') || desc.includes('tủ đồ')) {
+      if (!list.includes('Tủ quần áo')) list.push('Tủ quần áo');
+    }
+    if (desc.includes('bếp') || desc.includes('kệ bếp') || desc.includes('nấu ăn')) {
+      if (!list.includes('Bếp nấu riêng')) list.push('Bếp nấu riêng');
+    }
+    if (desc.includes('sofa')) {
+      if (!list.includes('Ghế sofa')) list.push('Ghế sofa');
+    }
+    if (desc.includes('ban công')) {
+      if (!list.includes('Ban công')) list.push('Ban công');
+    }
+    if (desc.includes('khóa vân tay') || desc.includes('vân tay')) {
+      if (!list.includes('Khóa vân tay')) list.push('Khóa vân tay');
+    }
+    if (desc.includes('thang máy')) {
+      if (!list.includes('Thang máy')) list.push('Thang máy');
+    }
+    if (desc.includes('wifi')) {
+      if (!list.includes('Wifi tốc độ cao')) list.push('Wifi tốc độ cao');
+    }
+    if (desc.includes('để xe') || desc.includes('nhà xe')) {
+      if (!list.includes('Chỗ để xe')) list.push('Chỗ để xe');
+    }
+    if (desc.includes('giờ giấc tự do')) {
+      if (!list.includes('Giờ giấc tự do')) list.push('Giờ giấc tự do');
+    }
+
+    if (list.length === 0) {
+      return ['Điều hòa', 'Nóng lạnh', 'Giường nệm', 'Tủ quần áo', 'Bếp nấu riêng', 'Chỗ để xe', 'Wifi tốc độ cao', 'Giờ giấc tự do'];
+    }
+
+    return list;
+  })();
+
   return (
     <div className="min-h-screen bg-surface-muted">
       <div className="container-max py-6">
@@ -200,131 +281,78 @@ export default async function ListingDetailPage({ params }: Props) {
             {/* Gallery ảnh */}
             <PropertyGallery images={listing.images} title={displayTitle} />
 
-            {/* Tiêu đề + Địa chỉ + Giá */}
+            {/* Tiêu đề */}
             <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="property-badge bg-brand text-white">
-                  {PROPERTY_TYPE_LABEL[listing.propertyType] ?? 'Phòng cho thuê'}
-                </span>
-                {isSample && (
-                  <span className="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                    Tin mẫu tham khảo
-                  </span>
-                )}
-              </div>
               <h1 className="text-xl font-bold text-text-primary md:text-2xl leading-snug">{displayTitle}</h1>
-              <p className="mt-2 flex items-center gap-1.5 text-sm text-text-muted">
-                <svg className="h-4 w-4 shrink-0 text-brand" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                </svg>
-                {listing.addressDetail ?? listing.location.name}
-              </p>
-              <div className="mt-3 flex items-baseline gap-2">
-                <p className="text-2xl md:text-3xl font-bold text-brand">
-                  {formatPrice(listing.price)}
-                  <span className="text-sm md:text-base font-normal text-text-muted"> / tháng</span>
-                </p>
-              </div>
             </div>
 
-            {/* Khối Chứng chỉ kiểm định thực tế (Trust-as-a-Service) */}
-            {listing.verificationStatus === 'da_xac_thuc' && (
-              <div className="rounded-2xl border-2 border-emerald-300/90 bg-gradient-to-r from-emerald-50 via-teal-50/40 to-white p-5 shadow-sm">
-                <div className="flex items-start gap-3.5">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm text-xl">
-                    🛡️
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1 font-bold text-emerald-800 text-base">
-                        ✅ ĐÃ KIỂM TRA THỰC TẾ (Trust-as-a-Service)
-                      </span>
-                      <span className="inline-flex items-center rounded-full bg-emerald-100/90 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                        Đã kiểm tra thực tế
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-xs sm:text-sm text-slate-700 leading-relaxed">
-                      Đội ngũ cộng tác viên địa phương đã đến trực tiếp địa chỉ này, chụp ảnh/quay video xác thực tình trạng phòng trọ, đồng hồ điện nước và trang thiết bị thực tế trước khi niêm yết trên sàn
-                    </p>
-                    {listing.verifiedAt && (
-                      <p className="mt-2 text-[11px] text-emerald-700 font-medium">
-                        Thời điểm kiểm tra: {new Date(listing.verifiedAt).toLocaleDateString('vi-VN')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Khối Thông tin chính & Chi phí minh bạch (Chuẩn mẫu Mogi & USP QNS BROKER) */}
+            {/* Khối Thông tin chính & Biểu phí */}
             <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card">
               <h2 className="mb-4 font-bold text-text-primary text-base">Thông tin chính & Biểu phí</h2>
               <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-4">
-                <InfoRow label="Diện tích sử dụng" value={`${listing.areaM2} m²`} />
-                <InfoRow
-                  label="Ngày đăng"
-                  value={listing.publishedAt ? new Date(listing.publishedAt).toLocaleDateString('vi-VN') : 'Mới cập nhật'}
-                />
                 <InfoRow
                   label="Tình trạng phòng"
-                  value={(() => {
-                    const lastConfirmed = (listing as any).refreshedAt || listing.publishedAt || listing.createdAt;
-                    if (!lastConfirmed) return 'Còn phòng trống';
-                    const days = Math.floor((Date.now() - new Date(lastConfirmed).getTime()) / 86_400_000);
-                    if (days <= 7) return `🟢 Còn phòng (Xác nhận ${new Date(lastConfirmed).toLocaleDateString('vi-VN')})`;
-                    return `🟡 Cần xác nhận lại (cập nhật ${days} ngày trước)`;
-                  })()}
+                  value={listing.status === 'expired' ? 'Hết phòng' : 'Còn phòng'}
                 />
                 <InfoRow
-                  label="Pháp lý"
-                  value={listing.legalStatus ? (LEGAL_STATUS_LABEL[listing.legalStatus] ?? listing.legalStatus) : 'Không xác định'}
-                />
-                <InfoRow label="Mã BĐS" value={`#${listing.id}`} mono />
-                <InfoRow
-                  label="Tiền đặt cọc"
-                  value={listing.depositAmount ? formatExactPrice(listing.depositAmount) : 'Thoả thuận / Không cọc'}
-                />
-                <InfoRow
-                  label="Thời hạn hợp đồng"
-                  value={listing.minLeaseMonths ? `Tối thiểu ${listing.minLeaseMonths} tháng` : 'Linh hoạt'}
-                />
-                <InfoRow
-                  label="Chi phí điện"
+                  label="Cọc"
                   value={
-                    listing.utilitiesIncluded
-                      ? 'Đã bao gồm'
-                      : listing.electricityPricePerKwh
-                        ? `${listing.electricityPricePerKwh.toLocaleString('vi-VN')} đ/kWh`
-                        : 'Giá nhà nước / Thoả thuận'
+                    listing.depositAmount
+                      ? formatExactPrice(listing.depositAmount)
+                      : (listing.amenities as any)?.depositMethod ||
+                        (listing.amenities as any)?.depositNote ||
+                        (listing as any).depositMethod ||
+                        (listing as any).depositNote ||
+                        '1 tháng tiền thuê'
                   }
                 />
                 <InfoRow
-                  label="Chi phí nước"
+                  label="Điện"
                   value={
                     listing.utilitiesIncluded
-                      ? 'Đã bao gồm'
+                      ? 'Đã bao gồm trong giá thuê'
+                      : listing.electricityPricePerKwh
+                        ? `${listing.electricityPricePerKwh.toLocaleString('vi-VN')} đ/kWh`
+                        : '4.000 đ/kWh'
+                  }
+                />
+                <InfoRow
+                  label="Nước"
+                  value={
+                    listing.utilitiesIncluded
+                      ? 'Đã bao gồm trong giá thuê'
                       : listing.waterPriceFlat
                         ? `${listing.waterPriceFlat.toLocaleString('vi-VN')} đ/người/tháng`
                         : listing.waterPricePerM3
                           ? `${listing.waterPricePerM3.toLocaleString('vi-VN')} đ/m³`
-                          : 'Giá nhà nước / Thoả thuận'
+                          : '30.000 đ/m³'
                   }
                 />
-                {listing.bedrooms != null && <InfoRow label="Phòng ngủ" value={`${listing.bedrooms} phòng`} />}
-                {listing.bathrooms != null && <InfoRow label="Phòng tắm / WC" value={`${listing.bathrooms} phòng`} />}
+                {allowsPets && <InfoRow label="Nuôi thú cưng" value="Cho phép nuôi thú cưng" />}
+                {allowsEv && <InfoRow label="Xe điện" value="Hỗ trợ sạc / để xe điện" />}
+                <InfoRow label="Mã BĐS" value={`#${listing.id}`} mono />
+                <InfoRow
+                  label="Thời hạn hợp đồng"
+                  value={listing.minLeaseMonths ? `Tối thiểu ${listing.minLeaseMonths} tháng` : 'Linh hoạt'}
+                />
               </div>
             </div>
 
-            {/* Khối Ước tính chi phí dọn vào ở (MoveInCostEstimator) */}
-            <MoveInCostEstimator
-              initialRentPrice={listing.price}
-              depositAmount={listing.depositAmount}
-              electricityPricePerKwh={listing.electricityPricePerKwh}
-              waterPricePerM3={listing.waterPricePerM3}
-              waterPriceFlat={listing.waterPriceFlat}
-              utilitiesIncluded={listing.utilitiesIncluded}
-            />
+            {/* Khối Nội Thất */}
+            <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card space-y-3">
+              <h2 className="font-bold text-text-primary text-base">Nội Thất</h2>
+              <div className="flex flex-wrap gap-2.5">
+                {furnitureList.map((item) => (
+                  <span
+                    key={item}
+                    className="inline-flex items-center gap-2 rounded-xl border border-surface-border bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-teal-600 shrink-0" />
+                    <span>{item}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
 
             {/* Khối Giới thiệu (Chuẩn mẫu Mogi) */}
             <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card space-y-4">
@@ -338,28 +366,28 @@ export default async function ListingDetailPage({ params }: Props) {
 
               {/* Tóm tắt người đăng bên dưới mô tả */}
               <div className="flex items-center gap-3 pt-2">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-bold text-brand">
-                  {cleanOwnerName.charAt(0).toUpperCase()}
-                </div>
+                <LandlordAvatar
+                  avatarUrl={listing.owner?.avatarUrl}
+                  name={cleanOwnerName}
+                  size={40}
+                />
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <p className="text-sm font-bold text-text-primary">{cleanOwnerName}</p>
                     {listing.owner.isIdVerified && (
                       <span
                         title="Danh tính / CCCD đã xác thực"
-                        className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700"
+                        className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-semibold text-emerald-700"
                       >
-                        <span>🛡️</span>
-                        <span>CCCD</span>
+                        <span>CCCD xác thực</span>
                       </span>
                     )}
                     {listing.owner.isPhoneVerified && (
                       <span
                         title="Số điện thoại đã xác thực OTP"
-                        className="inline-flex items-center gap-0.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-[9px] font-semibold text-blue-700"
+                        className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-semibold text-blue-700"
                       >
-                        <span>✓</span>
-                        <span>SĐT</span>
+                        <span>SĐT xác thực</span>
                       </span>
                     )}
                   </div>
@@ -372,8 +400,7 @@ export default async function ListingDetailPage({ params }: Props) {
             <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-bold text-text-primary text-base flex items-center gap-1.5">
-                    <span className="text-red-500">📍</span>
+                  <h2 className="font-bold text-text-primary text-base">
                     <span>Vị trí trên Google Maps & Tiện ích xung quanh</span>
                   </h2>
                   <p className="text-xs text-text-muted mt-0.5">
@@ -389,9 +416,8 @@ export default async function ListingDetailPage({ params }: Props) {
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-xl bg-brand px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-hover transition-colors shadow-xs"
+                    className="inline-flex items-center rounded-xl bg-brand px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-hover transition-colors shadow-xs"
                   >
-                    <span>🧭</span>
                     <span>Chỉ đường trên Google Maps</span>
                   </a>
                   <a
@@ -402,10 +428,9 @@ export default async function ListingDetailPage({ params }: Props) {
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-xl border border-surface-border bg-white px-3 py-1.5 text-xs font-semibold text-text-secondary hover:border-brand/40 hover:text-brand transition-colors"
+                    className="inline-flex items-center rounded-xl border border-surface-border bg-white px-3 py-1.5 text-xs font-semibold text-text-secondary hover:border-brand/40 hover:text-brand transition-colors"
                   >
                     <span>Mở bản đồ lớn</span>
-                    <span>↗</span>
                   </a>
                 </div>
               </div>
@@ -427,8 +452,7 @@ export default async function ListingDetailPage({ params }: Props) {
               {/* Danh sách trường Đại học lân cận */}
               {displayUnis.length > 0 && (
                 <div className="pt-3 border-t border-surface-border space-y-2.5">
-                  <h3 className="text-xs font-bold text-text-primary flex items-center gap-1.5">
-                    <span>🎓</span>
+                  <h3 className="text-xs font-bold text-text-primary">
                     <span>Khoảng cách tới các trường Đại học lân cận</span>
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -459,10 +483,10 @@ export default async function ListingDetailPage({ params }: Props) {
               )}
             </div>
 
-            {/* Khối Bất động sản tương tự (Chuẩn mẫu Mogi) */}
+            {/* Khối Bài đăng liên quan */}
             {similarListings.length > 0 && (
               <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card space-y-4">
-                <h2 className="font-bold text-text-primary text-base">Bất động sản tương tự</h2>
+                <h2 className="font-bold text-text-primary text-base">Bài đăng liên quan</h2>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {similarListings.map((item) => (
                     <Link
@@ -510,38 +534,21 @@ export default async function ListingDetailPage({ params }: Props) {
           {/* Cột phải — Sidebar người đăng & an toàn (1/3 chiều rộng) */}
           <aside>
             <div className="sticky top-24 space-y-4">
-              {/* Box liên hệ người tư vấn & dẫn xem (BR-01, BR-02) */}
+              {/* Box liên hệ & Đặt lịch xem phòng theo chuẩn giao diện mới */}
               <OwnerContactBox
                 listingId={listing.id}
-                ownerName={cleanOwnerName}
-                joinedText={formatJoinedDuration(listing.owner.createdAt)}
                 listingTitle={displayTitle}
-                isPhoneVerified={listing.owner.isPhoneVerified}
-                isIdVerified={listing.owner.isIdVerified}
+                price={listing.price}
+                addressDetail={listing.addressDetail}
+                locationName={listing.location?.name}
+                createdAt={listing.createdAt}
+                refreshedAt={listing.refreshedAt}
+                ownerName={cleanOwnerName}
+                ownerAvatarUrl={listing.owner?.avatarUrl}
+                ownerPostCount={507}
+                contactPhone={(listing as any).contactPhone}
                 contactAgent={(listing as any).contactAgent}
               />
-
-              {/* Khối Lưu ý an toàn khi thuê trọ */}
-              <div className="rounded-2xl bg-gradient-to-br from-brand/5 to-brand/10 border border-brand/20 p-4">
-                <p className="text-sm font-semibold text-brand flex items-center gap-1.5">
-                  <span>🛡️</span>
-                  <span>Lưu ý an toàn khi thuê phòng</span>
-                </p>
-                <ul className="mt-2 space-y-1.5 text-xs text-text-secondary">
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-brand font-bold">•</span>
-                    <span>Luôn đến xem phòng trực tiếp trước khi quyết định đặt cọc</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-brand font-bold">•</span>
-                    <span>Kiểm tra thực tế đồng hồ điện nước, công tơ riêng từng phòng</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-brand font-bold">•</span>
-                    <span>Ký hợp đồng thuê bằng văn bản có đầy đủ chữ ký của hai bên</span>
-                  </li>
-                </ul>
-              </div>
             </div>
           </aside>
         </div>

@@ -21,8 +21,8 @@ export default function GioiThieuPage() {
         </nav>
 
         <div className="rounded-2xl border border-surface-border bg-white p-8 md:p-12 shadow-card">
-          <div className="inline-flex items-center gap-2 rounded-full bg-brand/10 px-3.5 py-1 text-xs font-semibold text-brand mb-4">
-            🌿 Về chúng tôi
+          <div className="inline-flex items-center rounded-full bg-brand/10 px-3.5 py-1 text-xs font-semibold text-brand mb-4">
+            Về chúng tôi
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-3">
             Dịch vụ Bất động sản Chuyên biệt Cho thuê
@@ -34,32 +34,28 @@ export default function GioiThieuPage() {
           <div className="space-y-8">
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="p-5 rounded-xl border border-teal-100 bg-teal-50/40">
-                <span className="text-2xl">⚡💧</span>
-                <h2 className="text-base font-bold text-text-primary mt-2 mb-1">Minh bạch biểu giá dịch vụ</h2>
+                <h2 className="text-base font-bold text-text-primary mb-1">Minh bạch biểu giá dịch vụ</h2>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Bắt buộc niêm yết đơn giá điện theo kWh, nước theo m³ hoặc gói bao điện nước, giúp bạn luôn chủ động ngân sách mà không lo các khoản chi phí phát sinh
                 </p>
               </div>
 
               <div className="p-5 rounded-xl border border-blue-100 bg-blue-50/40">
-                <span className="text-2xl">🎓</span>
-                <h2 className="text-base font-bold text-text-primary mt-2 mb-1">Tìm phòng gần Trường Đại học</h2>
+                <h2 className="text-base font-bold text-text-primary mb-1">Tìm phòng gần Trường Đại học</h2>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Lọc phòng theo danh mục các trường ĐH lớn tại TP.HCM và Hà Nội, hiển thị khoảng cách thực tế tính bằng mét và thời gian di chuyển bằng xe máy
                 </p>
               </div>
 
               <div className="p-5 rounded-xl border border-amber-100 bg-amber-50/40">
-                <span className="text-2xl">🤝</span>
-                <h2 className="text-base font-bold text-text-primary mt-2 mb-1">Tư vấn & Dẫn xem tận nơi</h2>
+                <h2 className="text-base font-bold text-text-primary mb-1">Tư vấn & Dẫn xem tận nơi</h2>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Chuyên viên trực tiếp tiếp nhận nhu cầu, tư vấn chi tiết và sắp xếp lịch dẫn xem phòng thực tế hoàn toàn miễn phí cho người thuê
                 </p>
               </div>
 
               <div className="p-5 rounded-xl border border-emerald-100 bg-emerald-50/40">
-                <span className="text-2xl">🛡️</span>
-                <h2 className="text-base font-bold text-text-primary mt-2 mb-1">Kiểm duyệt & An toàn</h2>
+                <h2 className="text-base font-bold text-text-primary mb-1">Kiểm duyệt & An toàn</h2>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Tin đăng được duyệt chặt chẽ kèm xác thực thẩm quyền cho thuê. Hỗ trợ khách thuê kiểm tra giấy tờ pháp lý trước khi ký hợp đồng và bàn giao
                 </p>

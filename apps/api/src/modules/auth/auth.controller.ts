@@ -36,10 +36,11 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 3_600_000 } }) // tối đa 5 lần gửi OTP/giờ mỗi IP — chặn thêm 1 lớp ngoài rate-limit theo SĐT đã có sẵn trong OtpService
   @Post('otp/send')
   sendOtp(@Body() dto: SendOtpDto) {
-    return this.authService.sendOtp(dto.phone);
+    return this.authService.sendOtp(dto.phone, dto.purpose);
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } }) // chặn brute-force OTP đăng ký
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -65,6 +66,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } }) // chặn brute-force OTP reset mật khẩu
   @Post('forgot-password/reset')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);

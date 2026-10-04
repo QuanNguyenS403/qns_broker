@@ -1,11 +1,11 @@
 {
-  "drillTime": "2026-09-12T17:00:49.374Z",
+  "drillTime": "2026-10-03T18:34:18.839Z",
   "sourceDatabase": "postgresql://postgres:***@localhost:5432/batdongsan",
   "targetDrillDatabase": "postgresql://postgres:***@localhost:5432/batdongsan_restore_drill",
   "dumpFile": {
     "path": "docs\\ops\\backup-drill-snapshot.sql",
-    "sizeBytes": 20849,
-    "sha256": "3a807121763ef6cefacd436ce10677f4a12259a689da7eb779c025b02b842e21"
+    "sizeBytes": 50355,
+    "sha256": "18e52e49547cc7a02939d5927923f55aaa216ad89761109b1f54443cac01fcd9"
   },
   "uploadsVerification": {
     "sourceDirectory": "apps\\api\\uploads",
@@ -14,10 +14,10 @@
     "passed": true
   },
   "metrics": {
-    "backupDurationMs": 138,
-    "restoreDurationMs": 3649,
-    "uploadsRestoreDurationMs": 11,
-    "totalRtoMeasuredMs": 3801,
+    "backupDurationMs": 159,
+    "restoreDurationMs": 3784,
+    "uploadsRestoreDurationMs": 10,
+    "totalRtoMeasuredMs": 3956,
     "targetRtoStandard": "< 30 minutes",
     "estimatedRpo": "< 1 hour"
   },
@@ -25,7 +25,7 @@
     {
       "step": "ddl_snapshot_generation",
       "success": true,
-      "migrationsCount": 9
+      "migrationsCount": 11
     },
     {
       "step": "prisma_migrate_deploy_restore",

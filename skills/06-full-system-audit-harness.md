@@ -36,7 +36,7 @@ Thiết lập quy trình chuẩn hóa giúp AI Agent thực hiện tự động 
 ### Cổng 5: UI & Invariants Gate (Giao diện & Quy chuẩn hiển thị)
 - **Quy tắc không dấu chấm**: Tuyệt đối không có dấu chấm ở cuối câu trên toàn bộ văn bản UI, metadata description, popup, modal, thông báo lỗi.
 - **Hero Title**: Tiêu đề H1 hero phân tách 2 dòng ngữ nghĩa, line-height `leading-[1.2]`, margin vừa vặn `mt-1 sm:mt-1.5`.
-- **Thông tin liên hệ**: Đồng bộ toàn cục qua `SITE_CONFIG` (`hotline: 0981 753 082`, `address: Ngõ 622, Minh Khai, Phường Vĩnh Tuy, Hà Nội`, `workingHours: 24/7`).
+- **Thông tin liên hệ**: Đồng bộ toàn cục qua `SITE_CONFIG` (`hotline: 0981 753 082`, `email: contact@qns.com`, `address: Thành phố Hà Nội`, `workingHours: 24/7`).
 - **Search Autocomplete**: Tìm kiếm hero hỗ trợ tiếng Việt không dấu (diacritics-insensitive) và highlight đúng từ khóa.
 
 ### Cổng 6: Production Build Gate (Biên dịch sản xuất)

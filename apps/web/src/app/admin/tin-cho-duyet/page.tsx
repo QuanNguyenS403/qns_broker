@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { authFetch } from '@/lib/auth-client';
+import { LandlordAvatar } from '@/components/QnsLogo';
 
 interface ListingItem {
   id: string;
@@ -96,6 +97,8 @@ const AMENITY_LABELS: Record<string, string> = {
   elevator: 'Thang máy',
   balcony: 'Ban công',
   fingerprint_lock: 'Khóa vân tay',
+  thuCung: 'Cho nuôi thú cưng',
+  xeDien: 'Hỗ trợ xe điện',
 };
 
 const DEFAULT_REASONS = [
@@ -182,7 +185,7 @@ export default function AdminPendingListingsPage() {
         method: 'POST',
       });
       if (res.ok) {
-        showToast('✓ Đã phê duyệt tin thành công');
+        showToast('Đã phê duyệt tin thành công');
         setSelectedListing(null);
         loadListings();
       } else {
@@ -203,7 +206,7 @@ export default function AdminPendingListingsPage() {
     try {
       const res = await authFetch(endpoint, { method: 'POST' });
       if (res.ok) {
-        showToast(isCurrentlyVerified ? 'Đã hủy nhãn Xác thực thực tế' : '✅ Đã gắn nhãn Đã kiểm tra thực tế thành công!');
+        showToast(isCurrentlyVerified ? 'Đã hủy nhãn Xác thực thực tế' : 'Đã gắn nhãn Đã kiểm tra thực tế thành công');
         setItems((prev) =>
           prev.map((item) =>
             item.id === listingId
@@ -242,7 +245,7 @@ export default function AdminPendingListingsPage() {
         body: JSON.stringify({ reason: finalReason, rejectionReason: finalReason }),
       });
       if (res.ok) {
-        showToast('✓ Đã từ chối tin đăng');
+        showToast('Đã từ chối tin đăng');
         setRejectingListing(null);
         setSelectedListing(null);
         setCustomReason('');
@@ -330,10 +333,10 @@ export default function AdminPendingListingsPage() {
         <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">Chuyên mục:</span>
         {[
           { key: '', label: 'Tất cả' },
-          { key: 'thue_can_ho', label: '🏢 Căn hộ' },
-          { key: 'thue_studio', label: '🛋️ Studio' },
-          { key: 'thue_tro', label: '🛏️ Phòng trọ SV / Người đi làm' },
-          { key: 'thue_mat_bang', label: '🏪 Mặt bằng kinh doanh' },
+          { key: 'thue_can_ho', label: 'Căn hộ' },
+          { key: 'thue_studio', label: 'Studio' },
+          { key: 'thue_tro', label: 'Phòng trọ SV / Người đi làm' },
+          { key: 'thue_mat_bang', label: 'Mặt bằng kinh doanh' },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -389,9 +392,6 @@ export default function AdminPendingListingsPage() {
         </div>
       ) : items.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
-          <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-            🎉
-          </div>
           <h3 className="text-lg font-bold text-slate-900 mb-1">
             {statusFilter === 'pending'
               ? 'Không có tin đăng nào cần duyệt'
@@ -430,7 +430,7 @@ export default function AdminPendingListingsPage() {
                   Cho thuê
                 </div>
                 <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded text-[11px] font-bold bg-black/60 text-white backdrop-blur-sm">
-                  📷 {listing.images?.length ?? 0} ảnh
+                  {listing.images?.length ?? 0} ảnh
                 </div>
               </div>
 
@@ -443,7 +443,7 @@ export default function AdminPendingListingsPage() {
                     </span>
                     {listing.utilitiesIncluded && (
                       <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        ⚡ Bao điện nước
+                        Bao điện nước
                       </span>
                     )}
                     <span className="text-xs text-slate-400">
@@ -472,18 +472,18 @@ export default function AdminPendingListingsPage() {
                       </span>
                     )}
                     <span className="text-sm font-semibold text-slate-700">
-                      📐 {listing.areaM2} m²
+                      {listing.areaM2} m²
                     </span>
                     {listing.bedrooms != null && (
-                      <span className="text-xs text-slate-600">🛏️ {listing.bedrooms} PN</span>
+                      <span className="text-xs text-slate-600">{listing.bedrooms} PN</span>
                     )}
                     {listing.bathrooms != null && (
-                      <span className="text-xs text-slate-600">🚿 {listing.bathrooms} WC</span>
+                      <span className="text-xs text-slate-600">{listing.bathrooms} WC</span>
                     )}
                   </div>
 
                   <p className="mt-2 text-xs text-slate-500 line-clamp-1">
-                    📍 {listing.addressDetail ? `${listing.addressDetail}, ` : ''}
+                    {listing.addressDetail ? `${listing.addressDetail}, ` : ''}
                     {listing.location?.name ?? 'Chưa rõ khu vực'}
                   </p>
                 </div>
@@ -491,9 +491,11 @@ export default function AdminPendingListingsPage() {
                 {/* Footer card */}
                 <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">
-                      {(listing.owner.fullName ?? 'U').charAt(0).toUpperCase()}
-                    </div>
+                    <LandlordAvatar
+                      avatarUrl={listing.owner.avatarUrl}
+                      name={listing.owner.fullName ?? undefined}
+                      size={28}
+                    />
                     <div>
                       <span className="text-xs font-semibold text-slate-800">
                         {listing.owner.fullName ?? 'Chủ phòng'}
@@ -636,14 +638,14 @@ export default function AdminPendingListingsPage() {
                 </div>
               </div>
 
-              {/* Chi phí điện nước minh bạch */}
+              {/* Chi phí điện nước */}
               <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
                 <h4 className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-2">
-                  ⚡ Biểu giá dịch vụ & Điện nước
+                  Biểu phí điện nước
                 </h4>
                 {selectedListing.utilitiesIncluded ? (
                   <p className="text-sm font-semibold text-emerald-700">
-                    ✓ Miễn phí hoàn toàn / Đã bao trọn tiền điện nước trong giá thuê.
+                    Miễn phí hoàn toàn / Đã bao trọn tiền điện nước trong giá thuê
                   </p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
@@ -669,11 +671,11 @@ export default function AdminPendingListingsPage() {
                 )}
               </div>
 
-              {/* Tiện ích */}
+              {/* Nội Thất */}
               {selectedListing.amenities && Object.keys(selectedListing.amenities).length > 0 && (
                 <div>
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Tiện ích phòng
+                    Nội Thất
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(selectedListing.amenities).map(([key, val]) => {
@@ -683,7 +685,7 @@ export default function AdminPendingListingsPage() {
                           key={key}
                           className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium border border-slate-200"
                         >
-                          ✓ {AMENITY_LABELS[key] ?? key}
+                          {AMENITY_LABELS[key] ?? key}
                         </span>
                       );
                     })}
@@ -695,7 +697,7 @@ export default function AdminPendingListingsPage() {
               {selectedListing.nearbyUniversities && selectedListing.nearbyUniversities.length > 0 && (
                 <div>
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    🎓 Trường đại học lân cận
+                    Trường đại học lân cận
                   </h4>
                   <div className="space-y-1.5">
                     {selectedListing.nearbyUniversities.map((item, idx) => (
@@ -766,12 +768,10 @@ export default function AdminPendingListingsPage() {
                 >
                   {selectedListing.verificationStatus === 'da_xac_thuc' ? (
                     <>
-                      <span>✕</span>
                       <span>Hủy mác Xác thực thực tế</span>
                     </>
                   ) : (
                     <>
-                      <span>🛡️</span>
                       <span>Xác thực thực tế (Trust-as-a-Service)</span>
                     </>
                   )}

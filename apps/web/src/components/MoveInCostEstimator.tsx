@@ -50,10 +50,7 @@ export function MoveInCostEstimator({
     <div id="move-in-estimator" className="rounded-2xl border border-teal-200 bg-white p-6 shadow-card scroll-mt-28">
       <div className="flex items-center justify-between gap-3 border-b border-surface-border pb-4">
         <div>
-          <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand/10 text-brand text-sm">
-              💰
-            </span>
+          <h3 className="text-lg font-bold text-text-primary">
             Ước tính chi phí dọn vào ở
           </h3>
           <p className="mt-0.5 text-xs text-text-muted">
@@ -62,7 +59,7 @@ export function MoveInCostEstimator({
         </div>
         {utilitiesIncluded && (
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-            ✓ Đã bao điện nước
+            Đã bao điện nước
           </span>
         )}
       </div>

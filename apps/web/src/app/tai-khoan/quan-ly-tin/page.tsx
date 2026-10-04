@@ -104,7 +104,7 @@ export default function QuanLyTinPage() {
       const res = await authFetch(`/listings/${listingId}/confirm-availability`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Không thể xác nhận tình trạng còn phòng');
-      alert('✓ ' + (data.message || 'Đã xác nhận phòng vẫn còn trống thành công!'));
+      alert(data.message || 'Đã xác nhận phòng vẫn còn trống thành công');
       load(statusFilter, page);
     } catch (err) {
       alert((err as Error).message);
@@ -137,9 +137,8 @@ export default function QuanLyTinPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/tai-khoan/leads"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-surface-border bg-white px-4 py-2.5 text-sm font-semibold text-text-secondary hover:border-brand hover:text-brand transition-colors shadow-sm"
+              className="inline-flex items-center rounded-xl border border-surface-border bg-white px-4 py-2.5 text-sm font-semibold text-text-secondary hover:border-brand hover:text-brand transition-colors shadow-sm"
             >
-              <span>📬</span>
               <span>Khách thuê liên hệ</span>
             </Link>
             <Link href="/dang-tin" className="btn-primary">
@@ -185,8 +184,7 @@ export default function QuanLyTinPage() {
           <>
             {listings.length === 0 ? (
               <div className="mt-6 rounded-2xl border border-dashed border-surface-border bg-white p-12 text-center">
-                <span className="text-4xl">📃</span>
-                <p className="mt-3 font-semibold text-text-primary">Chưa có tin nào ở trạng thái này</p>
+                <p className="font-semibold text-text-primary">Chưa có tin nào ở trạng thái này</p>
                 <Link href="/dang-tin" className="btn-primary mt-4 inline-flex">
                   Đăng tin đầu tiên
                 </Link>
@@ -219,7 +217,7 @@ export default function QuanLyTinPage() {
                               • Còn phòng: {lastConfirmed ? new Date(lastConfirmed).toLocaleDateString('vi-VN') : 'Mới đăng'}
                               {daysSinceConfirm >= 7 && (
                                 <span className="ml-1.5 inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-amber-100 text-amber-800">
-                                  ⚠️ &gt; 7 ngày
+                                  Quá 7 ngày
                                 </span>
                               )}
                             </span>
@@ -253,7 +251,7 @@ export default function QuanLyTinPage() {
                               }`}
                               title="Xác nhận phòng vẫn còn trống trong chu kỳ 7 ngày (§7)"
                             >
-                              🔄 Còn phòng
+                              Còn phòng
                             </button>
                             <button
                               type="button"
@@ -261,7 +259,7 @@ export default function QuanLyTinPage() {
                               className="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200"
                               title="Đánh dấu phòng đã cho thuê thành công"
                             >
-                              ✓ Đã thuê
+                              Đã thuê
                             </button>
                           </>
                         )}

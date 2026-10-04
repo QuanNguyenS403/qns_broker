@@ -2,6 +2,33 @@
 
 > File này ghi lại **chính xác code đã có trong repo tại thời điểm này** — phân biệt với `CLAUDE.md`/`README.md` vốn là tài liệu đặc tả/tầm nhìn đầy đủ. Đọc file này trước để biết cái gì chạy được ngay, cái gì còn là TODO.
 
+## 🛡️ ĐỢT 9: VÁ LỖ HỔNG OTP GAP-01, SIẾT CHẶT XÁC THỰC CHỦ NHÀ & ADMIN, BẢO TOÀN LUỒNG KHÁCH THUÊ PUBLIC (04/10/2026)
+
+Thực thi rà soát và tăng cường an ninh xác thực chuyên biệt cho Chủ nhà và Admin theo chỉ thị của Quan:
+1. **Khắc phục dứt điểm GAP-01 (Bypass OTP)**:
+   - Xác minh và củng cố `await this.otpService.verifyOtp(...)` tại cả 2 hàm `register()` và `resetPassword()` trong `auth.service.ts`.
+   - Chạy test kiểm thử tự động chứng minh OTP sai, rỗng, null/undefined, hoặc hết hạn bị từ chối 100% với HTTP 400 Bad Request, không thể vượt rào.
+2. **Siết chặt bảo mật mã OTP (Backend OtpService)**:
+   - Cấu hình lưu trữ Redis phân tán có TTL 5 phút, CSPRNG `crypto.randomInt(100000, 1000000)`.
+   - Băm mã HMAC-SHA256 (`codeHash`) với secret pepper, loại bỏ hoàn toàn việc lưu plaintext code trong bộ nhớ hoặc Redis; so sánh an toàn bằng `crypto.timingSafeEqual`.
+   - Phân lập mục đích mã OTP (`purpose isolation`: `register`, `reset_password`, `lead_verification`, `general`), triệt tiêu rủi ro lấy mã gửi cho đăng ký đem đi đổi mật khẩu hoặc ngược lại.
+   - Chặn tuyệt đối việc in mã OTP ra console/log ở môi trường không phải development.
+3. **Google OAuth & Chuẩn hóa định danh người dùng**:
+   - Google Sign-In chỉ gửi credential (ID token) thật từ client; Backend xác thực server-side qua thư viện chính thức, kiểm tra `aud`, `iss`, `exp` và dùng `sub` (Google user ID bất biến) làm khóa định danh.
+   - Tuyệt đối không tin tưởng số điện thoại tự khai gửi từ client; nếu tài khoản Google chưa có SĐT xác thực trong hệ thống, bắt buộc qua bước OTP riêng (`needPhoneVerification`).
+   - Chuẩn hóa định danh số điện thoại `normalizePhone`: đưa mọi biến thể (+84, 84, dấu cách, dấu gạch nối) về 1 định dạng duy nhất 10 số (09xxxxxxxx) trước khi lưu trữ hoặc đối chiếu DB.
+4. **JWT Session Revocation & Admin MFA động RFC 6238 TOTP**:
+   - Tăng `tokenVersion` khi đổi mật khẩu, admin khóa tài khoản hoặc người dùng đăng xuất (`POST /auth/logout`); `JwtStrategy` từ chối ngay lập tức token cũ (HTTP 401).
+   - Nâng cấp cơ chế xác thực đa yếu tố cho Admin: thay thế so khớp header tĩnh bằng TOTP RFC 6238 động theo thời gian (cửa sổ 30 giây, dung sai +-1 bước sóng), loại bỏ hoàn toàn nguy cơ giả mạo Header (Header Forgery).
+   - Áp dụng Rate Limiting `@Throttle()` cho các endpoint nhạy cảm (`/auth/otp/send`, `/auth/login`, `/auth/bootstrap-admin`, `/auth/register`, `/auth/forgot-password/reset`).
+5. **RÀNG BUỘC TUYỆT ĐỐI — Giữ nguyên luồng khách thuê hoàn toàn Public**:
+   - Endpoint `POST /leads` và toàn bộ các endpoint phục vụ khách thuê tìm kiếm, xem phòng giữ nguyên `@Public()`, không gắn JWT Guard hay bất kỳ rào cản đăng nhập nào.
+6. **Kiểm thử nghiệm thu thực tế**:
+   - Bộ test `test-auth-hardening-landlord-admin.js`: 14/14 PASS (100%).
+   - Bộ test `test-dev05-at08.js`: 5/5 PASS (100%).
+   - Monorepo build: `pnpm --filter api exec tsc` sạch 0 lỗi; `pnpm --filter web build` biên dịch thành công 31/31 routes Next.js.
+   - Tuân thủ quy chuẩn GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu trên toàn bộ văn bản giao diện người dùng nhìn thấy.
+
 ## 🚀 ĐỢT 8: THỰC THI KẾ HOẠCH ĐIỀU CHỈNH V2, CHẶN LỖI P0, ENGINE HOA HỒNG V2 & HOÀN TẤT GATE G-01 (25/09/2026)
 
 Thực thi theo kế hoạch tại `docs/audit/ke-hoach-dieu-chinh-batdongsan-2026-09-25.md` (V2 thay thế hoàn toàn V1):

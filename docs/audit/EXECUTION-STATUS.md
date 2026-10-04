@@ -5,7 +5,7 @@
 > File [ke-hoach-dieu-chinh-batdongsan-2026-09-25.md](file:///d:/BĐS/docs/audit/ke-hoach-dieu-chinh-batdongsan-2026-09-25.md) (V2) **THAY THẾ HOÀN TOÀN** [ke-hoach-thuc-thi-moi-gioi-cho-thue.md](file:///d:/BĐS/docs/audit/ke-hoach-thuc-thi-moi-gioi-cho-thue.md) (V1) ở các điểm mâu thuẫn:
 > 1. **Công thức phí**: V2 áp dụng **bình quân có trọng số toàn kỳ hợp đồng** $\Sigma(p_i \times m_i) / \Sigma(m_i) \times 40\%$, làm tròn half-up ở bước cuối cùng. Toàn bộ các finding/tiêu chí của V1 dựa trên "40% tháng đầu" (kể cả AT-15, AT-16 cũ) nay bị thay thế bởi bộ kiểm thử FEE-01 đến FEE-14 của V2; không đóng bằng cách tự coi V1 đã đúng.
 > 2. **Gỡ bỏ thanh toán trực tuyến**: V2 bãi bỏ hoàn toàn thanh toán online, không checkout, không VietQR, không webhook ngân hàng tự động. Mục DEV-16 (tự động đối soát/cổng thanh toán) chính thức bị loại khỏi phạm vi phát hành. Route cũ trả 404/410 nhất quán.
-> 3. **Xác thực chủ nhà**: Sửa lỗi P0 xác thực (GAP-01 thiếu await, GAP-02/03 Google tự gán số điện thoại). Chỉ hỗ trợ Google verify server-side và SMS OTP số điện thoại.
+> 3. **Xác thực chủ nhà**: Sửa lỗi P0 xác thực (GAP-01 thiếu await, GAP-02/03 Google tự gán số điện thoại) — **ĐÃ ĐÓNG HOÀN TOÀN TRÊN MAIN VỚI BẰNG CHỨNG TEST THẬT** (`test-auth-hardening-landlord-admin.js` 14/14 PASS, `test-dev05-at08.js` 5/5 PASS). Chỉ hỗ trợ Google verify server-side và SMS OTP số điện thoại; bảo toàn `POST /leads` và luồng khách thuê 100% `@Public()`.
 > 4. **Chấp thuận điều khoản máy chủ**: Chấp thuận gắn liền với từng revision tin đăng trên máy chủ, lưu DocumentAcceptance có hash, snapshot điều khoản và bằng chứng.
 
 > **Quy ước trạng thái**: Chỉ sử dụng đúng 3 trạng thái chuẩn:

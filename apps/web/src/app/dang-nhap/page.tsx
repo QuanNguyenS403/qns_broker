@@ -82,6 +82,12 @@ function DangNhapContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? 'Đăng nhập Google thất bại');
 
+      if (data.needPhoneVerification) {
+        setError(data.message || 'Tài khoản Google cần xác thực số điện thoại chủ nhà qua OTP');
+        setStep('phone');
+        return;
+      }
+
       setTokens(data.accessToken, data.refreshToken);
       const safeUrl = getSafeReturnUrl(returnToParam);
       router.push(safeUrl);
@@ -156,7 +162,7 @@ function DangNhapContent() {
       const res = await fetch(`${API_URL}/auth/otp/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, purpose: 'register' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? 'Gửi OTP thất bại');
@@ -176,7 +182,7 @@ function DangNhapContent() {
       const res = await fetch(`${API_URL}/auth/otp/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, purpose: 'reset_password' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? 'Không thể gửi mã OTP');
@@ -239,9 +245,6 @@ function DangNhapContent() {
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="rounded-2xl border border-surface-border bg-white p-7 shadow-elevated">
         <div className="text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-xl text-brand mb-3">
-            🔐
-          </div>
           <h1 className="text-2xl font-bold text-text-primary">Đăng nhập / Đăng ký</h1>
           <p className="mt-1 text-xs text-text-secondary">
             Xác thực bằng số điện thoại (OTP)

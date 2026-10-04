@@ -148,7 +148,6 @@ export default function AdminPricingSeasonsPage() {
           }`}
         >
           <div className="flex items-center gap-2">
-            <span>{feedback.type === 'success' ? '✅' : '⚠️'}</span>
             <span>{feedback.message}</span>
           </div>
           <button onClick={() => setFeedback(null)} className="text-xs font-bold opacity-70 hover:opacity-100">
@@ -162,7 +161,6 @@ export default function AdminPricingSeasonsPage() {
         {/* Cột trái: Form nhập liệu */}
         <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-card">
           <h2 className="text-base font-bold text-slate-900 mb-5 flex items-center gap-2">
-            <span>✨</span>
             <span>Thiết lập Mùa Cao Điểm Mới</span>
           </h2>
 
@@ -269,7 +267,7 @@ export default function AdminPricingSeasonsPage() {
                 disabled={saving}
                 className="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
               >
-                {saving ? 'Đang lưu cấu hình...' : '💾 Lưu Cấu Hình Mùa Cao Điểm'}
+                {saving ? 'Đang lưu cấu hình...' : 'Lưu Cấu Hình Mùa Cao Điểm'}
               </button>
             </div>
           </form>
@@ -279,9 +277,6 @@ export default function AdminPricingSeasonsPage() {
         <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2.5 text-teal-400 mb-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-500/20 text-base">
-                👁️
-              </span>
               <span className="text-xs font-bold uppercase tracking-wider">
                 Xem trước giá thực tế (Live Preview)
               </span>
@@ -328,7 +323,6 @@ export default function AdminPricingSeasonsPage() {
           </div>
 
           <div className="mt-6 pt-5 border-t border-white/10 text-[11px] text-slate-400 flex items-center gap-2">
-            <span>💡</span>
             <span>Gói Dùng Thử luôn giữ mức 0đ bất kể hệ số mùa vụ</span>
           </div>
         </div>
@@ -349,7 +343,7 @@ export default function AdminPricingSeasonsPage() {
           <div className="p-8 text-center text-slate-500 text-xs">Đang tải danh sách mùa...</div>
         ) : seasons.length === 0 ? (
           <div className="p-8 text-center text-slate-500 text-xs">
-            Chưa có cấu hình mùa vụ nào. Hãy tạo mùa cao điểm đầu tiên ở form trên!
+            Chưa có cấu hình mùa vụ nào. Hãy tạo mùa cao điểm đầu tiên ở form trên
           </div>
         ) : (
           <div className="overflow-x-auto">

@@ -21,12 +21,10 @@ export default function ListingDetailLoading() {
               </div>
             </div>
 
-            {/* Tiêu đề & giá skeleton */}
+            {/* Tiêu đề skeleton */}
             <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card space-y-3">
-              <div className="h-6 w-24 skeleton rounded-full" />
               <div className="h-8 w-3/4 skeleton rounded-xl" />
               <div className="h-4 w-1/2 skeleton rounded" />
-              <div className="h-9 w-44 skeleton rounded-lg pt-2" />
             </div>
 
             {/* Thông tin chính skeleton */}
@@ -38,6 +36,16 @@ export default function ListingDetailLoading() {
                     <div className="h-3 w-16 skeleton rounded" />
                     <div className="h-5 w-24 skeleton rounded" />
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Nội Thất skeleton */}
+            <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card space-y-3">
+              <div className="h-5 w-28 skeleton rounded-lg" />
+              <div className="flex flex-wrap gap-2">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="h-8 w-24 skeleton rounded-xl" />
                 ))}
               </div>
             </div>
@@ -63,7 +71,7 @@ export default function ListingDetailLoading() {
               <div className="aspect-[16/9] md:aspect-[21/9] w-full skeleton rounded-xl" />
             </div>
 
-            {/* Bất động sản tương tự skeleton */}
+            {/* Bài đăng liên quan skeleton */}
             <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card space-y-4">
               <div className="h-5 w-44 skeleton rounded-lg" />
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -84,21 +92,19 @@ export default function ListingDetailLoading() {
           {/* Cột phải — Sidebar skeleton (1/3 chiều rộng) */}
           <div className="space-y-4">
             <div className="rounded-2xl border border-surface-border bg-white p-5 shadow-card space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 skeleton rounded-full" />
-                <div className="space-y-2 flex-1">
-                  <div className="h-4 w-28 skeleton rounded" />
-                  <div className="h-3 w-20 skeleton rounded" />
-                </div>
+              <div className="space-y-1">
+                <div className="h-4 w-20 skeleton rounded" />
+                <div className="h-8 w-44 skeleton rounded" />
               </div>
-              <div className="h-11 w-full skeleton rounded-xl" />
+              <div className="space-y-2">
+                <div className="h-4 w-3/4 skeleton rounded" />
+                <div className="h-4 w-1/2 skeleton rounded" />
+                <div className="h-4 w-2/3 skeleton rounded" />
+              </div>
               <div className="h-10 w-full skeleton rounded-xl" />
-              <div className="flex justify-between pt-2">
-                <div className="h-9 w-24 skeleton rounded-full" />
-                <div className="h-9 w-28 skeleton rounded-full" />
-              </div>
+              <div className="h-14 w-full skeleton rounded-xl" />
+              <div className="h-32 w-full skeleton rounded-2xl" />
             </div>
-            <div className="h-36 skeleton rounded-2xl" />
           </div>
         </div>
       </div>

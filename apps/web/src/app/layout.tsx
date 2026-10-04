@@ -36,6 +36,11 @@ export const metadata: Metadata = {
     locale: 'vi_VN',
     siteName: 'QNS BROKER',
   },
+  icons: {
+    icon: '/logo-qns.svg',
+    shortcut: '/logo-qns.svg',
+    apple: '/logo-qns.svg',
+  },
   robots: { index: true, follow: true },
 };
 

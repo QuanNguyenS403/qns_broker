@@ -80,7 +80,7 @@ export default async function ChoThueMatBangPage({ searchParams }: Props) {
       <div className="container-max py-8">
         {isApiError && isProduction && (
           <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-700">
-            ⚠️ Đang có gián đoạn kết nối tới máy chủ dữ liệu. Danh sách mặt bằng tạm thời chưa tải được.
+            Đang có gián đoạn kết nối tới máy chủ dữ liệu. Danh sách mặt bằng tạm thời chưa tải được
           </div>
         )}
         {/* Breadcrumb */}
@@ -92,8 +92,7 @@ export default async function ChoThueMatBangPage({ searchParams }: Props) {
 
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 text-rose-700 text-xs font-semibold mb-2">
-              <span>🏪</span>
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-rose-500/10 text-rose-700 text-xs font-semibold mb-2">
               <span>Chuyên mục Mặt bằng kinh doanh & Cửa hàng</span>
             </div>
             <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
@@ -119,10 +118,9 @@ export default async function ChoThueMatBangPage({ searchParams }: Props) {
 
         {items.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-surface-border bg-white p-10 text-center">
-            <span className="text-4xl">🏪</span>
-            <p className="mt-3 font-semibold text-text-primary">Không tìm thấy mặt bằng phù hợp</p>
+            <p className="font-semibold text-text-primary">Không tìm thấy mặt bằng phù hợp</p>
             <p className="mt-1 text-sm text-text-secondary">
-              Thử điều chỉnh bộ lọc hoặc tìm kiếm theo khu vực/tuyến phố khác.
+              Thử điều chỉnh bộ lọc hoặc tìm kiếm theo khu vực/tuyến phố khác
             </p>
           </div>
         ) : (

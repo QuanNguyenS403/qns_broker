@@ -193,12 +193,12 @@ export function SearchFilterBar({
             onChange={(e) => setUniversitySlug(e.target.value)}
             className="filter-select"
           >
-            <option value="">🎓 Gần trường ĐH (Toàn quốc)</option>
+            <option value="">Gần trường ĐH (Toàn quốc)</option>
             {['TP. Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng & Miền Trung', 'Cần Thơ & Miền Tây', 'Miền Bắc khác'].map((reg) => {
               const items = universities.filter((u) => u.region === reg);
               if (items.length === 0) return null;
               return (
-                <optgroup key={reg} label={`🏛️ ${reg}`}>
+                <optgroup key={reg} label={reg}>
                   {items.map((u) => (
                     <option key={u.slug} value={u.slug}>
                       {u.abbreviation ? `${u.abbreviation} — ${u.name}` : u.name}
@@ -277,7 +277,6 @@ export function SearchFilterBar({
                 : 'border-surface-border bg-surface text-text-secondary hover:bg-surface-muted'
             }`}
           >
-            <span>⚡💧</span>
             <span>Bao điện nước</span>
           </button>
 

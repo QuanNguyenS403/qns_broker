@@ -30,7 +30,7 @@ export function RevealPhoneButton({
   async function handleReveal() {
     setError(null);
     if (listingId.startsWith('demo-')) {
-      setError('Đây là tin mẫu thử nghiệm, vui lòng liên hệ hotline chính thức');
+      setError('Đây là tin mẫu thử nghiệm, vui lòng đặt lịch xem phòng để được hỗ trợ trực tiếp');
       return;
     }
     if (!isLoggedIn()) {

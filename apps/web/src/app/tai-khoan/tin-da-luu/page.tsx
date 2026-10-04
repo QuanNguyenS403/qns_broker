@@ -72,11 +72,11 @@ export default function TinDaLuuPage() {
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Bất động sản đã lưu</h1>
           <p className="mt-1 text-sm text-text-secondary">
-            Danh sách những bất động sản bạn đang theo dõi và quan tâm.
+            Danh sách những bất động sản bạn đang theo dõi và quan tâm
           </p>
         </div>
         <span className="rounded-full bg-rose-50 border border-rose-200 px-3.5 py-1.5 text-xs font-bold text-rose-600">
-          ❤️ {total} tin đã lưu
+          {total} tin đã lưu
         </span>
       </div>
 
@@ -87,10 +87,9 @@ export default function TinDaLuuPage() {
         <>
           {listings.length === 0 ? (
             <div className="mt-8 rounded-2xl border border-dashed border-surface-border bg-white p-12 text-center">
-              <span className="text-4xl">🤍</span>
               <h3 className="mt-3 text-base font-bold text-text-primary">Bạn chưa lưu bất động sản nào</h3>
               <p className="mt-1 text-sm text-text-secondary max-w-md mx-auto">
-                Khi tìm kiếm nhà đất, hãy bấm vào nút &quot;Lưu tin&quot; trên trang chi tiết để lưu lại và theo dõi bất cứ lúc nào.
+                Khi tìm kiếm nhà đất, hãy bấm vào nút &quot;Lưu tin&quot; trên trang chi tiết để lưu lại và theo dõi bất cứ lúc nào
               </p>
               <div className="mt-6 flex justify-center gap-3">
                 <Link
@@ -121,7 +120,6 @@ export default function TinDaLuuPage() {
                       >
                         {listing.title}
                       </Link>
-                      <p className="mt-0.5 text-xs text-text-muted">{listing.addressDetail ?? listing.location.name}</p>
                       <div className="mt-1 flex items-center gap-3 text-xs text-text-secondary">
                         <span className="font-bold text-brand text-sm">{formatPrice(listing.price)}</span>
                         {listing.transactionType === 'rent' && <span className="text-[11px] text-text-muted">/tháng</span>}

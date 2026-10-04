@@ -352,7 +352,7 @@ export default function AdminDuyetGoiPage() {
             <p className="text-xl font-extrabold text-amber-700 font-mono mt-1">
               {formatExactPrice(financeSummary.pendingQuotedTotal)}
             </p>
-            <p className="text-[11px] text-amber-600 mt-1">⚠️ Chưa phải doanh thu ({financeSummary.pendingOrdersCount} đơn)</p>
+            <p className="text-[11px] text-amber-600 mt-1">Chưa phải doanh thu ({financeSummary.pendingOrdersCount} đơn)</p>
           </div>
         </div>
       )}
@@ -366,7 +366,6 @@ export default function AdminDuyetGoiPage() {
           }`}
         >
           <div className="flex items-center gap-2">
-            <span>{feedback.type === 'success' ? '✅' : '⚠️'}</span>
             <span>{feedback.message}</span>
           </div>
           <button onClick={() => setFeedback(null)} className="text-xs font-bold opacity-70 hover:opacity-100">
@@ -386,7 +385,7 @@ export default function AdminDuyetGoiPage() {
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            ⏳ Chờ duyệt thanh toán
+            Chờ duyệt thanh toán
           </button>
           <button
             onClick={() => setActiveTab('all')}
@@ -396,7 +395,7 @@ export default function AdminDuyetGoiPage() {
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            📋 Tất cả lịch sử yêu cầu
+            Tất cả lịch sử yêu cầu
           </button>
         </div>
 
@@ -425,8 +424,8 @@ export default function AdminDuyetGoiPage() {
         ) : requests.length === 0 ? (
           <div className="p-12 text-center text-slate-500 text-xs">
             {activeTab === 'pending'
-              ? 'Hiện không có yêu cầu nâng cấp gói nào đang chờ duyệt. 🎉'
-              : 'Chưa có lịch sử yêu cầu nào khớp điều kiện tìm kiếm.'}
+              ? 'Hiện không có yêu cầu nâng cấp gói nào đang chờ duyệt'
+              : 'Chưa có lịch sử yêu cầu nào khớp điều kiện tìm kiếm'}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -459,7 +458,7 @@ export default function AdminDuyetGoiPage() {
                           href={`tel:${item.user.phone}`}
                           className="text-[11px] text-teal-600 font-mono font-bold hover:underline"
                         >
-                          📞 {item.user.phone}
+                          {item.user.phone}
                         </a>
                       </td>
 
@@ -546,7 +545,7 @@ export default function AdminDuyetGoiPage() {
                               onClick={() => handleApprove(item.id, item.plan.name, item.user.phone, item.quotedAmount || item.pricePaid)}
                               className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-colors shadow-xs"
                             >
-                              {actionLoading === item.id ? 'Đang duyệt...' : '✓ Xác nhận & Kích hoạt'}
+                              {actionLoading === item.id ? 'Đang duyệt...' : 'Xác nhận & Kích hoạt'}
                             </button>
                             <button
                               type="button"

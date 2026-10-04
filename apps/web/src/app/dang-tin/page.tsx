@@ -24,7 +24,7 @@ interface PropertyGroup {
 
 const PROPERTY_TYPE_GROUPS: PropertyGroup[] = [
   {
-    groupName: '🏢 Căn hộ',
+    groupName: 'Căn hộ',
     items: [
       { value: 'can-ho-chung-cu', label: 'Căn hộ chung cư' },
       { value: 'can-ho-mini', label: 'Căn hộ mini' },
@@ -33,7 +33,7 @@ const PROPERTY_TYPE_GROUPS: PropertyGroup[] = [
     ],
   },
   {
-    groupName: '🛋️ Studio',
+    groupName: 'Studio',
     items: [
       { value: 'studio', label: 'Studio tiêu chuẩn' },
       { value: 'studio-ban-cong', label: 'Studio ban công' },
@@ -42,7 +42,7 @@ const PROPERTY_TYPE_GROUPS: PropertyGroup[] = [
     ],
   },
   {
-    groupName: '🛏️ Phòng trọ & Mặt bằng',
+    groupName: 'Phòng trọ & Mặt bằng',
     items: [
       { value: 'phong-tro-sinh-vien', label: 'Phòng trọ sinh viên' },
       { value: 'phong-tro-nguoi-di-lam', label: 'Phòng trọ người đi làm' },
@@ -187,6 +187,19 @@ export default function DangTinPage() {
     }
 
     // FE-N06 & FE-N07: Thu thập tiện ích và biểu phí điện nước minh bạch
+    const depositRaw = ((form.get('depositInput') as string) || (form.get('depositAmount') as string) || '').trim();
+    let parsedDepositAmount: number | undefined = undefined;
+    let parsedDepositMethod: string | undefined = undefined;
+
+    if (depositRaw) {
+      const sanitized = depositRaw.replace(/[.,\s]/g, '');
+      if (/^\d+$/.test(sanitized)) {
+        parsedDepositAmount = Number(sanitized);
+      } else {
+        parsedDepositMethod = depositRaw;
+      }
+    }
+
     const amenities = {
       dieuHoa: form.get('amenity_dieuHoa') === 'on',
       nongLanh: form.get('amenity_nongLanh') === 'on',
@@ -198,6 +211,9 @@ export default function DangTinPage() {
       gioTuDo: form.get('amenity_gioTuDo') === 'on',
       choDeXe: form.get('amenity_choDeXe') === 'on',
       bepRieng: form.get('amenity_bepRieng') === 'on',
+      thuCung: form.get('amenity_thuCung') === 'on',
+      xeDien: form.get('amenity_xeDien') === 'on',
+      depositMethod: parsedDepositMethod,
     };
 
     const payload = {
@@ -219,7 +235,7 @@ export default function DangTinPage() {
       title: form.get('title') as string,
       description: (form.get('description') as string) || undefined,
       price: Number(form.get('price')),
-      depositAmount: form.get('depositAmount') ? Number(form.get('depositAmount')) : undefined,
+      depositAmount: parsedDepositAmount,
       minLeaseMonths: form.get('minLeaseMonths') ? Number(form.get('minLeaseMonths')) : undefined,
       electricityPricePerKwh: form.get('electricityPricePerKwh') ? Number(form.get('electricityPricePerKwh')) : undefined,
       waterPricePerM3: form.get('waterPricePerM3') ? Number(form.get('waterPricePerM3')) : undefined,
@@ -295,8 +311,8 @@ export default function DangTinPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
         <div className="mb-8 text-center space-y-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3.5 py-1 text-xs font-bold text-brand">
-            🔑 Cổng dịch vụ người cho thuê
+          <span className="inline-flex items-center rounded-full bg-brand/10 px-3.5 py-1 text-xs font-bold text-brand">
+            Cổng dịch vụ người cho thuê
           </span>
           <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
             Đăng tin cho thuê Căn hộ, Studio & Phòng trọ
@@ -307,9 +323,6 @@ export default function DangTinPage() {
         </div>
 
         <div className="rounded-3xl border border-teal-200/80 bg-gradient-to-br from-teal-50/70 via-white to-teal-50/30 p-8 md:p-10 text-center space-y-5 shadow-elevated">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand/10 text-3xl text-brand ring-1 ring-brand/20">
-            🔒
-          </div>
           <div className="space-y-1.5">
             <h2 className="text-lg md:text-xl font-bold text-slate-900">
               Bạn cần đăng nhập tài khoản để đăng tin cho thuê
@@ -361,8 +374,8 @@ export default function DangTinPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand mb-2">
-          🔑 Nền tảng chuyên biệt cho thuê
+        <span className="inline-flex items-center rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand mb-2">
+          Nền tảng chuyên biệt cho thuê
         </span>
         <h1 className="text-2xl font-bold text-text-primary">Đăng tin cho thuê Căn hộ, Studio & Phòng trọ</h1>
         <p className="mt-1 text-sm text-text-secondary">
@@ -408,7 +421,7 @@ export default function DangTinPage() {
             <option value="">-- Chọn khu vực --</option>
             {locations.map((loc) => (
               <option key={loc.id} value={loc.id}>
-                {loc.level === 'province' ? `📍 ${loc.name}` : loc.level === 'district' ? `  └─ ${loc.name}` : `     └─ ${loc.name}`}
+                {loc.level === 'province' ? loc.name : loc.level === 'district' ? `  └─ ${loc.name}` : `     └─ ${loc.name}`}
               </option>
             ))}
           </select>
@@ -460,14 +473,14 @@ export default function DangTinPage() {
             <p className="mt-1 text-[11px] text-text-muted">Nhập số nguyên VNĐ — VD: 3500000</p>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-text-secondary">Tiền đặt cọc (VNĐ)</label>
+            <label className="mb-1.5 block text-xs font-semibold text-text-secondary">Cọc (Chi phí hoặc phương thức)</label>
             <input
-              name="depositAmount"
-              type="number"
-              placeholder="VD: 3500000"
+              name="depositInput"
+              type="text"
+              placeholder="VD: 3.500.000 hoặc 1 tháng tiền thuê"
               className="input-field"
             />
-            <p className="mt-1 text-[11px] text-text-muted">Thường bằng 1 tháng tiền thuê</p>
+            <p className="mt-1 text-[11px] text-text-muted">Nhập số tiền VNĐ hoặc phương thức đặt cọc</p>
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-text-secondary">Hợp đồng tối thiểu (tháng)</label>
@@ -480,11 +493,11 @@ export default function DangTinPage() {
           </div>
         </div>
 
-        {/* Biểu phí điện nước & Chi phí sinh hoạt minh bạch (USP QNS BROKER) */}
+        {/* Biểu phí điện nước */}
         <div className="rounded-xl border border-surface-border bg-slate-50/60 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-text-primary">
-              Biểu phí sinh hoạt minh bạch (Rõ chi phí)
+              Biểu phí điện nước
             </span>
             <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-brand">
               <input type="checkbox" name="utilitiesIncluded" className="rounded text-brand" />
@@ -522,51 +535,59 @@ export default function DangTinPage() {
           </div>
         </div>
 
-        {/* Tiện ích có sẵn trong phòng / căn hộ */}
+        {/* Nội Thất */}
         <div className="rounded-xl border border-surface-border bg-slate-50/60 p-4 space-y-2.5">
           <span className="text-xs font-bold uppercase tracking-wider text-text-primary block">
-            Tiện ích có sẵn
+            Nội Thất
           </span>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 text-xs">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_dieuHoa" defaultChecked className="rounded text-brand" />
-              <span>❄️ Điều hòa</span>
+              <span>Điều hòa</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_nongLanh" defaultChecked className="rounded text-brand" />
-              <span>🚿 Nóng lạnh</span>
+              <span>Nóng lạnh</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_tuLanh" className="rounded text-brand" />
-              <span>🧊 Tủ lạnh</span>
+              <span>Tủ lạnh</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_mayGiat" className="rounded text-brand" />
-              <span>🧺 Máy giặt</span>
+              <span>Máy giặt</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_banCong" className="rounded text-brand" />
-              <span>🌿 Ban công</span>
+              <span>Ban công</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_thangMay" className="rounded text-brand" />
-              <span>🛗 Thang máy</span>
+              <span>Thang máy</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_khoaVanTay" className="rounded text-brand" />
-              <span>🔐 Khóa vân tay</span>
+              <span>Khóa vân tay</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_gioTuDo" defaultChecked className="rounded text-brand" />
-              <span>🕒 Giờ giấc tự do</span>
+              <span>Giờ giấc tự do</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_choDeXe" defaultChecked className="rounded text-brand" />
-              <span>🛵 Chỗ để xe</span>
+              <span>Chỗ để xe</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_bepRieng" className="rounded text-brand" />
-              <span>🍳 Bếp nấu riêng</span>
+              <span>Bếp nấu riêng</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="amenity_thuCung" className="rounded text-brand" />
+              <span>Cho nuôi thú cưng</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="amenity_xeDien" className="rounded text-brand" />
+              <span>Hỗ trợ xe điện / Sạc xe</span>
             </label>
           </div>
         </div>
@@ -646,7 +667,7 @@ export default function DangTinPage() {
 
         {uploadStatus && (
           <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 text-xs text-blue-800 flex items-center gap-2">
-            <span className="animate-spin text-sm">⏳</span>
+            <span className="inline-block w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
             <span>{uploadStatus}</span>
           </div>
         )}
@@ -659,8 +680,10 @@ export default function DangTinPage() {
 
         {message === 'success' && (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-center">
-            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold">
-              ✓
+            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
             <p className="font-bold text-emerald-800">Đăng tin thành công</p>
             <p className="mt-1 text-xs text-emerald-600">

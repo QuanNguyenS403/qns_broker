@@ -1,6 +1,7 @@
 export const SITE_CONFIG = {
   name: 'QNS BROKER',
   brandName: 'QNS BROKER',
+  logoUrl: '/logo-qns.svg',
   domain: 'qnsbroker.com',
   url: 'https://qnsbroker.com',
   slogan: 'Rõ chi phí, đúng người cho thuê',
@@ -11,10 +12,10 @@ export const SITE_CONFIG = {
   agentName: 'Đức Quân',
   agentRole: 'Người tư vấn và trực tiếp dẫn xem',
   zalo: '0981 753 082',
-  email: 'ducquan16102006@gmail.com',
-  supportEmail: 'ducquan16102006@gmail.com',
+  email: 'contact@qns.com',
+  supportEmail: 'contact@qns.com',
   workingHours: '24/7',
-  address: 'Ngõ 622, Minh Khai, Phường Vĩnh Tuy, Hà Nội',
+  address: 'Thành phố Hà Nội',
   servicePolicy: 'Tư vấn và xem phòng miễn phí. Hợp đồng thuê ký trực tiếp với bên có quyền cho thuê. Chủ thanh toán phí dịch vụ khi thuê thành công theo thỏa thuận',
   bankAccount: {
     bankName: 'Vietcombank (VCB)',

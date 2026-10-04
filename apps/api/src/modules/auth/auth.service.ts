@@ -2,13 +2,13 @@ import { BadRequestException, ConflictException, Injectable, UnauthorizedExcepti
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../prisma/prisma.service';
-import { OtpService } from './otp.service';
+import { OtpPurpose, OtpService } from './otp.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
-import { canonicalizeEmail, canonicalizePhone } from './utils/identity-canonical';
+import { canonicalizeEmail, canonicalizePhone, normalizePhone } from './utils/identity-canonical';
 
 function serializeUser(user: {
   id: bigint;
@@ -39,12 +39,14 @@ export class AuthService {
   ) {}
 
   async checkPhone(phone: string) {
-    const user = await this.prisma.user.findUnique({ where: { phone }, select: { id: true } });
+    const cleanPhone = normalizePhone(phone);
+    const user = await this.prisma.user.findUnique({ where: { phone: cleanPhone }, select: { id: true } });
     return { exists: !!user };
   }
 
-  async sendOtp(phone: string) {
-    const code = await this.otpService.sendOtp(phone);
+  async sendOtp(phone: string, purpose: OtpPurpose = 'general') {
+    const cleanPhone = normalizePhone(phone);
+    const code = await this.otpService.sendOtp(cleanPhone, purpose);
     const isDev = process.env.SMS_PROVIDER === 'mock' || !process.env.SMS_PROVIDER || process.env.NODE_ENV !== 'production';
     return {
       message: 'Đã gửi mã xác thực SMS',
@@ -53,16 +55,17 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    const cleanPhone = normalizePhone(dto.phone);
+    const existing = await this.prisma.user.findUnique({ where: { phone: cleanPhone } });
     if (existing) throw new ConflictException('Số điện thoại đã được đăng ký, vui lòng đăng nhập');
 
-    const otpValid = await this.otpService.verifyOtp(dto.phone, dto.otpCode);
+    const otpValid = await this.otpService.verifyOtp(cleanPhone, dto.otpCode, 'register');
     if (!otpValid) throw new BadRequestException('Mã OTP không đúng hoặc đã hết hạn');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({
       data: {
-        phone: dto.phone,
+        phone: cleanPhone,
         fullName: dto.fullName,
         passwordHash,
         isPhoneVerified: true,
@@ -73,7 +76,8 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    const cleanPhone = normalizePhone(dto.phone);
+    const user = await this.prisma.user.findUnique({ where: { phone: cleanPhone } });
     if (!user || !user.passwordHash) throw new UnauthorizedException('Số điện thoại hoặc mật khẩu không đúng');
 
     if (user.isBlocked) {
@@ -148,9 +152,13 @@ export class AuthService {
     const googleUser = await this.verifyGoogleIdToken(dto.credential);
 
     // 2. Tra cứu tài khoản theo Google sub làm khóa duy nhất (GAP-02, GAP-03)
-    let user: any = null;
+    let user = await this.prisma.user.findFirst({
+      where: {
+        googleId: googleUser.sub,
+      },
+    });
 
-    if ((this.prisma as any).authIdentity) {
+    if (!user && (this.prisma as any).authIdentity) {
       const identity = await (this.prisma as any).authIdentity.findUnique({
         where: {
           provider_subject: {
@@ -174,16 +182,16 @@ export class AuthService {
     }
 
     // 4. Nếu chưa có tài khoản gắn với sub:
-    // Theo BR-05 & Mục 5.1: Đăng ký Google yêu cầu hoàn tất xác minh OTP email
+    // Theo BR-05 & Mục 5.1: Đăng ký Google yêu cầu hoàn tất xác minh SĐT qua OTP
     // Tuyệt đối không tự cấp token đăng nhập hoặc tin số điện thoại client tự gửi
     return {
-      needEmailOtp: true,
+      needPhoneVerification: true,
       googleSub: googleUser.sub,
       email: googleUser.email,
       canonicalEmail: googleUser.canonicalEmail,
       name: googleUser.name,
       picture: googleUser.picture,
-      message: 'Vui lòng xác minh mã OTP gửi tới email tài khoản Google để hoàn tất đăng ký',
+      message: 'Vui lòng xác thực số điện thoại qua OTP để kích hoạt tài khoản chủ nhà',
     };
   }
 
@@ -216,14 +224,15 @@ export class AuthService {
       );
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
-    const existing = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    const cleanPhone = normalizePhone(dto.phone);
+    const existing = await this.prisma.user.findUnique({ where: { phone: cleanPhone } });
 
+    const passwordHash = await bcrypt.hash(dto.password, 10);
     let adminUser;
     if (!existing) {
       adminUser = await this.prisma.user.create({
         data: {
-          phone: dto.phone,
+          phone: cleanPhone,
           fullName: dto.fullName || 'Quản trị viên',
           passwordHash,
           role: 'admin',
@@ -301,10 +310,11 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const user = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+    const cleanPhone = normalizePhone(dto.phone);
+    const user = await this.prisma.user.findUnique({ where: { phone: cleanPhone } });
     if (!user) throw new BadRequestException('Tài khoản không tồn tại');
 
-    const otpValid = await this.otpService.verifyOtp(dto.phone, dto.otpCode);
+    const otpValid = await this.otpService.verifyOtp(cleanPhone, dto.otpCode, 'reset_password');
     if (!otpValid) throw new BadRequestException('Mã OTP không đúng hoặc đã hết hạn');
 
     const passwordHash = await bcrypt.hash(dto.newPassword, 10);

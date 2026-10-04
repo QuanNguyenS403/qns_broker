@@ -78,3 +78,18 @@ export function canonicalizePhone(phone: string): string | null {
 export function isValidVietnamPhone(phone: string): boolean {
   return canonicalizePhone(phone) !== null;
 }
+
+/**
+ * Chuẩn hóa số điện thoại về định dạng 10 chữ số chuẩn bắt đầu bằng 0 (0xxxxxxxxx).
+ * Dùng để tra cứu duy nhất trong CSDL, tránh tình trạng trùng lặp tài khoản do nhập +84, 84 hoặc có dấu cách/gạch nối.
+ */
+export function normalizePhone(phone: string): string {
+  if (!phone || typeof phone !== 'string') return '';
+  let clean = phone.replace(/[\s\-\.\(\)]/g, '');
+  if (clean.startsWith('+84')) {
+    clean = '0' + clean.slice(3);
+  } else if (clean.startsWith('84') && clean.length === 11) {
+    clean = '0' + clean.slice(2);
+  }
+  return clean;
+}

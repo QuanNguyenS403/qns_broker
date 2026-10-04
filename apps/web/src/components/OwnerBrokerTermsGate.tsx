@@ -70,8 +70,7 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
       {/* Header giới thiệu */}
       <div className="rounded-2xl border border-teal-200/80 bg-gradient-to-br from-teal-50/80 via-white to-teal-50/40 p-6 md:p-7 shadow-sm">
         <div className="flex items-center gap-2 mb-2.5">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand ring-1 ring-brand/20">
-            <span>🛡️</span>
+          <span className="inline-flex items-center rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand ring-1 ring-brand/20">
             <span>QUY ĐỊNH BẮT BUỘC DÀNH CHO NGƯỜI ĐĂNG TIN</span>
           </span>
         </div>
@@ -87,8 +86,7 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
       <div className="relative rounded-2xl border border-surface-border bg-white shadow-elevated overflow-hidden">
         {/* Thanh công cụ đọc */}
         <div className="flex items-center justify-between border-b border-surface-border bg-slate-50/80 px-5 py-3 text-xs text-slate-600">
-          <span className="font-semibold text-slate-800 flex items-center gap-1.5">
-            <span>📜</span>
+          <span className="font-semibold text-slate-800">
             <span>Văn bản: Quy chế Dịch vụ Môi giới Cho thuê (Bản V2.0)</span>
           </span>
           {!hasScrolledNearBottom && (
@@ -185,10 +183,7 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
               <span>Bảo mật thông tin & Xử lý hỗ trợ</span>
             </h3>
             <p>
-              QNS BROKER cam kết bảo mật thông tin liên hệ và hình ảnh của quý khách theo quy định pháp luật. Số điện thoại cá nhân không hiển thị công khai tùy tiện để tránh tin nhắn rác hoặc cuộc gọi làm phiền.
-            </p>
-            <p>
-              Hotline tiếp nhận hỗ trợ, thẩm định và phản ánh dịch vụ hoạt động 24/7 qua số điện thoại: <strong>{SITE_CONFIG.hotline}</strong>
+              QNS BROKER cam kết bảo mật thông tin liên hệ và hình ảnh của quý khách theo quy định pháp luật — số điện thoại cá nhân không hiển thị công khai tùy tiện để tránh tin nhắn rác hoặc cuộc gọi làm phiền
             </p>
           </section>
         </div>

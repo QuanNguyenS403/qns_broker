@@ -18,28 +18,24 @@ export const metadata: Metadata = {
 
 const VALUE_PROPOSITIONS = [
   {
-    icon: '📋',
     title: 'Tin đăng xác thực, rõ ràng',
     desc: 'Hình ảnh thực tế, thông tin mô tả chi tiết, giá thuê và các chi phí dịch vụ được công khai minh bạch',
     color: 'from-teal-500/10 to-teal-500/5',
     border: 'border-teal-200',
   },
   {
-    icon: '🔍',
     title: 'Tìm kiếm nhanh chóng, tiện lợi',
     desc: 'Dễ dàng lọc theo khu vực, mức giá, diện tích và loại hình phòng phù hợp với mọi nhu cầu sinh hoạt và ngân sách',
     color: 'from-blue-500/10 to-blue-500/5',
     border: 'border-blue-200',
   },
   {
-    icon: '📞',
     title: 'Tư vấn và trực tiếp dẫn xem',
     desc: 'Chuyên viên Đức Quân tiếp nhận nhu cầu, tư vấn chi tiết và trực tiếp dẫn xem phòng thực tế tận nơi',
     color: 'from-amber-500/10 to-amber-500/5',
     border: 'border-amber-200',
   },
   {
-    icon: '🛡️',
     title: '100% Miễn phí cho người thuê',
     desc: 'Khách thuê không phải trả bất kỳ khoản phí môi giới nào, ký hợp đồng và thanh toán trực tiếp với bên có quyền cho thuê',
     color: 'from-emerald-500/10 to-emerald-500/5',
@@ -115,31 +111,31 @@ export default async function HomePage() {
                     href="/"
                     className="bg-brand text-white px-5 py-2.5 text-xs sm:text-sm font-semibold border-x border-t border-brand rounded-tl-xl hover:bg-brand-700 transition-colors"
                   >
-                    🏠 Trang chủ
+                    Trang chủ
                   </Link>
                   <Link
                     href="/thue?categoryGroup=thue_can_ho"
                     className="bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-brand border-r border-t border-surface-border hover:bg-slate-50 transition-colors"
                   >
-                    🏢 Căn hộ
+                    Căn hộ
                   </Link>
                   <Link
                     href="/thue?categoryGroup=thue_studio"
                     className="bg-slate-50 px-5 py-2.5 text-xs sm:text-sm font-medium text-text-secondary border-r border-t border-surface-border hover:bg-white hover:text-brand transition-colors"
                   >
-                    🛋️ Studio
+                    Studio
                   </Link>
                   <Link
                     href="/cho-thue-tro"
                     className="bg-slate-50 px-5 py-2.5 text-xs sm:text-sm font-medium text-text-secondary border-r border-t border-surface-border hover:bg-white hover:text-brand transition-colors"
                   >
-                    🛏️ Phòng trọ SV
+                    Phòng trọ SV
                   </Link>
                   <Link
                     href="/cho-thue-mat-bang"
                     className="bg-slate-50 px-5 py-2.5 text-xs sm:text-sm font-medium text-text-secondary border-r border-t border-surface-border rounded-tr-xl hover:bg-white hover:text-brand transition-colors"
                   >
-                    🏪 Mặt bằng kinh doanh
+                    Mặt bằng kinh doanh
                   </Link>
                 </div>
               </div>
@@ -157,9 +153,8 @@ export default async function HomePage() {
             {VALUE_PROPOSITIONS.map((card, idx) => (
               <div
                 key={idx}
-                className={`flex items-start gap-4 rounded-2xl border ${card.border} bg-gradient-to-br ${card.color} p-5 transition-all hover:shadow-elevated hover:-translate-y-0.5`}
+                className={`flex flex-col rounded-2xl border ${card.border} bg-gradient-to-br ${card.color} p-5 transition-all hover:shadow-elevated hover:-translate-y-0.5`}
               >
-                <span className="text-2xl">{card.icon}</span>
                 <div>
                   <p className="font-semibold text-text-primary text-sm">{card.title}</p>
                   <p className="mt-1 text-xs text-text-secondary leading-relaxed">{card.desc}</p>
@@ -176,12 +171,7 @@ export default async function HomePage() {
         <div>
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-100 text-teal-800 text-xs">
-                  🛏️
-                </span>
-                <h2 className="text-xl font-bold text-text-primary">Phòng trọ sinh viên & Ký túc xá nổi bật</h2>
-              </div>
+              <h2 className="text-xl font-bold text-text-primary">Phòng trọ sinh viên & Ký túc xá nổi bật</h2>
               <p className="mt-1 text-xs text-text-muted">
                 Giá tốt từ 1.5 - 4 triệu/tháng, gần các trường đại học, giờ giấc tự do
               </p>
@@ -213,12 +203,7 @@ export default async function HomePage() {
         <div>
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-100 text-blue-800 text-xs">
-                  🏢
-                </span>
-                <h2 className="text-xl font-bold text-text-primary">Căn hộ cho thuê tiện nghi</h2>
-              </div>
+              <h2 className="text-xl font-bold text-text-primary">Căn hộ cho thuê tiện nghi</h2>
               <p className="mt-1 text-xs text-text-muted">
                 Đầy đủ nội thất, view thoáng mát, an ninh cho người đi làm & gia đình
               </p>
@@ -241,7 +226,7 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-sm text-slate-500">
-              Hiện chưa có tin đăng nào trong chuyên mục này.
+              Hiện chưa có tin đăng nào trong chuyên mục này
             </div>
           )}
         </div>
@@ -250,12 +235,7 @@ export default async function HomePage() {
         <div>
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-100 text-indigo-800 text-xs">
-                  🛋️
-                </span>
-                <h2 className="text-xl font-bold text-text-primary">Studio cho thuê cao cấp</h2>
-              </div>
+              <h2 className="text-xl font-bold text-text-primary">Studio cho thuê cao cấp</h2>
               <p className="mt-1 text-xs text-text-muted">
                 Studio ban công, duplex gác lửng, full nội thất hiện đại cho người đi làm & chuyên gia
               </p>
@@ -278,7 +258,7 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-sm text-slate-500">
-              Hiện chưa có tin đăng nào trong chuyên mục này.
+              Hiện chưa có tin đăng nào trong chuyên mục này
             </div>
           )}
         </div>
@@ -287,12 +267,7 @@ export default async function HomePage() {
         <div>
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-rose-100 text-rose-800 text-xs">
-                  🏪
-                </span>
-                <h2 className="text-xl font-bold text-text-primary">Mặt bằng kinh doanh & Cửa hàng</h2>
-              </div>
+              <h2 className="text-xl font-bold text-text-primary">Mặt bằng kinh doanh & Cửa hàng</h2>
               <p className="mt-1 text-xs text-text-muted">
                 Mặt phố kinh doanh, vỉa hè rộng, shophouse khối đế lưu lượng người qua lại cao
               </p>

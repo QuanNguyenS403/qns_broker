@@ -93,7 +93,7 @@ async function main() {
     update: {},
     create: {
       phone: '0900000002',
-      fullName: 'Môi giới Demo',
+      fullName: 'Chủ nhà',
       passwordHash,
       role: 'broker',
       isPhoneVerified: true,

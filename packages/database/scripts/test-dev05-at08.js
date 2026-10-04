@@ -22,6 +22,9 @@ if (fs.existsSync(envPath)) {
   }
 }
 
+process.env.NODE_ENV = 'test';
+process.env.SMS_PROVIDER = 'mock';
+
 // 2. Thiết lập module lookup paths
 const apiNodeModules = path.resolve(__dirname, '../../../apps/api/node_modules');
 const rootNodeModules = path.resolve(__dirname, '../../../node_modules');

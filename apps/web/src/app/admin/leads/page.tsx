@@ -104,7 +104,7 @@ export default function AdminLeadsPage() {
           onClick={() => fetchLeads()}
           className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm"
         >
-          <span>↻ Làm mới</span>
+          <span>Làm mới</span>
         </button>
       </div>
 
@@ -139,7 +139,7 @@ export default function AdminLeadsPage() {
           <div className="p-12 text-center text-sm text-gray-500">Đang tải danh sách leads...</div>
         ) : leads.length === 0 ? (
           <div className="p-12 text-center text-sm text-gray-500">
-            Không có lead nào trong trạng thái này.
+            Không có lead nào trong trạng thái này
           </div>
         ) : (
           <div className="overflow-x-auto">

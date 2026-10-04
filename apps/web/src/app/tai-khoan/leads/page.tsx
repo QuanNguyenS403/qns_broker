@@ -125,8 +125,7 @@ export default function MyLeadsPage() {
             </div>
           ) : leads.length === 0 ? (
             <div className="rounded-2xl border border-surface-border bg-white p-12 text-center">
-              <span className="text-4xl">📬</span>
-              <p className="mt-3 font-semibold text-text-primary">Chưa có khách thuê nào gửi yêu cầu</p>
+              <p className="font-semibold text-text-primary">Chưa có khách thuê nào gửi yêu cầu</p>
               <p className="mt-1 text-xs text-text-secondary">
                 Khi có khách để lại nhu cầu xem phòng, chuyên viên tư vấn sẽ tiếp nhận và cập nhật tiến độ tại đây
               </p>
@@ -187,9 +186,8 @@ export default function MyLeadsPage() {
                   {/* Thông tin điều phối bởi người môi giới (Đức Quân) */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
                     <div className="flex items-center gap-1.5 text-text-secondary">
-                      <span className="font-semibold text-brand">👤 Người phụ trách dẫn khách:</span>
+                      <span className="font-semibold text-brand">Người phụ trách dẫn khách:</span>
                       <span>{agentName}</span>
-                      <span className="text-text-muted">• Hotline {SITE_CONFIG.hotline}</span>
                     </div>
 
                     <div className="text-[11px] text-text-muted italic">

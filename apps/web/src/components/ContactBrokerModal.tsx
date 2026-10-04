@@ -116,7 +116,7 @@ export function ContactBrokerModal({
 
       setSubmitted(true);
       setSuccessMessage(
-        data.message || `Đã gửi đề xuất lịch xem thành công, ${SITE_CONFIG.agentName} sẽ sớm liên hệ xác nhận với bạn`,
+        data.message || `Đã đặt lịch xem phòng thành công, ${SITE_CONFIG.agentName} sẽ sớm liên hệ xác nhận với bạn`,
       );
 
       setTimeout(() => {
@@ -160,7 +160,7 @@ export function ContactBrokerModal({
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div>
             <h2 id="contact-modal-title" className="text-lg font-bold text-slate-800">
-              Đề xuất lịch xem phòng
+              Đặt lịch xem phòng
             </h2>
             <p className="text-xs text-brand mt-0.5 font-medium">
               {SITE_CONFIG.agentName} — {SITE_CONFIG.agentRole}
@@ -172,7 +172,7 @@ export function ContactBrokerModal({
           <button
             type="button"
             onClick={handleCloseModal}
-            aria-label="Đóng hộp thoại đề xuất lịch xem"
+            aria-label="Đóng hộp thoại đặt lịch xem phòng"
             className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors text-lg"
           >
             ✕
@@ -182,10 +182,12 @@ export function ContactBrokerModal({
         {/* Form Body */}
         {submitted ? (
           <div className="p-8 text-center space-y-3">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-2xl font-bold">
-              ✓
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <h3 className="text-base font-bold text-slate-900">Đã gửi đề xuất lịch thành công</h3>
+            <h3 className="text-base font-bold text-slate-900">Đã gửi yêu cầu đặt lịch thành công</h3>
             <p className="text-xs text-slate-600 leading-relaxed px-4">{successMessage}</p>
             <div className="pt-2">
               <button
@@ -201,7 +203,7 @@ export function ContactBrokerModal({
           <form onSubmit={handleSubmit} className="p-6 space-y-3.5">
             {errorMessage && (
               <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 leading-relaxed">
-                ⚠️ {errorMessage}
+                {errorMessage}
               </div>
             )}
 
@@ -304,7 +306,7 @@ export function ContactBrokerModal({
                 {loading && (
                   <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 )}
-                {loading ? 'Đang gửi...' : 'Gửi đề xuất lịch xem'}
+                {loading ? 'Đang gửi...' : 'Đặt lịch xem phòng'}
               </button>
 
               <button

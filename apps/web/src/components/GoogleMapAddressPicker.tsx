@@ -238,8 +238,7 @@ export function GoogleMapAddressPicker({
       {/* Header khu vực nhập địa chỉ & Google Maps */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border/70 pb-3">
         <div>
-          <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
-            <span className="text-base text-red-500">📍</span>
+          <h3 className="text-sm font-bold text-text-primary">
             <span>Định vị Google Maps & Trường Đại học lân cận</span>
           </h3>
           <p className="text-xs text-text-muted mt-0.5">
@@ -251,10 +250,9 @@ export function GoogleMapAddressPicker({
             type="button"
             onClick={handleGetDeviceGps}
             disabled={isLocatingGps}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-brand/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-brand hover:bg-brand/5 shadow-xs transition-colors disabled:opacity-50"
+            className="inline-flex items-center rounded-lg border border-brand/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-brand hover:bg-brand/5 shadow-xs transition-colors disabled:opacity-50"
             title="Định vị ngay tại vị trí căn phòng hiện tại"
           >
-            <span>🛰️</span>
             <span>{isLocatingGps ? 'Đang lấy GPS...' : 'Lấy vị trí GPS hiện tại'}</span>
           </button>
         </div>
@@ -282,7 +280,7 @@ export function GoogleMapAddressPicker({
                   handleGeocodeAddress();
                 }
               }}
-              placeholder="VD: Số 25 Ngõ 622 Minh Khai, Phường Vĩnh Tuy, Quận Hai Bà Trưng, Hà Nội"
+              placeholder="VD: Số 25 Phố Huế, Phường Hàng Bài, Quận Hoàn Kiếm, Hà Nội"
               className="input-field pr-8 text-sm"
               required
             />
@@ -303,15 +301,13 @@ export function GoogleMapAddressPicker({
             type="button"
             onClick={() => handleGeocodeAddress()}
             disabled={isGeocoding || !address.trim()}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-brand-hover transition-all disabled:opacity-50 whitespace-nowrap"
+            className="inline-flex items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-brand-hover transition-all disabled:opacity-50 whitespace-nowrap"
           >
-            <span>🔍</span>
             <span>{isGeocoding ? 'Đang định vị...' : 'Định vị Google Maps'}</span>
           </button>
         </div>
         {geoNotice && (
-          <p className="mt-1.5 text-[11px] font-medium text-emerald-700 flex items-center gap-1">
-            <span>ℹ️</span>
+          <p className="mt-1.5 text-[11px] font-medium text-emerald-700">
             <span>{geoNotice}</span>
           </p>
         )}
@@ -343,7 +339,6 @@ export function GoogleMapAddressPicker({
               className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:underline"
             >
               <span>Mở Google Maps lớn</span>
-              <span>↗</span>
             </a>
           </div>
         </div>
@@ -392,8 +387,7 @@ export function GoogleMapAddressPicker({
       <div className="space-y-3 pt-2 border-t border-surface-border/70">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div>
-            <h4 className="text-xs font-bold text-text-primary flex items-center gap-1">
-              <span>🎓</span>
+            <h4 className="text-xs font-bold text-text-primary">
               <span>Trường Đại học lân cận (Tự động đo theo Google Maps)</span>
             </h4>
             <p className="text-[11px] text-text-muted">

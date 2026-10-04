@@ -24,6 +24,8 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
       securityCamera: true,
       parkingSpace: true,
       privateBathroom: true,
+      thuCung: true,
+      xeDien: true,
     },
     areaM2: '24',
     bedrooms: 1,

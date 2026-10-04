@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { authFetch, clearTokens, getAccessToken } from '@/lib/auth-client';
+import { QnsLogo } from '@/components/QnsLogo';
 
 interface AdminUser {
   id: string;
@@ -97,12 +98,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center">
-          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-            🔒
-          </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Yêu cầu quyền Quản trị viên</h2>
           <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-            Khu vực này chỉ dành riêng cho Ban Quản trị hệ thống BĐS. Bạn cần đăng nhập bằng tài khoản có vai trò Quản trị (Admin) để tiếp tục.
+            Khu vực này chỉ dành riêng cho Ban Quản trị hệ thống BĐS. Bạn cần đăng nhập bằng tài khoản có vai trò Quản trị (Admin) để tiếp tục
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
@@ -217,13 +215,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         {/* Header Logo của Admin */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
-          <Link href="/admin" className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500 text-white font-bold text-base shadow-sm">
-              B
-            </span>
+          <Link href="/admin" className="flex items-center gap-2.5 group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-white/20 group-hover:scale-105 transition-transform">
+              <QnsLogo variant="emblem" theme="brand" size={26} />
+            </div>
             <div className="flex flex-col">
               <span className="font-bold text-base tracking-tight text-white leading-tight">
-                BĐS<span className="text-teal-400 font-semibold">.Admin</span>
+                QNS<span className="text-teal-400 font-semibold">.Admin</span>
               </span>
               <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
                 Trung tâm Quản trị

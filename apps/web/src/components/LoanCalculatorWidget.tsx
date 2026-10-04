@@ -42,11 +42,10 @@ export function LoanCalculatorWidget({ initialPrice }: LoanCalculatorWidgetProps
   return (
     <div data-loan-calc className="mt-5 rounded-2xl border border-surface-border bg-white p-5 shadow-card">
       <div className="flex items-center gap-2">
-        <span className="text-xl">🏦</span>
         <h3 className="text-base font-bold text-text-primary">Ước tính khoản vay mua nhà</h3>
       </div>
       <p className="mt-1 text-xs text-text-muted">
-        Công cụ tính toán số tiền trả góp hàng tháng theo phương thức dư nợ giảm dần cố định (chuẩn ngân hàng).
+        Công cụ tính toán số tiền trả góp hàng tháng theo phương thức dư nợ giảm dần cố định (chuẩn ngân hàng)
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
