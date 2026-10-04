@@ -369,4 +369,144 @@ Content: ${textSummary}
 
     return this.sendEmail(targetEmail, subject, html, summary);
   }
+
+  /**
+   * Bắn thông báo Telegram khi có sự kiện quan trọng (nếu đã cấu hình)
+   */
+  private async notifyTelegram(message: string): Promise<void> {
+    const botToken = this.config?.get<string>('TELEGRAM_BOT_TOKEN') ?? process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = this.config?.get<string>('TELEGRAM_CHAT_ID') ?? process.env.TELEGRAM_CHAT_ID;
+    if (!botToken || !chatId) return;
+
+    try {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'HTML',
+        }),
+      });
+    } catch {
+      // Non-blocking telegram alert failure
+    }
+  }
+
+  /**
+   * (h) Thông báo cho Quản trị viên/Chủ website: Khách hàng gửi phản hồi góp ý
+   */
+  async sendFeedbackNotification(feedback: {
+    rating?: number;
+    content: string;
+    name?: string;
+    email?: string;
+    ip?: string;
+  }) {
+    const adminEmail = this.config?.get<string>('ADMIN_NOTIFICATION_EMAIL') ?? process.env.ADMIN_NOTIFICATION_EMAIL ?? 'contact@qns.com';
+    const safeContent = escapeHtml(feedback.content);
+    const safeName = escapeHtml(feedback.name || 'Khách vãng lai');
+    const safeEmail = escapeHtml(feedback.email || 'Không cung cấp');
+    const ratingStars = feedback.rating ? `${'⭐'.repeat(feedback.rating)} (${feedback.rating}/5)` : 'Không đánh giá';
+    const nowStr = new Intl.DateTimeFormat('vi-VN', {
+      dateStyle: 'full',
+      timeStyle: 'medium',
+      timeZone: 'Asia/Ho_Chi_Minh',
+    }).format(new Date());
+
+    const subject = `[QNS BROKER - PHẢN HỒI MỚI] Góp ý từ khách hàng ${safeName}${feedback.rating ? ` [${feedback.rating}⭐]` : ''}`;
+    const summary = `Khách hàng ${safeName} (${safeEmail}) vừa gửi phản hồi mới trên website. Đánh giá: ${ratingStars}. Nội dung: "${feedback.content}". Thời gian: ${nowStr}.`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="background: linear-gradient(135deg, #0d9488, #0f766e); padding: 24px 28px; color: #ffffff;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 700;">💬 Phản Hồi / Góp Ý Mới Từ Khách Hàng</h2>
+          <p style="margin: 6px 0 0; font-size: 13px; opacity: 0.9;">Hệ thống website QNS BROKER ghi nhận phản hồi mới</p>
+        </div>
+        <div style="padding: 24px 28px; background: #ffffff;">
+          <div style="margin-bottom: 20px; padding: 14px 18px; background: #f0fdfa; border-left: 4px solid #0d9488; border-radius: 8px;">
+            <p style="margin: 0 0 6px; font-size: 14px;"><strong>Đánh giá trải nghiệm:</strong> <span style="font-size: 16px; color: #f59e0b;">${ratingStars}</span></p>
+            <p style="margin: 0 0 6px; font-size: 14px;"><strong>Người gửi:</strong> <strong>${safeName}</strong></p>
+            <p style="margin: 0; font-size: 14px;"><strong>Email liên hệ:</strong> ${safeEmail}</p>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <p style="font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Nội dung góp ý chi tiết:</p>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; font-size: 14px; color: #334155; white-space: pre-wrap;">${safeContent}</div>
+          </div>
+          <div style="font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+            <p style="margin: 0;">Thời gian tiếp nhận: ${nowStr}${feedback.ip ? ` • IP: ${feedback.ip}` : ''}</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    await this.notifyTelegram(
+      `💬 <b>[PHẢN HỒI MỚI - QNS BROKER]</b>\n` +
+      `👤 Người gửi: <b>${safeName}</b> (${safeEmail})\n` +
+      `⭐ Đánh giá: ${ratingStars}\n` +
+      `📝 Nội dung: <i>${safeContent.slice(0, 300)}</i>\n` +
+      `⏰ Thời gian: ${nowStr}`
+    );
+
+    return this.sendEmail(adminEmail, subject, html, summary);
+  }
+
+  /**
+   * (i) Thông báo cho Quản trị viên/Chủ website: Khách hàng yêu cầu tư vấn
+   */
+  async sendConsultationNotification(consultation: {
+    phone: string;
+    reason: string;
+    description?: string;
+    selectedRoomIds?: string[];
+    ip?: string;
+  }) {
+    const adminEmail = this.config?.get<string>('ADMIN_NOTIFICATION_EMAIL') ?? process.env.ADMIN_NOTIFICATION_EMAIL ?? 'contact@qns.com';
+    const safePhone = escapeHtml(consultation.phone);
+    const safeReason = escapeHtml(consultation.reason);
+    const safeDesc = escapeHtml(consultation.description || 'Không có mô tả thêm');
+    const roomsInfo = consultation.selectedRoomIds && consultation.selectedRoomIds.length > 0
+      ? `${consultation.selectedRoomIds.length} phòng (Mã: #${consultation.selectedRoomIds.join(', #')})`
+      : 'Chưa chọn phòng cụ thể';
+    const nowStr = new Intl.DateTimeFormat('vi-VN', {
+      dateStyle: 'full',
+      timeStyle: 'medium',
+      timeZone: 'Asia/Ho_Chi_Minh',
+    }).format(new Date());
+
+    const subject = `[QNS BROKER - YÊU CẦU TƯ VẤN] Khách hàng ${safePhone}: ${safeReason}`;
+    const summary = `Khách hàng SĐT ${safePhone} vừa gửi yêu cầu tư vấn trên website. Lý do: "${consultation.reason}". Chi tiết: "${consultation.description || 'Không có'}". Phòng quan tâm: ${roomsInfo}. Thời gian: ${nowStr}.`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="background: linear-gradient(135deg, #0d9488, #0f766e); padding: 24px 28px; color: #ffffff;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 700;">🎧 Yêu Cầu Tư Vấn Mới Từ Khách Hàng</h2>
+          <p style="margin: 6px 0 0; font-size: 13px; opacity: 0.9;">Website QNS BROKER — Liên hệ hỗ trợ khách thuê</p>
+        </div>
+        <div style="padding: 24px 28px; background: #ffffff;">
+          <div style="margin-bottom: 20px; padding: 16px 20px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px;">
+            <p style="margin: 0 0 8px; font-size: 15px;"><strong>Số điện thoại khách hàng:</strong> <a href="tel:${safePhone}" style="color: #047857; font-size: 18px; font-weight: 800; text-decoration: none;">${safePhone}</a></p>
+            <p style="margin: 0 0 8px; font-size: 14px;"><strong>Lý do cần tư vấn:</strong> <span style="background: #0d9488; color: #ffffff; padding: 2px 10px; border-radius: 9999px; font-weight: 600; font-size: 12px;">${safeReason}</span></p>
+            <p style="margin: 0; font-size: 14px;"><strong>Phòng quan tâm:</strong> ${escapeHtml(roomsInfo)}</p>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <p style="font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Mô tả thêm / Nhu cầu chi tiết:</p>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; font-size: 14px; color: #334155; white-space: pre-wrap;">${safeDesc}</div>
+          </div>
+          <div style="font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+            <p style="margin: 0;">Thời gian tiếp nhận: ${nowStr}${consultation.ip ? ` • IP: ${consultation.ip}` : ''}</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    await this.notifyTelegram(
+      `🎧 <b>[YÊU CẦU TƯ VẤN - QNS BROKER]</b>\n` +
+      `📞 Khách hàng: <b>${safePhone}</b>\n` +
+      `❓ Lý do: <b>${safeReason}</b>\n` +
+      `🏠 Phòng quan tâm: ${roomsInfo}\n` +
+      `📝 Mô tả: <i>${safeDesc.slice(0, 300)}</i>\n` +
+      `⏰ Thời gian: ${nowStr}`
+    );
+
+    return this.sendEmail(adminEmail, subject, html, summary);
+  }
 }

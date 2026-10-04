@@ -2,6 +2,7 @@
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
+| Triển khai Menu Avatar, Gửi phản hồi, Cần tư vấn, Các phòng đã chọn & Gửi Email tự động (05/10/2026) | ✅ Xong | Triển khai hoàn chỉnh 4 mục giao diện theo đúng 4 ảnh cung cấp: Nút Avatar tròn viền trắng trên Header mở dropdown 5 mục (Đăng nhập, Các phòng đã chọn, Cần tư vấn, Gửi phản hồi, Về chúng tôi); Modal Gửi phản hồi (đánh giá 1-5 sao, nội dung chi tiết min 10 ký tự 0/2000, tên, email, nút Hủy/Gửi); Modal Các phòng đã chọn (trạng thái rỗng khớp 100% Ảnh 3, lưu trữ localStorage, nút chọn phòng trực tiếp trên ListingCard, nút Đặt lịch xem tất cả); Modal Cần tư vấn (SĐT, dropdown lý do mặc định Khác, mô tả thêm 0/2000); Cấu hình tự động gửi email thông báo về contact@qns.com qua EmailService và Telegram bot; Endpoint @Public() POST /leads/feedback và POST /leads/consultation; Build tsc và next build PASS 100% (33 routes); Tuân thủ quy chuẩn GEMINI.md § 8. |
 | 01 - Khởi tạo monorepo | ✅ Xong | Cấu trúc monorepo hoàn chỉnh, `pnpm install` thành công |
 | 02 - Database schema & Prisma Client | ✅ Xong | 9 model, `pnpm db:generate` tạo Prisma Client v5.22.0, `pnpm db:migrate` đã chạy migration `init` vào Postgres |
 | 03 - Seed dữ liệu nền | ✅ Xong | Địa danh + 2 tài khoản demo + 2 tin `[MẪU]` đã nạp vào DB |

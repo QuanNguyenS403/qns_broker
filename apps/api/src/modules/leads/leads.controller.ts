@@ -13,6 +13,8 @@ import { LeadsService } from './leads.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { QueryLeadsDto } from './dto/query-leads.dto';
 import { UpdateLeadStatusDto } from './dto/update-lead-status.dto';
+import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -35,6 +37,22 @@ export class LeadsController {
   createLead(@Body() dto: CreateLeadDto, @Req() req: any) {
     const requesterId = req.user?.id ? BigInt(req.user.id) : undefined;
     return this.leadsService.createLead(dto, requesterId);
+  }
+
+  @Public()
+  @ApiOperation({ summary: 'Gửi phản hồi góp ý từ khách hàng (Tự động gửi email về chủ website)' })
+  @Post('feedback')
+  createFeedback(@Body() dto: CreateFeedbackDto, @Req() req: any) {
+    const ip = req.ip || req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress;
+    return this.leadsService.createFeedback(dto, ip);
+  }
+
+  @Public()
+  @ApiOperation({ summary: 'Gửi yêu cầu tư vấn từ khách hàng (Tự động gửi email về chủ website)' })
+  @Post('consultation')
+  createConsultation(@Body() dto: CreateConsultationDto, @Req() req: any) {
+    const ip = req.ip || req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress;
+    return this.leadsService.createConsultation(dto, ip);
   }
 
   @ApiBearerAuth()

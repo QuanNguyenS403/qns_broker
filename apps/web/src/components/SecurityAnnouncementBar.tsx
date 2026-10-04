@@ -10,7 +10,7 @@ export function SecurityAnnouncementBar() {
     <div
       role="region"
       aria-label="Cảnh báo an toàn QNS BROKER"
-      className="relative w-full overflow-hidden bg-[#282142] border-t border-black/15 shadow-inner select-none pointer-events-none"
+      className="relative w-full overflow-hidden bg-brand-700 border-t border-white/10 shadow-inner select-none pointer-events-none"
     >
       <div className="animate-marquee-scroll py-1.5 sm:py-2">
         {/* Track 1 */}
@@ -18,7 +18,7 @@ export function SecurityAnnouncementBar() {
           {REPEATED_ITEMS.map((item) => (
             <div key={`track-1-${item}`} className="flex items-center mx-6 sm:mx-10 shrink-0 text-xs sm:text-[13px] font-medium tracking-wide">
               <span className="font-bold text-white tracking-wider">QNS BROKER</span>
-              <span className="ml-1.5 text-slate-200">{SECURITY_TEXT}</span>
+              <span className="ml-1.5 text-white/95">{SECURITY_TEXT}</span>
               <span className="ml-6 sm:ml-10 text-white/30 text-xs select-none">•</span>
             </div>
           ))}
@@ -29,7 +29,7 @@ export function SecurityAnnouncementBar() {
           {REPEATED_ITEMS.map((item) => (
             <div key={`track-2-${item}`} className="flex items-center mx-6 sm:mx-10 shrink-0 text-xs sm:text-[13px] font-medium tracking-wide">
               <span className="font-bold text-white tracking-wider">QNS BROKER</span>
-              <span className="ml-1.5 text-slate-200">{SECURITY_TEXT}</span>
+              <span className="ml-1.5 text-white/95">{SECURITY_TEXT}</span>
               <span className="ml-6 sm:ml-10 text-white/30 text-xs select-none">•</span>
             </div>
           ))}

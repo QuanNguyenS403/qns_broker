@@ -24,10 +24,10 @@ const TOC_ITEMS = [
 export default function ChinhSachPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-16">
-      {/* Header Hero Banner — Tone tím than sang trọng */}
-      <section className="bg-gradient-to-b from-[#2e2547] to-[#251e3a] text-white py-12 md:py-16 border-b border-black/10">
+      {/* Header Hero Banner — Màu xanh chủ đạo của website */}
+      <section className="bg-gradient-to-b from-brand to-brand-700 text-white py-12 md:py-16 border-b border-black/10">
         <div className="container-max max-w-5xl text-center space-y-4">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1 text-xs font-semibold tracking-wider text-purple-200 backdrop-blur-sm border border-white/15">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-semibold tracking-wider text-white backdrop-blur-sm border border-white/25">
             <span>BẢO VỆ DỮ LIỆU</span>
           </div>
 
@@ -35,15 +35,15 @@ export default function ChinhSachPage() {
             Chính sách bảo mật
           </h1>
 
-          <p className="text-sm md:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm md:text-base text-white/90 max-w-2xl mx-auto leading-relaxed">
             Cam kết bảo vệ thông tin cá nhân và dữ liệu người dùng trên QNS BROKER
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2 text-xs text-slate-400">
-            <span className="rounded-lg bg-white/5 px-3 py-1 border border-white/10">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2 text-xs text-white/85">
+            <span className="rounded-lg bg-white/10 px-3 py-1 border border-white/20">
               Cập nhật lần cuối: 24/09/2026
             </span>
-            <span className="rounded-lg bg-white/5 px-3 py-1 border border-white/10">
+            <span className="rounded-lg bg-white/10 px-3 py-1 border border-white/20">
               Phiên bản: 2.1
             </span>
           </div>
@@ -248,19 +248,19 @@ export default function ChinhSachPage() {
             </article>
 
             {/* Khối CTA Hỗ trợ dưới cùng */}
-            <div className="rounded-2xl bg-gradient-to-r from-[#2e2547] to-[#251e3a] p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md border border-white/10">
+            <div className="rounded-2xl bg-gradient-to-r from-brand to-brand-700 p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md border border-white/10">
               <div className="space-y-1.5 text-center sm:text-left">
                 <h3 className="text-base sm:text-lg font-bold text-white">
                   Tiếp nhận và giải đáp thắc mắc về quyền riêng tư
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-white/90 leading-relaxed">
                   Mọi yêu cầu chỉnh sửa hoặc xóa dữ liệu cá nhân sẽ được bộ phận kỹ thuật tiếp nhận và xử lý nhanh chóng
                 </p>
               </div>
 
               <Link
                 href="/lien-he"
-                className="shrink-0 rounded-xl bg-white px-5 py-3 text-xs sm:text-sm font-bold text-slate-900 hover:bg-slate-100 transition-all shadow-sm active:scale-95"
+                className="shrink-0 rounded-xl bg-white px-5 py-3 text-xs sm:text-sm font-bold text-brand-700 hover:bg-brand-50 transition-all shadow-sm active:scale-95"
               >
                 <span>Gửi yêu cầu hỗ trợ</span>
               </Link>

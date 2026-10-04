@@ -1,6 +1,50 @@
 # Trạng thái phiên làm việc hiện tại
 
-**Việc vừa hoàn thành (04/10/2026 — VÁ LỖI GAP-01, SIẾT BẢO MẬT CHỦ NHÀ & ADMIN, GIỮ NGUYÊN LUỒNG KHÁCH THUÊ PUBLIC):**
+**Việc vừa hoàn thành (05/10/2026 — CHỈNH SỬA DÒNG BẢN QUYỀN CHÂN TRANG FOOTER):**
+- Đã xóa bỏ cụm `" (qnsbroker.com) — Nền tảng Dịch vụ Cho thuê Bất Động Sản"` ở chân trang [Footer.tsx](file:///d:/B%C4%90S/apps/web/src/components/Footer.tsx).
+- Dòng bản quyền hiện tại hiển thị tinh gọn: `© {new Date().getFullYear()} QNS BROKER`.
+- Kiểm tra `pnpm --filter web exec tsc --noEmit`: PASS (0 lỗi).
+- Tuân thủ quy chuẩn GEMINI.md § 8: Không có dấu chấm ở cuối câu.
+
+**Việc vừa hoàn thành (05/10/2026 — TRIỂN KHAI 4 MỤC THEO ẢNH & TỰ ĐỘNG GỬI EMAIL VỀ CONTACT@QNS.COM):**
+1. **Menu Avatar Dropdown (Ảnh 2)**:
+   - Thêm nút Avatar tròn viền trắng trên Header (`Header.tsx`), tương tác mượt mà cả khi chưa đăng nhập và đã đăng nhập.
+   - Menu dropdown hiển thị chuẩn xác 5 mục theo đúng giao diện ảnh:
+     - 👤 `Đăng nhập` (hoặc `Thông tin tài khoản` nếu đã đăng nhập)
+     - 📅 `Các phòng đã chọn` (kèm huy hiệu đếm số lượng phòng trong giỏ)
+     - 🎧 `Cần tư vấn` (mở Modal Cần tư vấn)
+     - 💬 `Gửi phản hồi` (mở Modal Gửi phản hồi)
+     - ℹ️ `Về chúng tôi` (chuyển hướng sang `/gioi-thieu`)
+2. **Modal "Gửi phản hồi" (Ảnh 1)**:
+   - Thành phần `apps/web/src/components/FeedbackModal.tsx` thiết kế đồng bộ với tone màu xanh thương hiệu (`#0d9488`).
+   - Đánh giá số sao (tùy chọn) 1-5 sao tương tác mượt mà.
+   - Vùng nhập nội dung chi tiết tối thiểu 10 ký tự kèm bộ đếm ký tự `0/2000`.
+   - Nhập thông tin liên hệ: Tên và Email (tùy chọn).
+   - Nút `Hủy` và nút `Gửi phản hồi` (kèm icon máy bay giấy).
+   - Tự động gọi API gửi toàn bộ thông tin về email `contact@qns.com` (và Telegram bot).
+3. **Modal "Các phòng đã chọn" (Ảnh 3)**:
+   - Thành phần `apps/web/src/components/SelectedRoomsModal.tsx`.
+   - Trạng thái rỗng khớp 100% Ảnh 3: Dòng chữ đỏ nổi bật `Bạn chưa có phòng nào trong "Giỏ hàng"` cùng nút `→ Bắt đầu tìm kiếm` chuyển hướng sang `/thue`.
+   - Hỗ trợ lưu trữ phòng yêu thích/chọn xem qua `localStorage` (`apps/web/src/lib/selected-rooms.ts`).
+   - Tích hợp nút chọn phòng trực tiếp ngay trên góc ảnh từng tin đăng (`ListingCard.tsx`), cập nhật thời gian thực số lượng lên Header.
+   - Hỗ trợ nút `Đặt lịch xem các phòng đã chọn` chuyển tiếp tự động sang Modal Cần tư vấn.
+4. **Modal "Cần tư vấn" (Ảnh 4)**:
+   - Thành phần `apps/web/src/components/ConsultationModal.tsx`.
+   - Ô nhập `Số điện thoại *` chuẩn hóa 10 chữ số di động Việt Nam.
+   - Hộp chọn `Lý do cần tư vấn *` mặc định là `Khác` theo đúng Ảnh 4.
+   - Vùng nhập `Mô tả thêm (tùy chọn)` kèm bộ đếm `0/2000`.
+   - Nút `Hủy` và nút `Gửi yêu cầu` (kèm icon máy bay giấy).
+   - Tự động gửi email về `contact@qns.com` (và Telegram bot).
+5. **Cấu hình Backend & Tự động gửi Email**:
+   - `EmailService`: Thêm `sendFeedbackNotification` và `sendConsultationNotification` định dạng HTML thương hiệu sang trọng, gửi về `contact@qns.com`.
+   - `LeadsModule`: Cung cấp 2 endpoint `@Public()` `POST /leads/feedback` và `POST /leads/consultation` kèm DTO validation `class-validator`.
+   - Next.js API Routes: Tạo `/api/feedback` và `/api/consultation` đảm bảo kết nối thông suốt 100%.
+   - Cấu hình `.env` & `.env.example`: `ADMIN_NOTIFICATION_EMAIL=contact@qns.com`.
+6. **Kiểm thử & Quy chuẩn**:
+   - `pnpm --filter api exec tsc --noEmit`: PASS (0 lỗi).
+   - `pnpm --filter web build`: PASS (33/33 routes tĩnh/động tối ưu hóa thành công).
+   - Tuân thủ nghiêm ngặt GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
 1. **Bước 0 — Khắc phục khẩn cấp GAP-01 (Bypass OTP)**:
    - Xác nhận và củng cố `await this.otpService.verifyOtp(...)` tại cả 2 vị trí: `AuthService.register()` (dòng ~59) và `AuthService.resetPassword()` (dòng ~307).
    - Kiểm thử tự động chứng minh 100% các ca OTP sai, rỗng, null/undefined, hoặc hết hạn đều bị từ chối thẳng thừng với HTTP 400 Bad Request, triệt tiêu hoàn toàn rủi ro vượt rào OTP.

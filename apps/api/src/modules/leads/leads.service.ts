@@ -8,9 +8,12 @@ import {
 import { createHash } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OutboxService } from '../outbox/outbox.service';
+import { EmailService } from '../email/email.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { QueryLeadsDto } from './dto/query-leads.dto';
 import { UpdateLeadStatusDto } from './dto/update-lead-status.dto';
+import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { CreateConsultationDto } from './dto/create-consultation.dto';
 
 @Injectable()
 export class LeadsService {
@@ -19,6 +22,7 @@ export class LeadsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly outboxService: OutboxService,
+    private readonly emailService: EmailService,
   ) {}
 
   /**
@@ -501,4 +505,47 @@ export class LeadsService {
 
     return this.formatLead(updated, false);
   }
+
+  /**
+   * Tiếp nhận phản hồi góp ý từ khách hàng và tự động gửi email thông báo cho chủ website
+   */
+  async createFeedback(dto: CreateFeedbackDto, ip?: string) {
+    this.logger.log(`Tiếp nhận phản hồi từ khách hàng: ${dto.name || 'Khách vãng lai'} (Rating: ${dto.rating ?? 'N/A'})`);
+
+    // Gửi email tự động tới chủ website (contact@qns.com)
+    await this.emailService.sendFeedbackNotification({
+      rating: dto.rating,
+      content: dto.content,
+      name: dto.name,
+      email: dto.email,
+      ip,
+    });
+
+    return {
+      success: true,
+      message: 'Cảm ơn bạn đã gửi phản hồi đóng góp ý kiến',
+    };
+  }
+
+  /**
+   * Tiếp nhận yêu cầu tư vấn từ khách hàng và tự động gửi email thông báo cho chủ website
+   */
+  async createConsultation(dto: CreateConsultationDto, ip?: string) {
+    this.logger.log(`Tiếp nhận yêu cầu tư vấn mới từ SĐT: ${dto.phone} (Lý do: ${dto.reason})`);
+
+    // Gửi email tự động tới chủ website (contact@qns.com)
+    await this.emailService.sendConsultationNotification({
+      phone: dto.phone,
+      reason: dto.reason,
+      description: dto.description,
+      selectedRoomIds: dto.selectedRoomIds,
+      ip,
+    });
+
+    return {
+      success: true,
+      message: 'Yêu cầu tư vấn của bạn đã được gửi thành công, chúng tôi sẽ liên hệ trong thời gian sớm nhất',
+    };
+  }
 }
+

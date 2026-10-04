@@ -1,5 +1,14 @@
+'use client';
+
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { Listing, formatPrice } from '@/lib/api';
+import {
+  isRoomSelected,
+  addSelectedRoom,
+  removeSelectedRoom,
+  subscribeSelectedRooms,
+} from '@/lib/selected-rooms';
 
 const PROPERTY_TYPE_LABEL: Record<string, string> = {
   'can-ho': 'Căn hộ',
@@ -64,6 +73,33 @@ export function ListingCard({ listing }: { listing: Listing }) {
   const displayTitle = isSample ? listing.title.replace(/^\[MẪU\]\s*/, '') : listing.title;
   const nearestUni = listing.nearbyUniversities?.[0];
 
+  const [selected, setSelected] = useState(false);
+
+  useEffect(() => {
+    setSelected(isRoomSelected(listing.id));
+    return subscribeSelectedRooms(() => {
+      setSelected(isRoomSelected(listing.id));
+    });
+  }, [listing.id]);
+
+  function handleToggleSelect(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (selected) {
+      removeSelectedRoom(listing.id);
+    } else {
+      addSelectedRoom({
+        id: String(listing.id),
+        title: displayTitle,
+        slug: listing.slug,
+        price: listing.price,
+        formattedPrice: formatPrice(listing.price),
+        address: listing.addressDetail || listing.location?.name || '',
+        coverImage: cover,
+      });
+    }
+  }
+
   return (
     <Link href={`/tin/${listing.slug}`} className="listing-card group flex flex-col justify-between">
       <div>
@@ -99,6 +135,29 @@ export function ListingCard({ listing }: { listing: Listing }) {
               {listing.images.length}
             </div>
           )}
+
+          {/* Nút Chọn phòng / Thêm vào danh sách phòng đã chọn */}
+          <button
+            type="button"
+            onClick={handleToggleSelect}
+            title={selected ? 'Bỏ chọn phòng' : 'Chọn phòng vào giỏ để đặt lịch xem'}
+            aria-label={selected ? 'Bỏ chọn phòng' : 'Chọn phòng vào giỏ để đặt lịch xem'}
+            className={`absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg transition-all shadow-sm ${
+              selected
+                ? 'bg-brand text-white scale-105 shadow-md ring-1 ring-white/50'
+                : 'bg-black/40 text-white/90 hover:bg-black/70 hover:text-white hover:scale-105 backdrop-blur-xs'
+            }`}
+          >
+            {selected ? (
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            ) : (
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            )}
+          </button>
         </div>
 
         {/* Nội dung card */}
