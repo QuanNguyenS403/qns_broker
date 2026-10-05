@@ -25,21 +25,21 @@ export default function ChinhSachPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-16">
       {/* Header Hero Banner — Màu xanh chủ đạo của website */}
-      <section className="bg-gradient-to-b from-brand to-brand-700 text-white py-12 md:py-16 border-b border-black/10">
-        <div className="container-max max-w-5xl text-center space-y-4">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-semibold tracking-wider text-white backdrop-blur-sm border border-white/25">
+      <section className="bg-gradient-to-b from-brand to-brand-700 text-white py-14 md:py-18 border-b border-black/10">
+        <div className="container-max max-w-6xl text-center space-y-4">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs sm:text-sm font-semibold tracking-wider text-white backdrop-blur-sm border border-white/25">
             <span>BẢO VỆ DỮ LIỆU</span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
             Chính sách bảo mật
           </h1>
 
-          <p className="text-sm md:text-base text-white/90 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-white/90 max-w-3xl mx-auto leading-relaxed">
             Cam kết bảo vệ thông tin cá nhân và dữ liệu người dùng trên QNS BROKER
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2 text-xs text-white/85">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2 text-xs sm:text-sm text-white/85">
             <span className="rounded-lg bg-white/10 px-3 py-1 border border-white/20">
               Cập nhật lần cuối: 24/09/2026
             </span>
@@ -50,7 +50,7 @@ export default function ChinhSachPage() {
         </div>
       </section>
 
-      <div className="container-max max-w-5xl mt-6 space-y-6">
+      <div className="container-max max-w-6xl mt-8 space-y-8">
         {/* Khối cam kết bảo mật nổi bật — Màu xanh lá như trong ảnh */}
         <div className="rounded-2xl border border-emerald-300 bg-emerald-50/80 p-5 text-emerald-950 shadow-xs space-y-2.5">
           <div className="flex items-center gap-2 font-bold text-sm sm:text-base text-emerald-900">
@@ -122,7 +122,7 @@ export default function ChinhSachPage() {
               </h2>
               <div className="text-xs sm:text-sm text-slate-600 leading-relaxed space-y-2">
                 <p><strong>Thông tin tài khoản:</strong> Số điện thoại di động chính chủ (dùng nhận mã xác thực OTP), họ tên hiển thị và mật khẩu đã mã hóa</p>
-                <p><strong>Thông tin nhu cầu thuê:</strong> Khu vực tìm kiếm, mức giá mong muốn, loại hình bất động sản quan tâm và lịch sử lưu tin</p>
+                <p><strong>Thông tin nhu cầu thuê:</strong> Khu vực tìm kiếm, mức giá mong muốn, loại hình phòng quan tâm và lịch sử lưu tin</p>
                 <p><strong>Dữ liệu thiết bị & kỹ thuật:</strong> Địa chỉ IP, loại trình duyệt, hệ điều hành và nhật ký tương tác để phục vụ bảo mật chống tấn công giả mạo</p>
               </div>
             </article>

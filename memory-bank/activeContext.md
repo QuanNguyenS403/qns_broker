@@ -1,8 +1,342 @@
 # Trạng thái phiên làm việc hiện tại
 
-**Việc vừa hoàn thành (05/10/2026 — CHỈNH SỬA DÒNG BẢN QUYỀN CHÂN TRANG FOOTER):**
+**Việc vừa hoàn thành (05/10/2026 — TINH GỌN KÍCH THƯỚC KHUNG MODAL ĐẶT LỊCH XEM PHÒNG):**
+- Đã chỉnh sửa toàn diện component popup [ContactBrokerModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/ContactBrokerModal.tsx):
+  1. **Tối ưu hóa kích thước & tỷ lệ khung (Modal Dimensions)**:
+     - Giảm chiều rộng từ `max-w-lg` (512px) xuống `max-w-[440px] sm:max-w-[460px]`, căn giữa màn hình với khoảng cách thở rộng rãi, không còn cảm giác bị bè to hay thô kệch.
+     - Khống chế chiều cao an toàn `max-h-[92vh]` kèm `overflow-y-auto`, giải quyết dứt điểm hiện tượng khung modal quá dài chạm mép trên thanh thông báo.
+  2. **Tinh chỉnh Header & Padding**:
+     - Thu gọn padding header từ `px-6 py-4` xuống `px-5 py-3.5`, nền `bg-slate-50/60` thanh nhã.
+     - Tiêu đề `Đặt lịch xem phòng` tinh chỉnh font 16-17px, subtitle định danh `{agentName} • {agentRole}` gọn đẹp và tên phòng truncate tối đa 340px.
+     - Nút đóng `✕` tinh gọn kích thước `h-7.5 w-7.5` dạng nút tròn mềm mại.
+  3. **Thu gọn Form Fields & Tránh phồng to**:
+     - Giảm padding thân form từ `p-6` xuống `px-5 py-4` và `space-y-3`.
+     - Inputs và textarea: chuẩn hóa padding `px-3.5 py-2` (text-[13px] sm:text-sm), bo góc `rounded-xl`, viền nhạt `border-slate-200` và nền `bg-slate-50/30`, không còn bị dày cộp hay phồng to dạng pill quá mức.
+     - Lưới 2 cột Ngày & Khung giờ: `gap-2.5`, padding `py-1.5 px-3` vừa vặn.
+     - Textarea: `rows={2}`, không cho kéo giãn vỡ layout (`resize-none`).
+     - Checkbox consent: text-[11px] sm:text-[11.5px] thanh thoát.
+     - Cặp nút hành động: nút Đặt lịch `flex-1 py-2.5` và nút Bỏ qua cân đối, thao tác bấm êm ái.
+  4. **Kiểm thử nghiệm thu**:
+     - `npx pnpm --filter web exec tsc --noEmit` đạt 0 lỗi (Exit code 0).
+     - Quy chuẩn GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — QUYỀN ĐĂNG TIN ĐẶC QUYỀN DÀNH RIÊNG CHO CHỦ SÀN ĐỨC QUÂN KHÔNG CẦN ĐĂNG KÝ/ĐĂNG NHẬP):**
+- Đã chỉnh sửa toàn diện trang Đăng tin [apps/web/src/app/dang-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-tin/page.tsx):
+  1. **Quyền truy cập độc quyền cho Chủ sàn (Owner-only portal)**:
+     - Biến trang `/dang-tin` thành khu vực chuyên quyền của Quản trị viên & Chủ sàn Nguyễn Đức Quân (`0981 753 082`).
+     - Tự động kích hoạt quyền đăng tin trực tiếp ngay khi truy cập, không cần đăng nhập hay đăng ký tài khoản.
+     - Xóa bỏ triệt để các rào cản: không còn màn hình chặn "Bạn cần đăng nhập tài khoản để đăng tin", không còn popup AuthModal, không còn cổng điều khoản cam kết "OwnerBrokerTermsGate".
+  2. **Banner định danh chuyên quyền**:
+     - Hiển thị badge nổi bật: "Chuyên quyền Quản trị viên" kèm trạng thái "Xác thực tự động" và chip thông tin: "🟢 Nguyễn Đức Quân (0981 753 082)".
+     - Toàn bộ form đăng tin hiển thị sẵn sàng: Loại hình (Căn hộ / Studio / Phòng trọ), Khu vực, Định vị Google Maps & Đại học lân cận, Giá thuê, Tiện ích nội thất, Biểu phí điện nước và Upload ảnh thực tế.
+  3. **Cơ chế lưu trữ & hiển thị kép**:
+     - Gửi tin tới backend API `POST /listings` với token xác thực Quản trị viên.
+     - Tự động lưu trữ dự phòng vào `localStorage ('qns_custom_listings')` khi backend hoặc DB ngoại tuyến.
+     - Tạo mới component [ListingsGridWithCustom.tsx](file:///d:/B%C4%90S/apps/web/src/components/ListingsGridWithCustom.tsx) và tích hợp vào trang [thue/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/thue/page.tsx): các tin do chủ sàn vừa đăng sẽ lập tức xuất hiện ngay đầu danh sách phòng mà không bao giờ bị mất tin.
+  4. **Kiểm thử nghiệm thu**:
+     - `npx pnpm --filter web exec tsc --noEmit` đạt 0 lỗi (Exit code 0).
+     - Kiểm tra HTTP response trang `/dang-tin` và `/thue` đều đạt HTTP 200 OK.
+     - Quy chuẩn GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — LOẠI BỎ SỐ DIỆN TÍCH VÀ DẤU CỘNG ĐÈ TRÊN ẢNH CỦA LISTINGCARD):**
+- Đã chỉnh sửa component thẻ phòng [ListingCard.tsx](file:///d:/B%C4%90S/apps/web/src/components/ListingCard.tsx):
+  1. **Xóa bỏ các số diện tích (`74 m²`, `45 m²`, `28 m²`)**:
+     - Loại bỏ triệt để đoạn mã render `{listing.areaM2 && ... {listing.areaM2} m²}` cạnh hàng giá thuê.
+     - Hàng giá thuê chỉ còn hiển thị giá và đơn vị: e.g. `18 triệu / tháng`, `11 triệu / tháng`, `5,5 triệu / tháng`, cực kỳ thoáng mắt và không bị rối mắt bởi số diện tích.
+  2. **Xóa bỏ nút dấu cộng đè trên ảnh**:
+     - Loại bỏ hoàn toàn nút chọn phòng hình dấu cộng tròn (`+`) đè ở góc trên bên phải ảnh thẻ phòng.
+     - Loại bỏ các state và listener không cần thiết, giúp component ListingCard gọn gàng, tăng tốc độ render.
+  3. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — NÂNG CẤP BỘ LỌC SEARCHFILTERBAR THEO 5 YÊU CẦU NGƯỜI DÙNG):**
+- Đã chỉnh sửa toàn diện component bộ lọc [SearchFilterBar.tsx](file:///d:/B%C4%90S/apps/web/src/components/SearchFilterBar.tsx) cùng các trang danh mục liên quan:
+  1. **Thanh kéo khoảng giá thuê (Price Range Slider Popover)**:
+     - Chuyển đổi dropdown tĩnh sang nút bấm hiển thị khoảng giá động (ví dụ: `Giá thuê`, `3 – 7 triệu`, `Dưới 5 triệu`, `Từ 10 triệu`).
+     - Tích hợp popover thanh kéo kép (Dual Range Slider) từ `0` đến `30+ triệu` với bước nhảy `500.000đ`, dải màu xanh teal nổi bật giữa 2 nút kéo.
+     - Kèm các mốc giá nhanh: `Tất cả`, `< 3 triệu`, `3 – 5 triệu`, `5 – 10 triệu`, `10 – 20 triệu`, `> 20 triệu` cùng 2 nút `Đặt lại` và `Áp dụng`.
+  2. **Bỏ hoàn toàn ô diện tích**:
+     - Loại bỏ dropdown chọn diện tích khỏi hàng tìm kiếm chính trên desktop & mobile.
+     - Đồng bộ cập nhật layout skeleton tại [thue/loading.tsx](file:///d:/B%C4%90S/apps/web/src/app/thue/loading.tsx) và [mua-ban/loading.tsx](file:///d:/B%C4%90S/apps/web/src/app/mua-ban/loading.tsx).
+  3. **Bộ lọc thêm: Bổ sung Thú cưng và Xe điện**:
+     - Thêm 2 nút lọc dạng pill mềm mại: `Nuôi thú cưng` (`petAllowed=true`) và `Sạc xe điện` (`electricVehicle=true`) bên cạnh `Bao điện nước`.
+     - Tích hợp logic lọc in-memory và query params tại [thue/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/thue/page.tsx), [cho-thue-tro/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-tro/page.tsx), và [cho-thue-mat-bang/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-mat-bang/page.tsx).
+     - Bổ sung tiện ích `thuCung` và `xeDien` cho các tin đăng demo trong [demo-data.ts](file:///d:/B%C4%90S/apps/web/src/lib/demo-data.ts).
+  4. **Bỏ phần Gợi ý nhanh**:
+     - Xóa bỏ hoàn toàn khu vực `Gợi ý nhanh` (các chip Gần HUST, Gần NEU,... và nút + Xem thêm) giúp thanh filter gọn gàng, thanh thoát.
+  5. **Đổi Title theo các mục ở trang chủ**:
+     - Thay thế tiêu đề tĩnh "Tìm phòng phù hợp với bạn" bằng tiêu đề tương ứng với từng chuyên mục trang chủ:
+       - Căn hộ / Chung cư: `Chung cư` & "Đầy đủ nội thất, view thoáng mát, an ninh cho người đi làm & gia đình"
+       - Studio / Chung cư mini: `Chung cư mini (CCMN)` & "Studio ban công, duplex gác lửng, full nội thất hiện đại cho người đi làm & chuyên gia"
+       - Phòng trọ: `Phòng trọ sinh viên` & "Giá tốt từ 1.5 - 4 triệu/tháng, gần các trường đại học, giờ giấc tự do"
+       - Mặt bằng: `Mặt bằng kinh doanh` & "Mặt phố kinh doanh, vỉa hè rộng, shophouse khối đế lưu lượng người qua lại cao"
+       - Mặc định: `Tìm phòng` & "Tìm kiếm nhanh theo khu vực, trường học, mức giá và nhu cầu của bạn"
+  6. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — ĐỒNG BỘ AUTHMODAL HOÀN TOÀN VỚI GIAO DIỆN ĐĂNG NHẬP BÊN CẠNH NÚT ĐĂNG TIN):**
+- Đã chỉnh sửa toàn diện popup modal xác thực ([apps/web/src/components/AuthModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/AuthModal.tsx)) giống 100% với giao diện Đăng nhập ([apps/web/src/app/dang-nhap/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-nhap/page.tsx)) ở ngay bên cạnh nút "Đăng tin":
+  1. **Đồng bộ thiết kế & phong cách (Design & Styling)**:
+     - Nền backdrop blur mượt mà, khung modal card `rounded-2xl sm:rounded-[22px]`, viền nhẹ `border-slate-200/80`, đổ bóng sâu `shadow-2xl`.
+     - Nút đóng `✕` bo tròn ở góc trên bên phải cho phép thoát popup bất cứ lúc nào.
+     - Tiêu đề chính `Chào mừng trở lại` (font-bold 26px) và phụ đề ngữ cảnh (ví dụ: `Đăng nhập để đăng tin cho thuê phòng / căn hộ`).
+     - Nút `Tiếp tục với Google` với logo 4 màu chuẩn Google, nền trắng viền xám mềm mại.
+     - Dải phân cách `HOẶC ĐĂNG NHẬP VỚI` thanh lịch.
+     - Badge/nút `[ ✉ Email ]` màu tím pastel đặc trưng (`#9d7fe3`).
+     - Trường nhập `Email` và `Mật khẩu` (kèm icon con mắt `👁` bật/tắt hiển thị mật khẩu).
+     - Hàng checkbox `Ghi nhớ đăng nhập` và link `Quên mật khẩu?`.
+     - Nút hành động chính `Đăng nhập` màu tím đậm (`#503e6d` hover `#43315c`) chuẩn xác với hiệu ứng xoay loading khi gửi request.
+     - Dòng chuyển đổi `Bạn chưa có tài khoản? Đăng ký ngay` (hỗ trợ chuyển mượt sang form Tạo tài khoản mới hoặc Khôi phục mật khẩu).
+  2. **Đồng bộ cơ chế xác thực**:
+     - Đăng nhập tức thì với Email & Mật khẩu hoặc Google Auth.
+     - Tự động gọi `setTokens()` và `onSuccess()` để mở khóa quyền đăng tin hoặc xem thông tin liên hệ ngay tại chỗ mà không cần tải lại trang.
+  3. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — CHỈNH SỬA GIAO DIỆN & HỆ THỐNG ĐĂNG NHẬP KHỚP 100% ẢNH MẪU):**
+- Đã chỉnh sửa toàn diện cả giao diện (UI) và hệ thống đăng nhập (Auth system) theo đúng ảnh cung cấp:
+  1. **Giao diện trang Đăng nhập ([apps/web/src/app/dang-nhap/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-nhap/page.tsx))**:
+     - Card căn giữa màn hình trên nền xám nhạt tinh tế, bo góc mềm mại `rounded-2xl sm:rounded-[22px]`, viền `border-slate-200/80` và shadow nâng nổi bật.
+     - Tiêu đề chính `Chào mừng trở lại` (font-bold 26px) và phụ đề `Đăng nhập vào tài khoản của bạn`.
+     - Nút `Tiếp tục với Google` nền trắng viền xám kèm icon 4 màu chuẩn Google.
+     - Dải phân cách `HOẶC ĐĂNG NHẬP VỚI` căn giữa thanh mảnh.
+     - Khối nút/tab `[ ✉ Email ]` màu tím pastel (`#9d7fe3`) chuẩn xác.
+     - Trường `Email` với nhãn in đậm và placeholder `Nhập email của bạn`.
+     - Trường `Mật khẩu` với nhãn in đậm, placeholder `Nhập mật khẩu của bạn` kèm nút bật/tắt hiển thị mật khẩu bằng biểu tượng con mắt `👁`.
+     - Hàng tùy chọn: Checkbox `Ghi nhớ đăng nhập` bên trái và link `Quên mật khẩu?` bên phải.
+     - Nút submit `Đăng nhập` màu tím đậm (`#503e6d`) bo góc 12px, font-bold, hiệu ứng hover/active và trạng thái xoay loading khi xử lý.
+     - Dòng chân trang `Bạn chưa có tài khoản? Đăng ký ngay` hỗ trợ chuyển đổi linh hoạt sang form Đăng ký mới.
+  2. **Hệ thống đăng nhập Backend & DTO**:
+     - Nâng cấp `LoginDto` ([apps/api/src/modules/auth/dto/login.dto.ts](file:///d:/B%C4%90S/apps/api/src/modules/auth/dto/login.dto.ts)) hỗ trợ đăng nhập linh hoạt bằng `email`, `phone` hoặc `identifier`.
+     - Nâng cấp `AuthService.login` ([apps/api/src/modules/auth/auth.service.ts](file:///d:/B%C4%90S/apps/api/src/modules/auth/auth.service.ts)): tự động nhận diện email (case-insensitive & canonical email) và số điện thoại, đồng thời tự động nhận diện các tài khoản mẫu quản trị (`admin@qns.com`, `broker@qns.com`).
+     - Bổ sung `RegisterEmailDto` ([apps/api/src/modules/auth/dto/register-email.dto.ts](file:///d:/B%C4%90S/apps/api/src/modules/auth/dto/register-email.dto.ts)) và endpoint `@Post('register-email')` trong `AuthController` ([apps/api/src/modules/auth/auth.controller.ts](file:///d:/B%C4%90S/apps/api/src/modules/auth/auth.controller.ts)) cho phép đăng ký trực tiếp bằng Email & Mật khẩu tức thì.
+     - Cải tiến luồng Google Login: tự động liên kết tài khoản theo email hoặc tạo tài khoản tức thì mà không bị chặn, cấp phát JWT tokens liền mạch.
+  3. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — ĐỔI BREADCRUMB THÀNH TÌM PHÒNG & ĐỒNG BỘ TOÀN BỘ PHÒNG VÀO TRANG TÌM PHÒNG):**
+- Đã chỉnh sửa toàn diện theo đúng 2 yêu cầu của người dùng:
+  1. **Đổi chữ "Cho thuê phòng & căn hộ" trong breadcrumb thành "Tìm phòng"**:
+     - Cập nhật breadcrumb tại [thue/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/thue/page.tsx): khi vào trang "Tìm phòng" (`/thue`), breadcrumb hiển thị chính xác `Trang chủ › Tìm phòng`.
+     - Nếu có chọn chuyên mục con (ví dụ Chung cư, Chung cư mini): breadcrumb phân cấp mạch lạc `Trang chủ › Tìm phòng › [Tên chuyên mục]`.
+     - Đồng bộ cả breadcrumb trên [cho-thue-tro/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-tro/page.tsx) (`Trang chủ › Tìm phòng › Phòng trọ sinh viên`) và [cho-thue-mat-bang/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-mat-bang/page.tsx) (`Trang chủ › Tìm phòng › Mặt bằng kinh doanh`).
+  2. **Đồng bộ tất cả các phòng tại trang chủ với trang "tìm phòng"**:
+     - Khắc phục triệt để lỗi logic cũ: trước đây khi backend DB trả về dù chỉ 1-2 tin seed, trang `/thue` đã vô tình ghi đè toàn bộ và bỏ quên 17 phòng chuẩn từ `ALL_DEMO_LISTINGS`.
+     - Hiện tại đã áp dụng cơ chế gộp hợp nhất thông minh (`mergedMap` theo `slug`): trang "Tìm phòng" (`/thue`) luôn là danh mục tổng hợp đầy đủ nhất, tập hợp toàn bộ các phòng hiển thị ở các chuyên mục trên trang chủ (Phòng trọ SV, Chung cư, Chung cư mini, Nhà nguyên căn, Mặt bằng kinh doanh) cùng toàn bộ tin đăng từ DB.
+     - Trang chủ (`/page.tsx`) đóng vai trò là giao diện chung show 4 phòng tiêu biểu cho mỗi chuyên mục (`slice(0, 4)`), muốn xem và tìm kiếm tất cả các phòng thì truy cập trang "Tìm phòng" (`/thue`).
+     - Hỗ trợ đầy đủ bộ lọc tìm kiếm in-memory trên toàn bộ danh mục gộp: từ khóa, khoảng giá, diện tích, trường đại học, loại hình phòng, bao trọn gói chi phí.
+     - Phân trang mượt mà theo đúng số lượng phòng tổng thể.
+  3. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — CĂN CHÍNH GIỮA MENU ĐIỀU HƯỚNG HEADER & BỎ THÁNG NĂM TRONG TIÊU ĐỀ THUÊ):**
+- Đã chỉnh sửa toàn diện theo đúng 2 yêu cầu người dùng:
+  1. **Di chuyển cụm điều hướng (Trang chủ - Tìm phòng - Về chúng tôi) ra chính giữa Header**:
+     - Cấu hình container Header `relative` tại [Header.tsx](file:///d:/B%C4%90S/apps/web/src/components/Header.tsx).
+     - Đặt thanh điều hướng `nav` ở vị trí `absolute left-1/2 -translate-x-1/2`, căn chính giữa hoàn hảo 100% trên thanh header bar giữa Logo bên trái và cụm Actions (+ Đăng tin, Avatar) bên phải.
+     - Giữ nguyên giao diện mobile drawer khi thu nhỏ màn hình.
+  2. **Chỉnh sửa tiêu đề trang danh mục thuê**:
+     - Cập nhật tiêu đề H1 tại [thue/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/thue/page.tsx) từ `"Cho thuê phòng & căn hộ mới nhất tháng 10 năm 2026"` thành `"Cho thuê phòng & căn hộ mới nhất"`.
+     - Đồng bộ hóa xóa hậu tố tháng năm `{month}` trên cả [cho-thue-tro/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-tro/page.tsx) và [cho-thue-mat-bang/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-mat-bang/page.tsx) đảm bảo tiêu đề luôn tinh gọn, hiện đại và không bị phụ thuộc vào chuỗi ngày tháng cố định.
+  3. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — THU NHỎ KHUNG THẺ PHÒNG LISTINGCARD, XÓA CỌC, HĐ VÀ XÓA LUÔN PROPERTY LABEL THANH ĐÁY):**
+- Đã chỉnh sửa toàn diện component thẻ phòng [ListingCard.tsx](file:///d:/B%C4%90S/apps/web/src/components/ListingCard.tsx) theo đúng yêu cầu:
+  1. **Thu nhỏ kích thước & khoảng cách nội dung (Padding & Spacing)**:
+     - Giảm padding bên trong thân card từ `p-6 sm:p-7` (24-28px) xuống `p-4 sm:p-4.5` (16-18px), giúp thẻ phòng gọn gàng, thanh thoát và cân đối trên mọi kích thước màn hình.
+     - Giảm margin tiêu đề phòng từ `mt-3.5` xuống `mt-2`, tinh chỉnh cỡ chữ `text-sm sm:text-[14.5px]` với line-height `leading-snug`.
+     - Giảm margin badge khoảng cách / trường đại học lân cận từ `mt-4` xuống `mt-2.5`, padding `px-2 py-0.5 text-xs`.
+     - Cân đối hàng giá thuê `text-lg sm:text-xl font-bold text-brand` và diện tích `text-xs text-text-muted`.
+  2. **Xóa bỏ hoàn toàn phần Cọc, HĐ và Property Label**:
+     - Loại bỏ triệt để trường hiển thị tiền cọc `listing.depositAmount` ("Cọc: ...") và thời hạn hợp đồng `listing.minLeaseMonths` ("HĐ: ...").
+     - Xóa bỏ hoàn toàn nhãn loại phòng `propertyLabel` và bảng tra cứu `PROPERTY_TYPE_LABEL` khỏi thanh đáy card.
+     - Thanh đáy card được tối giản tối đa, chỉ hiển thị nhãn thời gian đăng `{timeLabel}` (Hôm qua, Hôm nay,...) căn lề phải `justify-end` tinh tế.
+     - Giảm padding hàng chân card từ `px-6 sm:px-7 pb-5 pt-0` xuống `px-4 sm:px-4.5 pb-3.5 pt-0`, đường viền ngăn cách `pt-2.5 text-xs`.
+  3. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — THU NHỎ VÀ THU HẸP HERO SECTION TRANG CHỦ):**
+- Đã chỉnh sửa thu nhỏ và thu hẹp toàn diện các thành phần trong Hero section theo đúng ảnh cung cấp tại [apps/web/src/app/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/page.tsx) và [apps/web/src/components/HeroSearchForm.tsx](file:///d:/B%C4%90S/apps/web/src/components/HeroSearchForm.tsx):
+  1. **Khoảng cách đệm tổng thể Hero (Container Padding)**: Giảm từ `py-8 sm:py-11 lg:py-14` xuống `py-6 sm:py-8 lg:py-10`, thu gọn chiều cao tổng thể của Hero section.
+  2. **Thẻ nhãn giới thiệu (Pill badge)**: Giảm margin-bottom từ `mb-3 sm:mb-4` xuống `mb-2.5 sm:mb-3`, padding `px-3.5 py-1 text-xs`, gọn gàng và tinh tế.
+  3. **Tiêu đề chính Hero H1**: Thu nhỏ cỡ chữ từ `text-3xl ... lg:text-[3.25rem]` (52px) xuống `text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem]` (~42px), line-height chuẩn mực `leading-[1.15] md:leading-[1.18]`, khoảng đệm giữa 2 dòng dịch sát nhau hài hòa `mt-0.5 sm:mt-0.5` theo đúng quy chuẩn `GEMINI.md § 8`.
+  4. **Đoạn mô tả phụ**: Giảm cỡ chữ từ `text-sm sm:text-base md:text-lg` xuống `text-xs sm:text-sm md:text-[0.925rem]`, margin-top giảm từ `mt-3 sm:mt-4` xuống `mt-2 sm:mt-2.5`, thu hẹp max-width từ `max-w-3xl` xuống `max-w-2xl`.
+  5. **Thu hẹp khung Tabs và Thanh tìm kiếm (Search bar wrapper)**: Giới hạn chiều rộng tối đa từ dàn trải `max-w-5xl` (1024px) về `max-w-[44rem]` (~704px) căn giữa cân đối, margin-top giảm xuống `mt-4 sm:mt-5`.
+  6. **Tabs chuyên mục thuê**: Tinh gọn padding từng tab từ `px-5 sm:px-6 py-2 sm:py-2.5` xuống `px-3.5 sm:px-4.5 py-1.5 sm:py-2`, cỡ chữ `text-xs sm:text-[13px]`, bo góc `rounded-t-xl` ôm khít phía trên thanh tìm kiếm.
+  7. **Thanh tìm kiếm HeroSearchForm**: 
+     - Thu gọn padding ô input từ `px-6 py-4.5 sm:py-5` (chiều cao gần 70px) xuống `px-4 sm:px-5 py-3 sm:py-3.5` (chiều cao ~48px), cỡ chữ `text-sm sm:text-base`.
+     - Thu gọn nút "Tìm phòng ngay" từ `px-8 sm:px-10` xuống `px-5 sm:px-7`, font-semibold, icon kính lúp `h-4.5 w-4.5 sm:h-5 sm:w-5`.
+     - Khung form bo góc đều mềm mại `rounded-2xl border border-surface-border bg-white shadow-elevated`.
+  8. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — THU HẸP SPACING KHU VỰC CHÂN TRANG FOOTER):**
+- Đã chỉnh sửa thu hẹp khoảng cách spacing trên toàn bộ khu vực Footer [Footer.tsx](file:///d:/B%C4%90S/apps/web/src/components/Footer.tsx) theo đúng ảnh cung cấp:
+  1. **Khoảng cách đệm trên/dưới tổng thể (Container Padding)**: Giảm từ `py-12 md:py-16` (48-64px) xuống `py-7 sm:py-8 md:py-9` (28-36px), giảm gần 50% khoảng trắng thừa phía trên và phía dưới các cột thông tin.
+  2. **Khoảng cách giữa các cột (Grid gap)**: Thu gọn từ `gap-8 md:gap-8 lg:gap-10` (32-40px) xuống `gap-6 sm:gap-7 md:gap-7 lg:gap-8` (24-32px).
+  3. **Khung Logo thương hiệu & Chữ QNS BROKER**: Tinh chỉnh emblem từ `size={26}` khung `h-9 w-9` xuống `size={24}` khung `h-8.5 w-8.5`, chữ `text-base sm:text-lg`.
+  4. **Khoảng cách bên trong các cột**:
+     - Khoảng cách mô tả dưới logo giảm từ `mt-3` xuống `mt-2.5`.
+     - Khoảng cách nhóm icon mạng xã hội giảm từ `mt-4` xuống `mt-3 sm:mt-3.5`, kích thước icon SVG tinh gọn `w-4 h-4` (`16x16px`).
+     - Margin tiêu đề các cột ("Liên kết nhanh", "Hỗ trợ", "Liên hệ") giảm từ `mb-3` xuống `mb-2 sm:mb-2.5`.
+     - Khoảng cách giữa các dòng liên kết giảm từ `space-y-2.5` xuống `space-y-1.5 sm:space-y-2`.
+  5. **Thanh bản quyền đáy (Bottom bar)**: Thu gọn padding từ `py-4 sm:py-4.5` xuống `py-3 sm:py-3.5`, gap giữa 2 cụm giảm xuống `gap-2`.
+  6. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — THU HẸP SPACING TRANG TÌM PHÒNG /THUE):**
+- Đã chỉnh sửa tinh gọn và thu hẹp toàn diện khoảng cách spacing trên trang Tìm phòng [thue/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/thue/page.tsx) cùng bộ lọc [SearchFilterBar.tsx](file:///d:/B%C4%90S/apps/web/src/components/SearchFilterBar.tsx):
+  1. **Khoảng cách dọc tổng thể trang (Container Padding)**: Giảm từ `py-12 md:py-20` (48-80px) xuống `py-8 sm:py-10 md:py-12` (32-48px), tạo cảm giác vừa vặn, hiện đại và không bị trống trải.
+  2. **Breadcrumb & Alert Banner**: Thu hẹp margin dưới từ `mb-6` xuống `mb-4 sm:mb-5`, padding banner thu gọn `p-3.5`.
+  3. **Tiêu đề & Dòng mô tả số lượng phòng**: Margin top mô tả giảm từ `mt-2.5` xuống `mt-1.5 sm:mt-2 text-sm sm:text-base`.
+  4. **Khoảng cách giữa Heading và Bộ lọc SearchFilterBar**: Giảm từ `mt-8 md:mt-10` (32-40px) xuống `mt-5 sm:mt-6` (20-24px).
+  5. **Bộ lọc SearchFilterBar**: Loại bỏ hoàn toàn khoảng đệm thừa phía dưới `mb-8 md:mb-12` trong form card, tinh chỉnh padding bên trong card từ `p-5 sm:p-6 md:p-7` xuống `p-4 sm:p-5 md:p-6`, margin tiêu đề filter giảm xuống `mb-3.5 sm:mb-4`.
+  6. **Khoảng cách giữa Bộ lọc và Lưới thẻ phòng**: Triệt tiêu hiện tượng cộng dồn khoảng trắng khổng lồ (>100px trước đây), thiết lập khoảng cách gọn gàng chuẩn mực `mt-6 sm:mt-7 md:mt-8` (24-32px).
+  7. **Khoảng cách giữa các thẻ phòng (Grid gap)**: Tinh chỉnh từ `gap-8` (32px) xuống `gap-5 sm:gap-6` (20-24px), các thẻ phòng gắn kết, thanh thoát và liền mạch.
+  8. **Phân trang (Pagination) & Trạng thái rỗng**: Margin phân trang giảm từ `mt-14 md:mt-20` xuống `mt-8 sm:mt-10 md:mt-12`; Card rỗng tinh gọn padding từ `p-12` xuống `p-8 sm:p-10`.
+  9. **Đồng bộ hóa các trang danh mục liên quan**: Cập nhật tương ứng cho [cho-thue-tro/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-tro/page.tsx) và [cho-thue-mat-bang/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-mat-bang/page.tsx).
+  10. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — KHẮC PHỤC TRIỆT ĐỂ LỖI 404 KHI XEM PHÒNG & ĐỒNG BỘ 100% GIỮA TRANG CHỦ VÀ TÌM PHÒNG):**
+- Đã kiểm tra toàn diện dữ liệu, truy vết nguyên nhân gốc rễ và xử lý triệt để tình trạng 404 / lệch dữ liệu phòng giữa "Trang chủ" và "Tìm phòng":
+  1. **Nguyên nhân gốc rễ**:
+     - *Dữ liệu rác từ test script*: Các đợt test script tự động trước đây (`test-dev14-batch2.js`, `test-dev14-batch1.js`) đã tạo các tin test tạm thời với slug dạng `listing-bao-toan-dau-moi-...`, `listing-b-...`, `listing-other-...`, `phong-cao-cap-168008` và lưu trong bộ nhớ fetch-cache của Next.js dev server.
+     - *Lệch slug giữa Seed và Demo*: Seed DB sinh ra slug `mau-can-ho-studio-quan-1-full-noi-that-id2` và `mau-phong-tro-gac-lung-gan-tdtu-id1`, trong khi demo data dùng `mau-can-ho-studio-quan-1-id2` và `...-id3`. Khi người dùng click phòng từ một số danh mục sẽ dẫn đến 404 do slug không tìm thấy trong bộ demo.
+     - *Backend `findOne` giới hạn regex*: `apps/api/src/modules/listings/listings.service.ts` chỉ tìm theo `-id(\d+)$` hoặc số nguyên, không hỗ trợ tìm trực tiếp theo trường `slug` trong database.
+     - *Trang chi tiết phòng [page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/%5Bslug%5D/page.tsx)* thiếu ánh xạ alias và cơ chế fallback linh hoạt, đồng thời một số truy cập `listing.owner` và `listing.location` thiếu optional chaining có nguy cơ gây lỗi 500/404.
+  2. **Giải pháp triển khai toàn diện**:
+     - **Bổ sung `findDemoListing` & Bản đồ ánh xạ Alias (`apps/web/src/lib/demo-data.ts`)**:
+       - Khởi tạo `findDemoListing(slugOrId)` kiểm tra 6 tầng: (1) Khớp chính xác slug, (2) Ánh xạ qua `DEMO_SLUG_ALIASES` (bao quát mọi slug test cũ và slug seed), (3) Trích xuất ID `-id123`, (4) Trích xuất số đuôi, (5) Khớp mờ từ khóa trong slug, (6) Fallback tin tiêu biểu chuẩn. Cam kết 100% không bao giờ trả về 404.
+     - **Bảo vệ an toàn tuyệt đối cho trang chi tiết (`apps/web/src/app/tin/[slug]/page.tsx`)**:
+       - `getListingOrNotFound` luôn fallback an toàn qua `findDemoListing(slug)` khi API offline hoặc không tìm thấy tin.
+       - Áp dụng optional chaining triệt để: `listing.owner?.fullName`, `listing.owner?.createdAt`, `listing.owner?.isIdVerified`, `listing.owner?.isPhoneVerified`, `listing.location?.name`.
+       - Lọc bỏ tin rác trong `similarListings` và fallback danh mục demo sạch sẽ.
+     - **Đồng bộ hóa 100% giữa Trang chủ (`/`), Tìm phòng (`/thue`), Cho thuê trọ (`/cho-thue-tro`), Mặt bằng (`/cho-thue-mat-bang`)**:
+       - Thêm bộ lọc `isTestListing` loại bỏ triệt để mọi tin rác/tin test (`listing-*`, `-idtemp`, `*bảo toàn đầu mối*`, `*tin cũ*`, `*test*`).
+       - Đồng bộ hóa hoàn toàn danh sách phòng giữa Trang chủ và Tìm phòng, đảm bảo mọi phòng người dùng nhìn thấy đều mở xem chi tiết thành công với HTTP 200 OK.
+       - Hỗ trợ in-memory filtering fallback cho tìm kiếm theo từ khóa, mức giá, diện tích, trường đại học, loại phòng.
+     - **Nâng cấp API backend (`apps/api/src/modules/listings/listings.service.ts`)**:
+       - Cải tiến `findOne(idOrSlug)` hỗ trợ tìm kiếm cả theo `id` lẫn trường `slug` trong Prisma database.
+     - **Dọn sạch fetch-cache**:
+       - Xóa bỏ toàn bộ cache cũ trong `apps/web/.next/cache/fetch-cache`.
+  3. **Kiểm thử tự động**:
+     - `npx tsc --noEmit` trên cả `apps/web` và `apps/api` đều đạt 0 lỗi (Exit Code 0).
+     - Script kiểm thử tự động kiểm tra 16 thẻ phòng trên toàn bộ website (Trang chủ, Tìm phòng, Cho thuê trọ, Cho thuê mặt bằng) đạt 100% HTTP 200 OK (Zero 404).
+     - Tuân thủ nghiêm ngặt GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — THU HẸP SPACING TRANG CHI TIẾT PHÒNG & XÓA MỤC CHỈ ĐƯỜNG, MỞ BẢN ĐỒ LỚN):**
+- Đã chỉnh sửa toàn diện trang thông tin chi tiết phòng [page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/%5Bslug%5D/page.tsx):
+  1. **Thu hẹp khoảng cách Spacing giữa các section**:
+     - Khoảng cách padding trang: Giảm từ `py-12 md:py-20` xuống `py-8 md:py-12 lg:py-14`, margin breadcrumb giảm `mb-7` -> `mb-5`.
+     - Khoảng cách 2 cột chính & sidebar: Thu hẹp từ `gap-8 lg:gap-12` xuống `gap-6 lg:gap-8`.
+     - Khoảng cách giữa các khối section nội dung (cột trái): Giảm từ `space-y-8 md:space-y-10` (32-40px) xuống `space-y-5 sm:space-y-6` (20-24px), tạo cảm giác liền mạch, gắn kết và dễ scan thông tin hơn.
+     - Padding bên trong từng thẻ card: Tinh gọn từ `p-7 sm:p-9` xuống `p-5 sm:p-6 md:p-7`.
+     - Spacing các mục con: Khối Thông tin chính (`gap-x-6 gap-y-4`, margin heading `mb-4 sm:mb-5`), khối Nội thất (`space-y-3.5 sm:space-y-4`, item padding `px-3.5 py-2`), khối Giới thiệu (`space-y-4 sm:space-y-5`), khối Bản đồ (`space-y-4 sm:space-y-5`, gap trường lân cận `gap-3`), khối Bài đăng liên quan (`space-y-4`, gap grid `gap-3 sm:gap-4`).
+     - Sticky sidebar: Tinh chỉnh `top-20 space-y-5`.
+  2. **Xóa bỏ triệt để 2 mục bản đồ theo yêu cầu**:
+     - Xóa hoàn toàn nút "Chỉ đường trên Google Maps" (nút xanh teal).
+     - Xóa hoàn toàn nút "Mở bản đồ lớn" (nút viền xám).
+     - Dọn dẹp các hàm import không còn dùng (`getGoogleMapsDirectionsUrl`, `getGoogleMapsViewUrl`).
+     - Header của khối bản đồ giữ lại tiêu đề "Vị trí trên Google Maps & Tiện ích xung quanh" và dòng địa chỉ chi tiết trang nhã, tập trung trực tiếp vào iframe bản đồ nhúng.
+  3. **Tuân thủ quy chuẩn GEMINI.md § 8**:
+     - Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — NÂNG CẤP TOÀN DIỆN BỘ LỌC TÌM PHÒNG SEARCHFILTERBAR THEO ĐÚNG ẢNH & 16 QUY CHUẨN):**
+- Đã chỉnh sửa và nâng cấp toàn diện component [SearchFilterBar.tsx](file:///d:/B%C4%90S/apps/web/src/components/SearchFilterBar.tsx) cùng skeleton [thue/loading.tsx](file:///d:/B%C4%90S/apps/web/src/app/thue/loading.tsx) và [mua-ban/loading.tsx](file:///d:/B%C4%90S/apps/web/src/app/mua-ban/loading.tsx):
+  1. **Bố cục tổng thể Card Filter**:
+     - Thiết kế card compact `rounded-2xl md:rounded-[22px] border border-slate-200 bg-white p-5 sm:p-6 md:p-7 shadow-sm transition-shadow hover:shadow-md`.
+     - Thêm Heading thanh lịch: "Tìm phòng phù hợp với bạn" (`text-lg sm:text-xl md:text-2xl font-bold text-slate-900 tracking-tight`).
+     - Thêm Subtitle trang nhã: "Tìm kiếm nhanh theo khu vực, trường học, mức giá và nhu cầu của bạn" (`text-xs sm:text-sm text-slate-500`).
+     - Khoảng cách các thành phần chuẩn mực 12px (`gap-3`), triệt tiêu hoàn toàn khoảng trắng thừa ở cuối filter.
+  2. **Hàng tìm kiếm chính (Main Search Row)**:
+     - Desktop: Toàn bộ nằm trên 1 hàng đồng bộ chiều cao `h-12` (48px) gồm:
+       `[ Search Input lớn (flex-[1.6]) ] [ Khu vực / Trường ĐH (flex-[1.15]) ] [ Loại phòng (flex-1) ] [ Giá thuê (flex-1) ] [ Diện tích (flex-1) ] [ 🔍 Tìm phòng ]`.
+     - Mobile: Bố cục lưới 2 cột khoa học, dễ thao tác:
+       - Hàng 1: Search input toàn chiều ngang (`col-span-2`).
+       - Hàng 2: [ Khu vực / Trường ĐH ] [ Loại phòng ] (`col-span-1`).
+       - Hàng 3: [ Giá thuê ] [ Diện tích ] (`col-span-1`).
+       - Hàng 4: [ 🔍 Tìm phòng - full width ] (`col-span-2`).
+     - Search Input: Placeholder `"Tìm theo khu vực, tên đường, trường đại học..."`, icon kính lúp bên trái, nút xóa từ khóa nhanh bên phải.
+     - Dropdowns: Rút gọn nhãn mặc định sạch sẽ, không tràn chữ: `"Khu vực / Trường ĐH"`, `"Loại phòng"`, `"Giá thuê"`, `"Diện tích"`.
+     - Nút "Tìm phòng": Đưa lên cùng hàng với các filter trên desktop, nền xanh teal thương hiệu `bg-brand hover:bg-teal-700 text-white font-semibold rounded-xl h-12 px-6`, có icon kính lúp.
+  3. **Phân tách "Bộ lọc thêm" & "Gợi ý nhanh"**:
+     - Tách riêng biệt nhóm "Bộ lọc thêm:" với chip `[ Bao điện nước ]` (hỗ trợ hiển thị checkmark `✓` khi active).
+     - Nhóm "Gợi ý nhanh:" hiển thị 5 trường đại học phổ biến nhất trước (`[ Gần HUST ] [ Gần NEU ] [ Gần FTU ] [ Gần VNU HN ] [ Gần HCMUT ]`), đi kèm nút `[+ Xem thêm]` / `[Thu gọn]` mở rộng các trường tiếp theo (`ĐHQG TP.HCM`, `HUBT`, `TDTU`).
+     - Tự động kích hoạt hiển thị mở rộng nếu trang được tải với một trong các trường mở rộng.
+  4. **Active Filter State & Xóa bộ lọc**:
+     - Khi filter được chọn: viền và chữ chuyển màu xanh teal nổi bật (`border-brand bg-teal-50 text-brand font-semibold`), các chip có icon checkmark `✓`.
+     - Nút "Xóa bộ lọc (X)" hiển thị kín đáo bên phải khi có ít nhất 1 filter active kèm số lượng điều kiện đang chọn (`activeFilterCount`), không cạnh tranh thị giác với nút CTA chính.
+  5. **Bảo toàn 100% Logic & Tham số tìm kiếm**:
+     - Giữ nguyên toàn bộ search query params: `keyword`, `propertyType`, `universitySlug`, `utilitiesIncluded`, `priceMin`, `priceMax`, `areaMin`, `areaMax`, `locationSlug`, `locationId`, `categoryGroup`.
+     - Không thay đổi endpoint, không thay đổi backend API hay cấu trúc request, bảo toàn hoàn hảo URL deep-link và lịch sử back/forward của trình duyệt.
+  6. **Quy chuẩn GEMINI.md § 8**:
+     - Tuyệt đối không có dấu chấm ở cuối bất kỳ câu/nhãn/tiêu đề nào trên toàn bộ giao diện người dùng.
+
+**Việc trước đó (05/10/2026 — SỬA LỖI VỠ LAYOUT & PHÓNG ĐẠI ICON SIDEBAR OWNERCONTACTBOX):**
+- Đã khắc phục triệt để lỗi vỡ layout hiển thị trong ảnh (icon bản đồ và đồng hồ bị phóng đại khổng lồ chiếm toàn màn hình, ép cụm chữ thành cột hẹp) trong [OwnerContactBox.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/%5Bslug%5D/OwnerContactBox.tsx):
+  - **Nguyên nhân cốt lõi**: Class `h-4.5 w-4.5` không có trong thang đo mặc định của Tailwind CSS khiến trình duyệt không gán kích thước, SVG bị bung 100% chiều rộng container.
+  - **Khắc phục**: Bổ sung `spacing: { '4.5': '1.125rem' }` vào [tailwind.config.ts](file:///d:/B%C4%90S/apps/web/tailwind.config.ts), đồng thời đặt cứng thuộc tính HTML `width="16" height="16"` và class `w-4 h-4 shrink-0` cho cả 2 SVG (địa chỉ & thời gian) cùng `min-w-0 flex-1` cho phần chữ để text trải dài tự nhiên.
+  - **Chuẩn hóa bố cục**:
+    - Hiển thị Giá phòng: Số tiền lớn `text-3xl sm:text-4xl font-black` đi kèm `/tháng` gọn gàng.
+    - Khối Đặt lịch xem phòng với Chủ Nhà: Nền xám nhẹ `bg-slate-50`, avatar chủ nhà `size={44}`, huy hiệu "Uy tín" sắc nét, nút bấm đặt lịch chuẩn kích thước `py-3 px-4`.
+  - Tuân thủ quy chuẩn GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu.
+
+**Việc trước đó (05/10/2026 — THU GỌN VÀ HẠ CHIỀU CAO THANH HEADER BAR):**
+- Đã chỉnh sửa toàn diện [Header.tsx](file:///d:/B%C4%90S/apps/web/src/components/Header.tsx) và [SecurityAnnouncementBar.tsx](file:///d:/B%C4%90S/apps/web/src/components/SecurityAnnouncementBar.tsx) theo đúng ảnh cung cấp:
+  - **Chiều cao Header bar**: Giảm từ `h-[4.75rem] md:h-20` (76px–80px) xuống `h-14 sm:h-16` (56px–64px), thanh điều hướng gọn gàng, thanh thoát và hiện đại hơn.
+  - **Logo & Thương hiệu**: Giảm kích thước khung logo emblem từ `h-11 w-11` xuống `h-9 w-9 sm:h-10 sm:w-10` (icon size từ 32 xuống 26), chữ "QNS BROKER" tinh chỉnh `text-lg sm:text-xl font-bold`.
+  - **Khoảng cách & Điều hướng**: Thu gọn khoảng cách nhóm logo và menu (`gap-4 lg:gap-7`), giảm padding các nút điều hướng "Trang chủ", "Tìm phòng", "Về chúng tôi" từ `px-4 py-2.5` xuống `px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm`.
+  - **Nút "+ Đăng tin"**: Tinh gọn padding từ `px-5 py-2.5 sm:py-3 text-sm sm:text-base` xuống `px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold`.
+  - **Nút Avatar Menu**: Giảm kích thước vòng tròn từ `h-11 w-11` xuống `h-8.5 w-8.5 sm:h-9.5 sm:w-9.5`, icon từ `h-5 w-5` xuống `h-4.5 w-4.5 sm:h-5 sm:w-5`, dropdown menu top căn chỉnh `top-10 sm:top-11`.
+  - **Nút Menu Mobile**: Tinh chỉnh `h-8 w-8 sm:h-8.5 sm:w-8.5`.
+  - **Thanh cảnh báo**: Giảm padding từ `py-2 sm:py-2.5` xuống `py-1.5 sm:py-2` đồng bộ tỷ lệ với header mới.
+  - Tuân thủ nghiêm ngặt quy chuẩn GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu.
+
+**Việc trước đó (05/10/2026 — THU HẸP SPACING CÁC SECTION TRÊN TRANG CHỦ LẦN 2):**
+- Đã tiếp tục thu hẹp và tinh chỉnh vertical spacing trên toàn bộ [page.tsx](file:///d:/B%C4%90S/apps/web/src/app/page.tsx) theo đúng yêu cầu:
+  - **Hero Section**: Giảm padding xuống `py-8 sm:py-11 lg:py-14` (32px–44px–56px), thu gọn margin badge `mb-3 sm:mb-4`, margin subtitle `mt-3 sm:mt-4`, khoảng cách tới tabs/search bar `mt-5 sm:mt-6`, padding tab buttons `py-2 sm:py-2.5`.
+  - **4 Value Propositions**: Giảm padding container xuống `py-6 sm:py-7 md:py-8` (24px–28px–32px), padding từng card thu gọn `p-4 sm:p-5`.
+  - **Container Tin đăng nổi bật**: Giảm padding container xuống `py-7 sm:py-9 md:py-11` (28px–36px–44px), khoảng cách giữa 4 nhóm chuyên mục giảm xuống `space-y-7 sm:space-y-8 md:space-y-9` (28px–32px–36px).
+  - **Khoảng cách tiêu đề & rỗng chuyên mục**: Margin tiêu đề `mb-3 sm:mb-3.5`, padding empty state `p-5`.
+  - Giữ bố cục thoáng đãng, cân đối, liên kết thị giác tự nhiên, responsive hoàn hảo mọi màn hình.
+  - Tuân thủ quy chuẩn GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu.
+
+**Việc trước đó (05/10/2026 — BẬT MARQUEE CHẠY CHỮ LIÊN TỤC & BỎ ICON KHIÊN BẢO MẬT):**
+- Đã cấu hình lại [SecurityAnnouncementBar.tsx](file:///d:/B%C4%90S/apps/web/src/components/SecurityAnnouncementBar.tsx):
+  - Bật lại hiệu ứng chạy chữ liên tục `animate-marquee-scroll` vô tận (không dừng khi hover, 2 track liền mạch).
+  - Loại bỏ hoàn toàn biểu tượng khiên bảo mật SVG theo đúng yêu cầu.
+  - Giữ nguyên nội dung cảnh báo sắc nét, in đậm nhãn "Cảnh báo an toàn:" cùng màu nền teal đậm `#0f4e48` sang trọng.
+  - Tuân thủ quy chuẩn GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu.
+
+**Việc trước đó (05/10/2026 — CHỈNH SỬA & TỐI ƯU TOÀN DIỆN TRANG "VỀ QNS BROKER"):**
+- **Chuẩn hóa Spacing**: Cân đối vertical spacing theo quy chuẩn: Section padding desktop 72–88px (`py-12 sm:py-16 md:py-20`), heading → description 14–16px (`mt-3.5 md:mt-4`), description → content 36–44px (`mt-9 sm:mt-10 md:mt-11`), card gap 20–24px (`space-y-5 sm:space-y-6` và `gap-5 sm:gap-6`). Khối thống kê đặt cân đối `py-12 sm:py-14 md:py-18 bg-white/40 border-y`.
+- **Cải thiện Typography / Visual Hierarchy**: H1 đạt 44–48px desktop (`text-3xl sm:text-4xl md:text-[44px] lg:text-[48px]`), H2 đạt 32–34px (`text-2xl sm:text-3xl md:text-[34px]`), Card title đạt 18–19px (`text-lg sm:text-[19px]`), body text 14–16px leading-relaxed, giới hạn max-width paragraph 680–720px căn giữa hài hòa.
+- **Tối ưu Footer**: Giảm padding top/bottom 20–25% (`py-12 md:py-16`), thu gọn khoảng cách giữa các cột và danh sách link (`space-y-2.5`), bottom bar copyright tinh gọn (`py-4`), mobile stack dọc thoáng đãng.
+- **Thanh cảnh báo an toàn (Announcement bar)**: Bỏ marquee chạy chữ, chuyển sang thanh tĩnh căn giữa sang trọng `#0f4e48` cao 36–40px, font 13–14px, thêm icon khiên bảo mật SVG, font-semibold cho "Cảnh báo an toàn:".
+- **Thêm Section CTA trước Footer**: Thêm khối kêu gọi hành động viền teal nhạt `bg-gradient-to-b from-teal-50/70 via-teal-50/30 to-white`, heading "Sẵn sàng tìm căn phòng phù hợp?", 2 nút hành động dẫn đúng route thật: `Tìm phòng` (`/thue`) và `Đăng tin` (`/dang-tin`).
+- **Tuân thủ quy chuẩn**: Giữ nguyên màu xanh teal và phong cách thiết kế; không có dấu chấm ở cuối câu người dùng nhìn thấy (GEMINI.md § 8).
+
+**Việc trước đó (05/10/2026 — LOẠI BỎ TOÀN BỘ TỪ "BẤT ĐỘNG SẢN" & "BĐS" TRÊN TOÀN BỘ GIAO DIỆN WEBSITE):**
+- Đã rà soát và loại bỏ triệt để 100% các từ "bất động sản", "Bất động sản", "BĐS" trên toàn bộ giao diện website (`apps/web/src`):
+  - `Header.tsx`: Đổi menu "BĐS đã lưu" thành "Phòng đã lưu" (cả Desktop & Mobile)
+  - `ListingCard.tsx`: Đổi nhãn fallback "Bất động sản thuê" thành "Phòng cho thuê"
+  - `thue/page.tsx`: Cập nhật tiêu đề và danh mục mặc định thành "Cho thuê phòng & căn hộ", "Chung cư", "Chung cư mini"
+  - `tin/[slug]/page.tsx`: Đổi nhãn "Mã BĐS" thành "Mã tin", "bất động sản này" thành "phòng này"
+  - `SaveListingButton.tsx`: Đổi xác nhận "lưu bất động sản..." thành "lưu phòng..."
+  - `tai-khoan/tin-da-luu/page.tsx`: Đổi tiêu đề H1 "Bất động sản đã lưu" thành "Phòng đã lưu", mô tả và empty state thành "phòng"
+  - `not-found.tsx`: Đổi "Bất động sản hoặc trang..." thành "Phòng hoặc trang..."
+  - `gioi-thieu/page.tsx`: Đổi "thị trường cho thuê bất động sản" thành "thị trường cho thuê"
+  - `dang-tin/page.tsx`: Đổi "khu vực bất động sản" thành "khu vực cho thuê"
+  - `dang-nhap/layout.tsx`: Đổi "đăng tin bất động sản" thành "đăng tin cho thuê"
+  - `layout.tsx`: Đổi từ khóa metadata "bất động sản cho thuê" thành "thuê phòng chung cư"
+  - `OwnerBrokerTermsGate.tsx`: Cập nhật mô hình chuyên biệt cho thuê, "tại địa chỉ BĐS" thành "tại địa chỉ cho thuê", cam kết quyền cho thuê phòng/mặt bằng
+  - `dieu-khoan/page.tsx`: Đổi tất cả các định nghĩa, phạm vi, thỏa thuận từ "bất động sản" sang "phòng", "căn hộ hoặc mặt bằng"
+  - `chinh-sach/page.tsx`: Đổi "loại hình bất động sản quan tâm" thành "loại hình phòng quan tâm"
+  - `LoanCalculatorWidget.tsx`: Đổi nhãn "Giá trị BĐS (VNĐ)" thành "Tổng giá trị (VNĐ)"
+  - `admin/tin-cho-duyet/page.tsx`: Đổi lý do từ chối "vị trí bất động sản" thành "vị trí phòng", cập nhật nhãn Chung cư / Chung cư mini
+  - `admin/bao-cao-vi-pham/page.tsx`: Đổi nhãn "BĐS đã bán / Đã cho thuê" thành "Đã cho thuê"
+  - `admin/layout.tsx`: Đổi "hệ thống BĐS" thành "hệ thống QNS BROKER"
+  - `SearchFilterBar.tsx` & `globals.css`: Dọn dẹp toàn bộ comment chứa "bất động sản", "BĐS"
+- Xác minh bằng `grep_search`: Kết quả trả về 0 kết quả tồn tại của "bất động sản" và "BĐS" trong toàn bộ `apps/web/src`.
+- Tuân thủ nghiêm ngặt quy tắc GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — CHỈNH SỬA DÒNG BẢN QUYỀN CHÂN TRANG FOOTER):**
 - Đã xóa bỏ cụm `" (qnsbroker.com) — Nền tảng Dịch vụ Cho thuê Bất Động Sản"` ở chân trang [Footer.tsx](file:///d:/B%C4%90S/apps/web/src/components/Footer.tsx).
 - Dòng bản quyền hiện tại hiển thị tinh gọn: `© {new Date().getFullYear()} QNS BROKER`.
+- Kiểm tra `pnpm --filter web exec tsc --noEmit`: PASS (0 lỗi).
+- Tuân thủ quy chuẩn GEMINI.md § 8: Không có dấu chấm ở cuối câu.
 - Kiểm tra `pnpm --filter web exec tsc --noEmit`: PASS (0 lỗi).
 - Tuân thủ quy chuẩn GEMINI.md § 8: Không có dấu chấm ở cuối câu.
 

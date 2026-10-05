@@ -13,6 +13,9 @@ const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
+      spacing: {
+        '4.5': '1.125rem',
+      },
       colors: {
         brand: {
           50: '#f0fdfa',

@@ -106,7 +106,7 @@ const DEFAULT_REASONS = [
   'Mức giá không hợp lý hoặc sai đơn vị định giá',
   'Nội dung có dấu hiệu lừa đảo / quảng cáo spam',
   'Tin đăng trùng lặp với tin đã tồn tại trên sàn',
-  'Địa chỉ hoặc vị trí bất động sản không chính xác',
+  'Địa chỉ hoặc vị trí phòng không chính xác',
   'Thông tin điện nước/chi phí dịch vụ không minh bạch',
 ];
 
@@ -281,7 +281,7 @@ export default function AdminPendingListingsPage() {
         <div>
           <h1 className="text-xl font-bold text-slate-900">Kiểm duyệt tin cho thuê phòng</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Tổng cộng <b>{total}</b> tin đăng theo bộ lọc hiện tại.
+            Tổng cộng <b>{total}</b> tin đăng theo bộ lọc hiện tại
           </p>
         </div>
 
@@ -333,8 +333,8 @@ export default function AdminPendingListingsPage() {
         <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">Chuyên mục:</span>
         {[
           { key: '', label: 'Tất cả' },
-          { key: 'thue_can_ho', label: 'Căn hộ' },
-          { key: 'thue_studio', label: 'Studio' },
+          { key: 'thue_can_ho', label: 'Chung cư' },
+          { key: 'thue_studio', label: 'Chung cư mini' },
           { key: 'thue_tro', label: 'Phòng trọ SV / Người đi làm' },
           { key: 'thue_mat_bang', label: 'Mặt bằng kinh doanh' },
         ].map((tab) => (

@@ -5,6 +5,7 @@ import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RegisterEmailDto } from './dto/register-email.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -44,6 +45,13 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('register-email')
+  registerEmail(@Body() dto: RegisterEmailDto) {
+    return this.authService.registerEmail(dto);
   }
 
   @Public()

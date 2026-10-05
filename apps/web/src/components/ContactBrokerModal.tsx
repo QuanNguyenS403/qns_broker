@@ -153,37 +153,39 @@ export function ContactBrokerModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) handleCloseModal();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4 backdrop-blur-xs animate-fade-in"
     >
-      <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          <div>
-            <h2 id="contact-modal-title" className="text-lg font-bold text-slate-800">
+      <div className="relative w-full max-w-[440px] sm:max-w-[460px] rounded-2xl bg-white shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col border border-slate-100">
+        {/* Header tinh gọn, hiện đại */}
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5 bg-slate-50/60">
+          <div className="min-w-0 pr-3">
+            <h2 id="contact-modal-title" className="text-base sm:text-[17px] font-bold text-slate-900 leading-tight">
               Đặt lịch xem phòng
             </h2>
-            <p className="text-xs text-brand mt-0.5 font-medium">
-              {SITE_CONFIG.agentName} — {SITE_CONFIG.agentRole}
+            <p className="text-[11.5px] text-brand mt-0.5 font-semibold flex items-center gap-1.5">
+              <span>{SITE_CONFIG.agentName}</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-600 font-normal">{SITE_CONFIG.agentRole}</span>
             </p>
             {listingTitle && (
-              <p className="text-xs text-slate-500 truncate max-w-sm mt-0.5">{listingTitle}</p>
+              <p className="text-[11px] text-slate-400 truncate max-w-[300px] sm:max-w-[340px] mt-0.5">{listingTitle}</p>
             )}
           </div>
           <button
             type="button"
             onClick={handleCloseModal}
             aria-label="Đóng hộp thoại đặt lịch xem phòng"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors text-lg"
+            className="flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors text-sm"
           >
             ✕
           </button>
         </div>
 
-        {/* Form Body */}
+        {/* Form Body kích thước hài hòa */}
         {submitted ? (
-          <div className="p-8 text-center space-y-3">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="p-6 text-center space-y-2.5">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -193,23 +195,23 @@ export function ContactBrokerModal({
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="rounded-xl bg-emerald-600 px-6 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
+                className="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
               >
                 Đóng
               </button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-3.5">
+          <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3 overflow-y-auto">
             {errorMessage && (
-              <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 leading-relaxed">
+              <div className="rounded-xl bg-rose-50 border border-rose-200 p-2.5 text-xs text-rose-700 leading-relaxed">
                 {errorMessage}
               </div>
             )}
 
             {/* Họ & Tên */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-[11.5px] font-semibold text-slate-700 mb-1">
                 Họ và tên của bạn <span className="text-rose-500">*</span>
               </label>
               <input
@@ -218,13 +220,13 @@ export function ContactBrokerModal({
                 placeholder="Ví dụ: Nguyễn Văn A"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2 text-xs sm:text-[13px] text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10 transition-all"
               />
             </div>
 
             {/* Số điện thoại */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-[11.5px] font-semibold text-slate-700 mb-1">
                 Số điện thoại liên hệ <span className="text-rose-500">*</span>
               </label>
               <input
@@ -233,14 +235,14 @@ export function ContactBrokerModal({
                 placeholder="Ví dụ: 0987 654 321"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2 text-xs sm:text-[13px] text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10 transition-all"
               />
             </div>
 
             {/* Ngày & Giờ mong muốn xem phòng */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-[11.5px] font-semibold text-slate-700 mb-1">
                   Ngày xem phòng
                 </label>
                 <input
@@ -248,18 +250,18 @@ export function ContactBrokerModal({
                   value={preferredDate}
                   min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setPreferredDate(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3 py-1.5 text-xs sm:text-[13px] text-slate-800 focus:bg-white focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-[11.5px] font-semibold text-slate-700 mb-1">
                   Khung giờ thuận tiện
                 </label>
                 <select
                   value={preferredTime}
                   onChange={(e) => setPreferredTime(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3 py-1.5 text-xs sm:text-[13px] text-slate-800 focus:bg-white focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10 transition-all"
                 >
                   <option value="sang">Sáng (08:30 - 11:30)</option>
                   <option value="chieu">Chiều (13:30 - 17:30)</option>
@@ -270,50 +272,50 @@ export function ContactBrokerModal({
 
             {/* Ghi chú thêm */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-[11.5px] font-semibold text-slate-700 mb-1">
                 Ghi chú hoặc yêu cầu thêm (không bắt buộc)
               </label>
               <textarea
                 rows={2}
-                placeholder="Ví dụ: Cần dọn vào đầu tháng tới, ưu tiên phòng có chỗ để xe máy..."
+                placeholder="Ví dụ: Cần dọn vào đầu tháng tới, ưu tiên phòng có chỗ để xe máy"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className="w-full resize-y rounded-xl border border-slate-300 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/30 p-2.5 text-xs sm:text-[13px] text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10 transition-all"
               />
             </div>
 
             {/* Checkbox Consent - Mặc định không chọn sẵn (GAP-10) */}
-            <div className="flex items-start gap-2 pt-1">
+            <div className="flex items-start gap-2 pt-0.5">
               <input
                 type="checkbox"
                 id="lead-consent"
                 checked={consent}
                 onChange={(e) => setConsent(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-slate-300 text-brand focus:ring-brand cursor-pointer"
               />
-              <label htmlFor="lead-consent" className="text-xs text-slate-600 leading-snug">
+              <label htmlFor="lead-consent" className="text-[11px] sm:text-[11.5px] text-slate-600 leading-snug cursor-pointer select-none">
                 Tôi đồng ý cung cấp thông tin liên hệ để người tư vấn và trực tiếp dẫn xem ({SITE_CONFIG.agentName}) liên hệ xác nhận lịch
               </label>
             </div>
 
             {/* Nút hành động */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-2.5 pt-1.5">
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-brand px-7 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-600 transition-colors disabled:opacity-60 flex items-center gap-2"
+                className="flex-1 rounded-xl bg-brand px-5 py-2.5 text-xs sm:text-[13px] font-bold text-white shadow-sm hover:bg-brand-600 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {loading && (
                   <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 )}
-                {loading ? 'Đang gửi...' : 'Đặt lịch xem phòng'}
+                <span>{loading ? 'Đang gửi' : 'Đặt lịch xem phòng'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleCloseModal}
                 disabled={loading}
-                className="rounded-xl border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-[13px] font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer"
               >
                 Bỏ qua
               </button>

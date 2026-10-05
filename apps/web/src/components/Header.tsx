@@ -110,63 +110,61 @@ export function Header() {
         scrolled ? 'shadow-elevated' : 'shadow-sm'
       }`}
     >
-      <div className="container-max flex h-16 items-center justify-between gap-4">
-        {/* Logo QNS & Điều hướng chính */}
-        <div className="flex items-center gap-6 lg:gap-8">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-white/30 group-hover:scale-105 transition-transform">
-              <QnsLogo variant="emblem" theme="brand" size={30} />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-white">
-              QNS <span className="font-normal opacity-90">BROKER</span>
-            </span>
-          </Link>
+      <div className="container-max relative flex h-14 sm:h-16 items-center justify-between gap-3 sm:gap-4">
+        {/* Logo QNS */}
+        <Link href="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0 group">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-white p-0.5 sm:p-1 shadow-sm ring-1 ring-white/30 group-hover:scale-105 transition-transform">
+            <QnsLogo variant="emblem" theme="brand" size={26} />
+          </div>
+          <span className="text-lg sm:text-xl font-bold tracking-tight text-white">
+            QNS <span className="font-normal opacity-90">BROKER</span>
+          </span>
+        </Link>
 
-          {/* 3 mục điều hướng chính trên header bar */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-            <Link
-              href="/"
-              className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all ${
-                pathname === '/'
-                  ? 'bg-white/20 text-white font-semibold shadow-xs'
-                  : 'text-white/90 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Trang chủ
-            </Link>
-            <Link
-              href="/thue"
-              className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all ${
-                pathname === '/thue' || pathname.startsWith('/thue/') || pathname.startsWith('/tin/')
-                  ? 'bg-white/20 text-white font-semibold shadow-xs'
-                  : 'text-white/90 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Tìm phòng
-            </Link>
-            <Link
-              href="/gioi-thieu"
-              className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all ${
-                pathname === '/gioi-thieu'
-                  ? 'bg-white/20 text-white font-semibold shadow-xs'
-                  : 'text-white/90 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              Về chúng tôi
-            </Link>
-          </nav>
-        </div>
+        {/* 3 mục điều hướng chính trên header bar — căn chính giữa */}
+        <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-1.5 lg:gap-2.5 pointer-events-auto">
+          <Link
+            href="/"
+            className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
+              pathname === '/'
+                ? 'bg-white/20 text-white font-semibold shadow-xs'
+                : 'text-white/90 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            Trang chủ
+          </Link>
+          <Link
+            href="/thue"
+            className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
+              pathname === '/thue' || pathname.startsWith('/thue/') || pathname.startsWith('/tin/')
+                ? 'bg-white/20 text-white font-semibold shadow-xs'
+                : 'text-white/90 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            Tìm phòng
+          </Link>
+          <Link
+            href="/gioi-thieu"
+            className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
+              pathname === '/gioi-thieu'
+                ? 'bg-white/20 text-white font-semibold shadow-xs'
+                : 'text-white/90 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            Về chúng tôi
+          </Link>
+        </nav>
 
         {/* Actions bên phải */}
         <div className="flex items-center gap-2.5 sm:gap-3">
           {!checked ? (
-            <div className="h-9 w-20 skeleton bg-white/20 rounded-xl" />
+            <div className="h-8.5 w-20 skeleton bg-white/20 rounded-lg sm:rounded-xl" />
           ) : (
             <>
               {user && user.role === 'admin' && (
                 <Link
                   href="/admin"
-                  className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm"
+                  className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg sm:rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm"
                 >
                   <span>Quản trị</span>
                 </Link>
@@ -175,7 +173,7 @@ export function Header() {
               {/* Nút + Đăng tin */}
               <Link
                 href="/dang-tin"
-                className="inline-flex items-center gap-1 rounded-xl bg-white text-brand px-3.5 py-2 text-xs sm:text-sm font-bold shadow-sm transition-all hover:bg-teal-50 active:scale-[0.98]"
+                className="inline-flex items-center gap-1.5 rounded-lg sm:rounded-xl bg-white text-brand px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold shadow-sm transition-all hover:bg-teal-50 active:scale-[0.98]"
               >
                 <span>+ Đăng tin</span>
               </Link>
@@ -186,20 +184,20 @@ export function Header() {
                   id="user-profile-menu-button"
                   type="button"
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 hover:bg-white/20 transition-all text-white focus:outline-none"
+                  className="relative flex h-8.5 w-8.5 sm:h-9.5 sm:w-9.5 items-center justify-center rounded-full border border-white/30 bg-white/10 hover:bg-white/20 transition-all text-white focus:outline-none"
                   aria-label="Menu cá nhân và tiện ích"
                 >
                   {user ? (
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-brand font-bold text-xs shadow-sm">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-brand font-bold text-[11px] shadow-sm">
                       {initials}
                     </span>
                   ) : (
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                    <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                     </svg>
                   )}
                   {selectedRoomsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-brand">
+                    <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-brand">
                       {selectedRoomsCount > 9 ? '9+' : selectedRoomsCount}
                     </span>
                   )}
@@ -208,7 +206,7 @@ export function Header() {
                 {menuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 top-12 z-50 w-60 rounded-2xl border border-surface-border bg-white py-2 shadow-modal animate-slide-down text-slate-800">
+                    <div className="absolute right-0 top-10 sm:top-11 z-50 w-60 rounded-2xl border border-surface-border bg-white py-2 shadow-modal animate-slide-down text-slate-800">
                       {/* Banner user info nếu đã đăng nhập */}
                       {user && (
                         <div className="px-4 py-2 border-b border-surface-border mb-1">
@@ -331,7 +329,7 @@ export function Header() {
                             onClick={() => setMenuOpen(false)}
                             className="flex items-center px-4 py-2 text-xs text-text-secondary hover:bg-slate-50 hover:text-text-primary transition-colors"
                           >
-                            <span>BĐS đã lưu</span>
+                            <span>Phòng đã lưu</span>
                           </Link>
                           <button
                             type="button"
@@ -356,15 +354,15 @@ export function Header() {
           <button
             id="mobile-menu-button"
             onClick={() => setMobileOpen((v) => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-white hover:bg-white/10 md:hidden transition-colors"
+            className="flex h-8 w-8 sm:h-8.5 sm:w-8.5 items-center justify-center rounded-lg text-white hover:bg-white/10 md:hidden transition-colors"
             aria-label="Menu"
           >
             {mobileOpen ? (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5" width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5" width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
               </svg>
             )}
@@ -450,7 +448,7 @@ export function Header() {
                   href="/tai-khoan/tin-da-luu"
                   className="flex rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
                 >
-                  BĐS đã lưu
+                  Phòng đã lưu
                 </Link>
                 {user.role === 'admin' && (
                   <Link

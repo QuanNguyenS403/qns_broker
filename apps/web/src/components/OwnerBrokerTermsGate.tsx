@@ -114,10 +114,10 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
               <span>Mô hình môi giới chuyên biệt & Đầu mối phục vụ thực tế</span>
             </h3>
             <p>
-              Hệ thống QNS BROKER hoạt động theo mô hình môi giới chuyên biệt cho thuê bất động sản (phòng trọ, studio, căn hộ mini, căn hộ chung cư và mặt bằng kinh doanh).
+              Hệ thống QNS BROKER hoạt động theo mô hình môi giới chuyên biệt cho thuê phòng trọ, chung cư mini, chung cư và mặt bằng kinh doanh
             </p>
             <p>
-              Chuyên viên Đức Quân trực tiếp tiếp nhận tin đăng, liên hệ chủ nhà để xác minh thông tin, khảo sát thực tế và điều phối dẫn khách thuê tới xem phòng trực tiếp tại địa chỉ BĐS.
+              Chuyên viên Đức Quân trực tiếp tiếp nhận tin đăng, liên hệ chủ nhà để xác minh thông tin, khảo sát thực tế và điều phối dẫn khách thuê tới xem phòng trực tiếp tại địa chỉ cho thuê
             </p>
             <p className="font-medium text-emerald-800 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200/60">
               Khách thuê phòng được phục vụ hoàn toàn miễn phí 0 đồng, không phải trả bất kỳ chi phí dịch vụ môi giới nào
@@ -170,7 +170,7 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
             <ul className="list-disc pl-5 space-y-1">
               <li>Cung cấp thông tin địa chỉ, diện tích, giá thuê và hình ảnh thực tế trung thực, chính xác</li>
               <li>Công khai minh bạch các chi phí dịch vụ đi kèm (giá điện, nước, internet, gửi xe)</li>
-              <li>Cam kết có toàn quyền cho thuê hoặc là chủ sở hữu hợp pháp đối với bất động sản đăng tải</li>
+              <li>Cam kết có toàn quyền cho thuê hoặc là chủ sở hữu hợp pháp đối với phòng hoặc mặt bằng đăng tải</li>
               <li>Phối hợp tạo điều kiện thuận lợi để chuyên viên hẹn giờ và dẫn khách thuê tới xem phòng</li>
               <li>Thông báo ngay cho QNS BROKER khi phòng đã được cho thuê từ nguồn khác để hệ thống gỡ hoặc ẩn tin đăng, tránh làm phiền đôi bên</li>
             </ul>

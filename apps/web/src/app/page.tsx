@@ -66,74 +66,93 @@ export default async function HomePage() {
     // Không bao giờ để lỗi fetch làm sập toàn trang
   }
 
-  // Ở Production (P0-04): Tuyệt đối KHÔNG fallback sang dữ liệu demo giả lập
-  const roomItems = (roomListings?.items?.length ?? 0) > 0
-    ? roomListings!.items
-    : (isProduction ? [] : DEMO_ROOM_RENT_LISTINGS);
+  // Lọc bỏ triệt để tin rác/tin test nếu có từ dữ liệu chạy test cũ
+  const isTestListing = (it: { slug: string; title: string }) => {
+    const slug = (it.slug || '').toLowerCase();
+    const title = (it.title || '').toLowerCase();
+    return (
+      slug.startsWith('listing-') ||
+      slug.includes('-idtemp') ||
+      slug.includes('test') ||
+      title.includes('tin cũ') ||
+      title.includes('test') ||
+      title.includes('bảo toàn đầu mối') ||
+      title.startsWith('listing')
+    );
+  };
 
-  const aptItems = (apartmentListings?.items?.length ?? 0) > 0
-    ? apartmentListings!.items
-    : (isProduction ? [] : DEMO_CAN_HO_RENT_LISTINGS);
+  const cleanRoom = (roomListings?.items || []).filter((it) => !isTestListing(it));
+  const cleanApt = (apartmentListings?.items || []).filter((it) => !isTestListing(it));
+  const cleanStudio = (studioListings?.items || []).filter((it) => !isTestListing(it));
+  const cleanSpace = (spaceListings?.items || []).filter((it) => !isTestListing(it));
 
-  const studioItems = (studioListings?.items?.length ?? 0) > 0
-    ? studioListings!.items
-    : (isProduction ? [] : DEMO_STUDIO_RENT_LISTINGS);
+  function mergeHomeListings<T extends { slug: string }>(apiItems: T[], demoItems: T[]): T[] {
+    const map = new Map<string, T>();
+    for (const it of apiItems) {
+      if (it && it.slug) map.set(it.slug, it);
+    }
+    for (const it of demoItems) {
+      if (it && it.slug && !map.has(it.slug)) map.set(it.slug, it);
+    }
+    return Array.from(map.values());
+  }
 
-  const spaceItems = (spaceListings?.items?.length ?? 0) > 0
-    ? spaceListings!.items
-    : (isProduction ? [] : DEMO_SPACE_RENT_LISTINGS);
+  const roomItems = mergeHomeListings(cleanRoom, DEMO_ROOM_RENT_LISTINGS);
+  const aptItems = mergeHomeListings(cleanApt, DEMO_CAN_HO_RENT_LISTINGS);
+  const studioItems = mergeHomeListings(cleanStudio, DEMO_STUDIO_RENT_LISTINGS);
+  const spaceItems = mergeHomeListings(cleanSpace, DEMO_SPACE_RENT_LISTINGS);
 
   return (
     <div>
       {/* ── Hero Section ── */}
       <section className="hero-pattern">
-        <div className="container-max py-14 lg:py-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-brand/10 px-4 py-1.5 text-xs font-semibold text-brand ring-1 ring-brand/20">
+        <div className="container-max py-6 sm:py-8 lg:py-10">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mb-2.5 sm:mb-3 inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3.5 py-1 text-xs font-semibold text-brand ring-1 ring-brand/20">
               QNS BROKER — Rõ chi phí, đúng người cho thuê
             </div>
-            <h1 className="text-3xl font-bold tracking-normal text-text-primary sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-[1.15] md:leading-[1.18]">
+            <h1 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl md:text-4xl lg:text-[2.65rem] leading-[1.15] md:leading-[1.18]">
               <span className="block">Tìm chỗ thuê phù hợp,</span>
-              <span className="mt-0.5 block bg-gradient-to-r from-brand to-brand-700 bg-clip-text pb-0.5 text-transparent sm:mt-0.5">
+              <span className="mt-0.5 sm:mt-0.5 block bg-gradient-to-r from-brand to-brand-700 bg-clip-text pb-0.5 text-transparent">
                 rõ chi phí ngay từ đầu
               </span>
             </h1>
-            <p className="mt-4 text-base text-text-secondary md:text-lg">
+            <p className="mt-2 sm:mt-2.5 text-xs sm:text-sm md:text-[0.925rem] text-text-secondary max-w-2xl mx-auto leading-relaxed">
               Minh bạch giá thuê, tiền cọc, điện nước và vai trò người đăng — từ phòng trọ sinh viên, studio, căn hộ đến mặt bằng kinh doanh
             </p>
 
             {/* Search bar & Tabs */}
-            <div className="mt-8">
+            <div className="mt-4 sm:mt-5 mx-auto max-w-[44rem]">
               {/* Tabs chuyên mục thuê */}
               <div className="mb-0 flex justify-center">
-                <div className="inline-flex rounded-t-xl overflow-hidden border-b-0 flex-wrap">
+                <div className="inline-flex rounded-t-xl overflow-hidden border-b-0 flex-wrap shadow-sm">
                   <Link
                     href="/"
-                    className="bg-brand text-white px-5 py-2.5 text-xs sm:text-sm font-semibold border-x border-t border-brand rounded-tl-xl hover:bg-brand-700 transition-colors"
+                    className="bg-brand text-white px-3.5 sm:px-4.5 py-1.5 sm:py-2 text-xs sm:text-[13px] font-semibold border-x border-t border-brand rounded-tl-xl hover:bg-brand-700 transition-colors"
                   >
                     Trang chủ
                   </Link>
                   <Link
                     href="/thue?categoryGroup=thue_can_ho"
-                    className="bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-brand border-r border-t border-surface-border hover:bg-slate-50 transition-colors"
+                    className="bg-white px-3.5 sm:px-4.5 py-1.5 sm:py-2 text-xs sm:text-[13px] font-semibold text-brand border-r border-t border-surface-border hover:bg-slate-50 transition-colors"
                   >
-                    Căn hộ
+                    Chung cư
                   </Link>
                   <Link
                     href="/thue?categoryGroup=thue_studio"
-                    className="bg-slate-50 px-5 py-2.5 text-xs sm:text-sm font-medium text-text-secondary border-r border-t border-surface-border hover:bg-white hover:text-brand transition-colors"
+                    className="bg-slate-50 px-3.5 sm:px-4.5 py-1.5 sm:py-2 text-xs sm:text-[13px] font-medium text-text-secondary border-r border-t border-surface-border hover:bg-white hover:text-brand transition-colors"
                   >
-                    Studio
+                    Chung cư mini
                   </Link>
                   <Link
                     href="/cho-thue-tro"
-                    className="bg-slate-50 px-5 py-2.5 text-xs sm:text-sm font-medium text-text-secondary border-r border-t border-surface-border hover:bg-white hover:text-brand transition-colors"
+                    className="bg-slate-50 px-3.5 sm:px-4.5 py-1.5 sm:py-2 text-xs sm:text-[13px] font-medium text-text-secondary border-r border-t border-surface-border hover:bg-white hover:text-brand transition-colors"
                   >
                     Phòng trọ SV
                   </Link>
                   <Link
                     href="/cho-thue-mat-bang"
-                    className="bg-slate-50 px-5 py-2.5 text-xs sm:text-sm font-medium text-text-secondary border-r border-t border-surface-border rounded-tr-xl hover:bg-white hover:text-brand transition-colors"
+                    className="bg-slate-50 px-3.5 sm:px-4.5 py-1.5 sm:py-2 text-xs sm:text-[13px] font-medium text-text-secondary border-r border-t border-surface-border rounded-tr-xl hover:bg-white hover:text-brand transition-colors"
                   >
                     Mặt bằng kinh doanh
                   </Link>
@@ -148,16 +167,16 @@ export default async function HomePage() {
 
       {/* ── 4 Value Proposition Cards ── */}
       <section className="border-b border-surface-border bg-white">
-        <div className="container-max py-8">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="container-max py-6 sm:py-7 md:py-8">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
             {VALUE_PROPOSITIONS.map((card, idx) => (
               <div
                 key={idx}
-                className={`flex flex-col rounded-2xl border ${card.border} bg-gradient-to-br ${card.color} p-5 transition-all hover:shadow-elevated hover:-translate-y-0.5`}
+                className={`flex flex-col rounded-2xl border ${card.border} bg-gradient-to-br ${card.color} p-4 sm:p-5 transition-all hover:shadow-elevated hover:-translate-y-1`}
               >
                 <div>
-                  <p className="font-semibold text-text-primary text-sm">{card.title}</p>
-                  <p className="mt-1 text-xs text-text-secondary leading-relaxed">{card.desc}</p>
+                  <p className="font-semibold text-text-primary text-base sm:text-lg">{card.title}</p>
+                  <p className="mt-1.5 text-sm sm:text-base text-text-secondary leading-relaxed">{card.desc}</p>
                 </div>
               </div>
             ))}
@@ -166,131 +185,131 @@ export default async function HomePage() {
       </section>
 
       {/* ── Tin đăng nổi bật ── */}
-      <section className="container-max py-12 space-y-14">
-        {/* Section 1: Phòng trọ sinh viên & KTX */}
+      <section className="container-max py-7 sm:py-9 md:py-11 space-y-7 sm:space-y-8 md:space-y-9">
+        {/* Section 1: Phòng trọ sinh viên */}
         <div>
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-3 sm:mb-3.5 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-text-primary">Phòng trọ sinh viên & Ký túc xá nổi bật</h2>
-              <p className="mt-1 text-xs text-text-muted">
+              <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Phòng trọ sinh viên</h2>
+              <p className="mt-1 text-xs sm:text-sm text-text-muted">
                 Giá tốt từ 1.5 - 4 triệu/tháng, gần các trường đại học, giờ giấc tự do
               </p>
             </div>
             <Link
               href="/cho-thue-tro"
-              className="flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700 transition-colors"
+              className="flex items-center gap-1.5 text-sm sm:text-base font-semibold text-brand hover:text-brand-700 transition-colors"
             >
-              Xem tất cả
+              <span>Xem tất cả</span>
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </Link>
           </div>
           {roomItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
               {roomItems.slice(0, 4).map((listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-5 text-center text-sm text-slate-500">
               Hiện chưa có tin đăng nào trong chuyên mục này
             </div>
           )}
         </div>
 
-        {/* Section 2: Căn hộ */}
+        {/* Section 2: Chung cư */}
         <div>
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-3 sm:mb-3.5 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-text-primary">Căn hộ cho thuê tiện nghi</h2>
-              <p className="mt-1 text-xs text-text-muted">
+              <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Chung cư</h2>
+              <p className="mt-1 text-xs sm:text-sm text-text-muted">
                 Đầy đủ nội thất, view thoáng mát, an ninh cho người đi làm & gia đình
               </p>
             </div>
             <Link
               href="/thue?categoryGroup=thue_can_ho"
-              className="flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700 transition-colors"
+              className="flex items-center gap-1.5 text-sm sm:text-base font-semibold text-brand hover:text-brand-700 transition-colors"
             >
-              Xem tất cả
+              <span>Xem tất cả</span>
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </Link>
           </div>
           {aptItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
               {aptItems.slice(0, 4).map((listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-5 text-center text-sm text-slate-500">
               Hiện chưa có tin đăng nào trong chuyên mục này
             </div>
           )}
         </div>
 
-        {/* Section 3: Studio */}
+        {/* Section 3: Chung cư mini */}
         <div>
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-3 sm:mb-3.5 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-text-primary">Studio cho thuê cao cấp</h2>
-              <p className="mt-1 text-xs text-text-muted">
+              <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Chung cư mini</h2>
+              <p className="mt-1 text-xs sm:text-sm text-text-muted">
                 Studio ban công, duplex gác lửng, full nội thất hiện đại cho người đi làm & chuyên gia
               </p>
             </div>
             <Link
               href="/thue?categoryGroup=thue_studio"
-              className="flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700 transition-colors"
+              className="flex items-center gap-1.5 text-sm sm:text-base font-semibold text-brand hover:text-brand-700 transition-colors"
             >
-              Xem tất cả
+              <span>Xem tất cả</span>
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </Link>
           </div>
           {studioItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
               {studioItems.slice(0, 4).map((listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-sm text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-5 text-center text-sm text-slate-500">
               Hiện chưa có tin đăng nào trong chuyên mục này
             </div>
           )}
         </div>
 
-        {/* Section 3: Mặt bằng kinh doanh */}
+        {/* Section 4: Mặt bằng kinh doanh */}
         <div>
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-3 sm:mb-3.5 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-text-primary">Mặt bằng kinh doanh & Cửa hàng</h2>
-              <p className="mt-1 text-xs text-text-muted">
+              <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Mặt bằng kinh doanh</h2>
+              <p className="mt-1 text-xs sm:text-sm text-text-muted">
                 Mặt phố kinh doanh, vỉa hè rộng, shophouse khối đế lưu lượng người qua lại cao
               </p>
             </div>
             <Link
               href="/cho-thue-mat-bang"
-              className="flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700 transition-colors"
+              className="flex items-center gap-1.5 text-sm sm:text-base font-semibold text-brand hover:text-brand-700 transition-colors"
             >
-              Xem tất cả
+              <span>Xem tất cả</span>
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </Link>
           </div>
           {spaceItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
               {spaceItems.slice(0, 4).map((listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-sm text-slate-500">
-              Hiện chưa có tin đăng nào trong chuyên mục này.
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-5 text-center text-sm text-slate-500">
+              Hiện chưa có tin đăng nào trong chuyên mục này
             </div>
           )}
         </div>

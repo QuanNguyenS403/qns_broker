@@ -7,12 +7,8 @@ import { authFetch, isLoggedIn } from '@/lib/auth-client';
 import { formatPrice, Listing, ListingListResponse } from '@/lib/api';
 
 /**
- * Trang "Quản lý tin bất động sản" — TRƯỚC ĐÂY HOÀN TOÀN CHƯA TỒN TẠI (phát hiện qua audit
- * 01/09/2026): người dùng đăng tin xong (trang /dang-tin) không có bất kỳ cách nào trong ứng
- * dụng để xem lại tin của chính mình, kể cả để biết tin đã được duyệt hay chưa — phải nhờ admin
- * vào Prisma Studio tra thủ công (đúng như ghi chú "known limitation" trong tài liệu bàn giao).
- * Trang này gọi endpoint `GET /listings/mine` (mới bổ sung ở đợt audit này) để đóng lại vòng lặp
- * "Đăng tin → Quản lý tin" đúng như đặc tả MVP gốc trong CLAUDE.md / README.md mục 14.
+ * Trang "Quản lý tin đăng" — đóng lại vòng lặp "Đăng tin → Quản lý tin"
+ * cho người dùng xem lại tin của chính mình và biết tin đã được duyệt hay chưa
  */
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
@@ -131,8 +127,8 @@ export default function QuanLyTinPage() {
       <div className="container-max py-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Quản lý tin đăng</h1>
-            <p className="mt-0.5 text-sm text-text-muted">{total} tin trong tài khoản</p>
+            <h1 className="text-3xl font-bold text-text-primary">Quản lý tin đăng</h1>
+            <p className="mt-1 text-base text-text-muted">{total} tin trong tài khoản</p>
           </div>
           <div className="flex items-center gap-3">
             <Link

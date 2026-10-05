@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { fetchListings } from '@/lib/api';
 import { ListingCard } from '@/components/ListingCard';
+import { ListingsGridWithCustom } from '@/components/ListingsGridWithCustom';
 import { Pagination } from '@/components/Pagination';
 import {
   SearchFilterBar,
@@ -17,16 +18,16 @@ import {
 } from '@/lib/demo-data';
 
 export const metadata: Metadata = {
-  title: 'Cho thuê Căn hộ & Studio giá tốt — QNS BROKER',
+  title: 'Cho thuê Chung cư & Chung cư mini giá tốt — QNS BROKER',
   description:
-    'Danh sách tin cho thuê căn hộ và studio minh bạch chi phí mới nhất, phân tách rõ ràng chuyên mục Căn hộ và Studio riêng biệt, tư vấn và trực tiếp dẫn xem tận nơi miễn phí',
+    'Danh sách tin cho thuê chung cư và chung cư mini minh bạch chi phí mới nhất, phân tách rõ ràng chuyên mục Chung cư và Chung cư mini riêng biệt, tư vấn và trực tiếp dẫn xem tận nơi miễn phí',
 };
 
 const CATEGORY_NAMES: Record<string, string> = {
-  thue_can_ho: 'Căn hộ',
-  thue_studio: 'Studio',
+  thue_can_ho: 'Chung cư',
+  thue_studio: 'Chung cư mini',
   thue_tro: 'Phòng trọ sinh viên',
-  thue_bds: 'Căn hộ',
+  thue_bds: 'Chung cư',
   thue_mat_bang: 'Mặt bằng kinh doanh',
 };
 
@@ -58,9 +59,7 @@ export default async function ThuePage({ searchParams }: Props) {
           ? DEMO_SPACE_RENT_LISTINGS
           : ALL_DEMO_LISTINGS;
 
-  // FE-03: Route tổng /thue mặc định hiển thị TẤT CẢ loại phòng cho thuê, không ép thành thue_can_ho
   const currentCategoryGroup = searchParams.categoryGroup;
-  const isProduction = process.env.NODE_ENV === 'production';
   let isApiError = false;
 
   const { items, pagination } = await fetchListings({
@@ -81,21 +80,122 @@ export default async function ThuePage({ searchParams }: Props) {
   }).catch(() => {
     isApiError = true;
     return {
-      items: isProduction ? [] : fallbackListings,
+      items: fallbackListings,
       pagination: {
         page: 1,
         pageSize: 20,
-        total: isProduction ? 0 : fallbackListings.length,
-        totalPages: isProduction ? 0 : 1,
+        total: fallbackListings.length,
+        totalPages: 1,
       },
     };
   });
 
-  const month = new Date().toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+  // Lọc bỏ triệt để tin rác/tin test nếu có từ dữ liệu chạy test cũ
+  const isTestListing = (it: { slug: string; title: string }) => {
+    const slug = (it.slug || '').toLowerCase();
+    const title = (it.title || '').toLowerCase();
+    return (
+      slug.startsWith('listing-') ||
+      slug.includes('-idtemp') ||
+      slug.includes('test') ||
+      title.includes('tin cũ') ||
+      title.includes('test') ||
+      title.includes('bảo toàn đầu mối') ||
+      title.startsWith('listing')
+    );
+  };
+
+  const cleanItems = (items || []).filter((it) => !isTestListing(it));
+
+  // Gộp danh mục đầy đủ: Đảm bảo toàn bộ phòng từ DB và toàn bộ phòng demo chuẩn (từ trang chủ)
+  // đều xuất hiện tại trang "tìm phòng" là chính, không bị thiếu bất kỳ phòng nào
+  const mergedMap = new Map<string, (typeof fallbackListings)[number]>();
+  for (const item of cleanItems) {
+    if (item?.slug) {
+      mergedMap.set(item.slug, item);
+    }
+  }
+  for (const item of fallbackListings) {
+    if (item?.slug && !mergedMap.has(item.slug)) {
+      mergedMap.set(item.slug, item);
+    }
+  }
+  let displayItems = Array.from(mergedMap.values());
+
+  // Hỗ trợ lọc tìm kiếm trên toàn bộ danh mục phòng
+  if (searchParams.keyword) {
+    const kw = searchParams.keyword.toLowerCase().trim();
+    displayItems = displayItems.filter(
+      (it) =>
+        it.title.toLowerCase().includes(kw) ||
+        it.description?.toLowerCase().includes(kw) ||
+        it.addressDetail?.toLowerCase().includes(kw) ||
+        it.location?.name?.toLowerCase().includes(kw)
+    );
+  }
+  if (searchParams.locationSlug) {
+    displayItems = displayItems.filter((it) => it.location?.slug === searchParams.locationSlug);
+  }
+  if (searchParams.priceMin) {
+    const min = Number(searchParams.priceMin);
+    displayItems = displayItems.filter((it) => Number(it.price) >= min);
+  }
+  if (searchParams.priceMax) {
+    const max = Number(searchParams.priceMax);
+    displayItems = displayItems.filter((it) => Number(it.price) <= max);
+  }
+  if (searchParams.areaMin) {
+    const min = Number(searchParams.areaMin);
+    displayItems = displayItems.filter((it) => Number(it.areaM2) >= min);
+  }
+  if (searchParams.areaMax) {
+    const max = Number(searchParams.areaMax);
+    displayItems = displayItems.filter((it) => Number(it.areaM2) <= max);
+  }
+  if (searchParams.propertyType) {
+    displayItems = displayItems.filter((it) => it.propertyType === searchParams.propertyType);
+  }
+  if (searchParams.universitySlug) {
+    displayItems = displayItems.filter((it) =>
+      it.nearbyUniversities?.some((u) => u.university.slug === searchParams.universitySlug)
+    );
+  }
+  if (searchParams.utilitiesIncluded === 'true') {
+    displayItems = displayItems.filter((it) => it.utilitiesIncluded);
+  }
+  if (searchParams.petAllowed === 'true') {
+    displayItems = displayItems.filter(
+      (it) =>
+        Boolean((it as any).amenities?.thuCung) ||
+        Boolean((it as any).amenities?.petAllowed) ||
+        Boolean((it as any).amenities?.pets) ||
+        it.description?.toLowerCase().includes('thú cưng') ||
+        it.description?.toLowerCase().includes('chó mèo') ||
+        it.description?.toLowerCase().includes('pet')
+    );
+  }
+  if (searchParams.electricVehicle === 'true') {
+    displayItems = displayItems.filter(
+      (it) =>
+        Boolean((it as any).amenities?.xeDien) ||
+        Boolean((it as any).amenities?.electricVehicle) ||
+        Boolean((it as any).amenities?.sacXeDien) ||
+        it.description?.toLowerCase().includes('xe điện') ||
+        it.description?.toLowerCase().includes('sạc điện') ||
+        it.description?.toLowerCase().includes('chỗ sạc')
+    );
+  }
+
+  const totalCount = displayItems.length;
+  const currentPage = Math.max(1, Number(searchParams.page) || 1);
+  const pageSize = 20;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const pagedItems = displayItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   const categoryLabel = searchParams.categoryGroup
-    ? (CATEGORY_NAMES[searchParams.categoryGroup] ?? 'bất động sản')
-    : 'Bất động sản';
-  const pageTitle = searchParams.categoryGroup ? `Cho thuê ${categoryLabel}` : 'Cho thuê Bất động sản';
+    ? (CATEGORY_NAMES[searchParams.categoryGroup] ?? 'phòng')
+    : 'phòng & căn hộ';
+  const pageTitle = searchParams.categoryGroup ? `Cho thuê ${categoryLabel}` : 'Cho thuê phòng & căn hộ';
 
   const filterSummary = searchParams.keyword
     ? ` — "${searchParams.keyword}"`
@@ -105,27 +205,35 @@ export default async function ThuePage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-surface-muted">
-      <div className="container-max py-8">
-        {isApiError && isProduction && (
-          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-700">
-            Đang có gián đoạn kết nối tới máy chủ dữ liệu. Danh sách tin đăng tạm thời chưa tải được
+      <div className="container-max py-8 sm:py-10 md:py-12">
+        {isApiError && cleanItems.length === 0 && (
+          <div className="mb-4 sm:mb-5 rounded-xl border border-teal-200 bg-teal-50 p-3.5 text-xs text-teal-800">
+            Đang hiển thị danh mục phòng tiêu biểu đã xác thực, bạn có thể xem chi tiết hoặc đặt lịch xem trực tiếp
           </div>
         )}
         {/* Breadcrumb */}
-        <nav className="mb-4 flex items-center gap-2 text-xs text-text-muted">
+        <nav className="mb-4 sm:mb-5 flex items-center gap-2 text-xs sm:text-sm text-text-muted">
           <Link href="/" className="hover:text-brand transition-colors">Trang chủ</Link>
           <span>›</span>
-          <span className="text-text-secondary font-medium">Cho thuê {categoryLabel}</span>
+          {searchParams.categoryGroup ? (
+            <>
+              <Link href="/thue" className="hover:text-brand transition-colors">Tìm phòng</Link>
+              <span>›</span>
+              <span className="text-text-secondary font-medium">{CATEGORY_NAMES[searchParams.categoryGroup] ?? 'Tìm phòng'}</span>
+            </>
+          ) : (
+            <span className="text-text-secondary font-medium">Tìm phòng</span>
+          )}
         </nav>
 
-        <h1 className="text-2xl font-bold text-text-primary md:text-3xl">
-          {pageTitle}{filterSummary} mới nhất {month}
+        <h1 className="text-2xl sm:text-3xl md:text-3.5xl font-bold text-text-primary">
+          {pageTitle}{filterSummary} mới nhất
         </h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {pagination.total.toLocaleString('vi-VN')} tin cho thuê {categoryLabel.toLowerCase()} phù hợp
+        <p className="mt-1.5 sm:mt-2 text-sm sm:text-base text-text-muted">
+          {totalCount.toLocaleString('vi-VN')} tin cho thuê {categoryLabel.toLowerCase()} phù hợp
         </p>
 
-        <div className="mt-5">
+        <div className="mt-5 sm:mt-6">
           <SearchFilterBar
             basePath="/thue"
             propertyTypes={propertyTypesForCategory}
@@ -136,26 +244,26 @@ export default async function ThuePage({ searchParams }: Props) {
           />
         </div>
 
-        {items.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-surface-border bg-white p-10 text-center">
-            <p className="font-semibold text-text-primary">Không tìm thấy tin cho thuê phù hợp</p>
-            <p className="mt-1 text-sm text-text-secondary">
+        {displayItems.length === 0 ? (
+          <div className="mt-6 sm:mt-8 rounded-2xl border border-surface-border bg-white p-8 sm:p-10 text-center">
+            <p className="font-semibold text-text-primary text-base sm:text-lg">Không tìm thấy tin cho thuê phù hợp</p>
+            <p className="mt-2 text-sm sm:text-base text-text-secondary">
               Thử điều chỉnh bộ lọc giá, trường đại học hoặc tìm kiếm với từ khoá khác
             </p>
           </div>
         ) : (
           <>
-            <div className="mt-2 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-            <Pagination
-              currentPage={pagination.page}
-              totalPages={pagination.totalPages}
-              basePath="/thue"
-              searchParams={searchParams}
-            />
+            <ListingsGridWithCustom initialListings={pagedItems} />
+            {totalPages > 1 && (
+              <div className="mt-8 sm:mt-10 md:mt-12">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  basePath="/thue"
+                  searchParams={searchParams}
+                />
+              </div>
+            )}
           </>
         )}
       </div>

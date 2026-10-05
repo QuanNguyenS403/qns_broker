@@ -70,9 +70,9 @@ export default function TinDaLuuPage() {
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="flex items-center justify-between border-b border-surface-border pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Bất động sản đã lưu</h1>
+          <h1 className="text-2xl font-bold text-text-primary">Phòng đã lưu</h1>
           <p className="mt-1 text-sm text-text-secondary">
-            Danh sách những bất động sản bạn đang theo dõi và quan tâm
+            Danh sách những phòng bạn đang theo dõi và quan tâm
           </p>
         </div>
         <span className="rounded-full bg-rose-50 border border-rose-200 px-3.5 py-1.5 text-xs font-bold text-rose-600">
@@ -87,9 +87,9 @@ export default function TinDaLuuPage() {
         <>
           {listings.length === 0 ? (
             <div className="mt-8 rounded-2xl border border-dashed border-surface-border bg-white p-12 text-center">
-              <h3 className="mt-3 text-base font-bold text-text-primary">Bạn chưa lưu bất động sản nào</h3>
+              <h3 className="mt-3 text-base font-bold text-text-primary">Bạn chưa lưu phòng nào</h3>
               <p className="mt-1 text-sm text-text-secondary max-w-md mx-auto">
-                Khi tìm kiếm nhà đất, hãy bấm vào nút &quot;Lưu tin&quot; trên trang chi tiết để lưu lại và theo dõi bất cứ lúc nào
+                Khi tìm phòng, hãy bấm vào nút &quot;Lưu tin&quot; trên trang chi tiết để lưu lại và theo dõi bất cứ lúc nào
               </p>
               <div className="mt-6 flex justify-center gap-3">
                 <Link

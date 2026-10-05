@@ -5,7 +5,7 @@ import { SITE_CONFIG } from '@/lib/constants';
 export const metadata: Metadata = {
   title: 'Điều khoản sử dụng — QNS BROKER',
   description:
-    'Quy định chi tiết về quyền, nghĩa vụ và trách nhiệm pháp lý của các bên khi sử dụng nền tảng cho thuê bất động sản QNS BROKER',
+    'Quy định chi tiết về quyền, nghĩa vụ và trách nhiệm pháp lý của các bên khi sử dụng nền tảng cho thuê QNS BROKER',
 };
 
 const TOC_ITEMS = [
@@ -27,21 +27,21 @@ export default function DieuKhoanPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-16">
       {/* Header Hero Banner — Màu xanh chủ đạo của website */}
-      <section className="bg-gradient-to-b from-brand to-brand-700 text-white py-12 md:py-16 border-b border-black/10">
-        <div className="container-max max-w-5xl text-center space-y-4">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-semibold tracking-wider text-white backdrop-blur-sm border border-white/25">
+      <section className="bg-gradient-to-b from-brand to-brand-700 text-white py-14 md:py-18 border-b border-black/10">
+        <div className="container-max max-w-6xl text-center space-y-4">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs sm:text-sm font-semibold tracking-wider text-white backdrop-blur-sm border border-white/25">
             <span>VĂN BẢN PHÁP LÝ</span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
             Điều khoản sử dụng
           </h1>
 
-          <p className="text-sm md:text-base text-white/90 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-white/90 max-w-3xl mx-auto leading-relaxed">
             Quy định quyền và nghĩa vụ khi sử dụng dịch vụ trên nền tảng QNS BROKER
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2 text-xs text-white/85">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2 text-xs sm:text-sm text-white/85">
             <span className="rounded-lg bg-white/10 px-3 py-1 border border-white/20">
               Cập nhật lần cuối: 24/09/2026
             </span>
@@ -52,7 +52,7 @@ export default function DieuKhoanPage() {
         </div>
       </section>
 
-      <div className="container-max max-w-5xl mt-6 space-y-6">
+      <div className="container-max max-w-6xl mt-8 space-y-8">
         {/* Banner cảnh báo an toàn quan trọng */}
         <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-4 sm:p-5 text-amber-900 shadow-xs flex items-start gap-3.5">
           <svg className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -100,7 +100,7 @@ export default function DieuKhoanPage() {
               </h2>
               <div className="text-xs sm:text-sm text-slate-600 leading-relaxed space-y-2.5">
                 <p>
-                  Điều khoản sử dụng này là thỏa thuận pháp lý giữa người dùng với nền tảng QNS BROKER (sau đây gọi là &ldquo;Nền tảng&rdquo;), điều chỉnh việc truy cập, tra cứu thông tin, đăng tin cho thuê và sử dụng dịch vụ môi giới kết nối bất động sản
+                  Điều khoản sử dụng này là thỏa thuận pháp lý giữa người dùng với nền tảng QNS BROKER (sau đây gọi là &ldquo;Nền tảng&rdquo;), điều chỉnh việc truy cập, tra cứu thông tin, đăng tin cho thuê và sử dụng dịch vụ môi giới kết nối phòng cho thuê
                 </p>
                 <p>
                   Bằng việc truy cập website, đăng ký tài khoản hoặc sử dụng bất kỳ tính năng nào của QNS BROKER, bạn xác nhận đã đọc kỹ, hiểu rõ và đồng ý bị ràng buộc bởi toàn bộ các quy định trong văn bản này
@@ -115,9 +115,9 @@ export default function DieuKhoanPage() {
                 <span>Định nghĩa và Giải thích thuật ngữ</span>
               </h2>
               <div className="text-xs sm:text-sm text-slate-600 leading-relaxed space-y-2">
-                <p><strong>Nền tảng QNS BROKER:</strong> Hệ sinh thái website và công nghệ hỗ trợ tìm kiếm, xác thực và kết nối giao dịch cho thuê phòng trọ, căn hộ, studio và mặt bằng kinh doanh</p>
-                <p><strong>Khách thuê:</strong> Cá nhân, sinh viên, người đi làm có nhu cầu tìm kiếm và thuê bất động sản thông qua hệ thống</p>
-                <p><strong>Chủ nhà / Bên cho thuê:</strong> Chủ sở hữu hợp pháp hoặc bên có quyền quản lý, vận hành và ký kết hợp đồng cho thuê bất động sản</p>
+                <p><strong>Nền tảng QNS BROKER:</strong> Hệ sinh thái website và công nghệ hỗ trợ tìm kiếm, xác thực và kết nối giao dịch cho thuê phòng trọ, chung cư mini, chung cư và mặt bằng kinh doanh</p>
+                <p><strong>Khách thuê:</strong> Cá nhân, sinh viên, người đi làm có nhu cầu tìm kiếm và thuê phòng thông qua hệ thống</p>
+                <p><strong>Chủ nhà / Bên cho thuê:</strong> Chủ sở hữu hợp pháp hoặc bên có quyền quản lý, vận hành và ký kết hợp đồng cho thuê phòng, căn hộ hoặc mặt bằng</p>
                 <p><strong>Tin đăng:</strong> Nội dung mô tả phòng, hình ảnh, biểu phí điện nước, vị trí và tiện ích được tạo và công khai trên hệ thống</p>
               </div>
             </article>
@@ -159,7 +159,7 @@ export default function DieuKhoanPage() {
                 <span>Quyền và Nghĩa vụ của Chủ nhà / Bên cho thuê</span>
               </h2>
               <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                <li>Cam kết có quyền sở hữu hoặc quyền cho thuê hợp pháp đối với bất động sản đăng tải</li>
+                <li>Cam kết có quyền sở hữu hoặc quyền cho thuê hợp pháp đối với phòng hoặc mặt bằng đăng tải</li>
                 <li>Công khai thông tin chính xác về giá thuê, đơn giá điện, nước và các tiện ích đi kèm</li>
                 <li>Phối hợp tiếp nhận lịch hẹn dẫn xem phòng và tôn trọng quyền lợi của khách thuê</li>
                 <li>Kịp thời cập nhật tình trạng khi phòng đã được thuê để tránh gây hiểu nhầm cho khách hàng khác</li>

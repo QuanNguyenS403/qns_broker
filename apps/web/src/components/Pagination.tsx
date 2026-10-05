@@ -29,17 +29,17 @@ export function Pagination({ currentPage, totalPages, basePath, searchParams }: 
   );
 
   return (
-    <nav className="mt-8 flex items-center justify-center gap-1 text-sm">
+    <nav className="mt-12 md:mt-16 flex items-center justify-center gap-2 text-sm sm:text-base">
       <Link
         href={buildHref(Math.max(1, currentPage - 1))}
         aria-disabled={currentPage === 1}
-        className={`flex items-center gap-1 rounded-xl px-3.5 py-2 font-medium transition-colors ${
+        className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-medium transition-colors ${
           currentPage === 1
             ? 'pointer-events-none text-text-muted'
             : 'text-text-secondary hover:bg-white hover:text-brand'
         }`}
       >
-        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
         Trước
@@ -52,7 +52,7 @@ export function Pagination({ currentPage, totalPages, basePath, searchParams }: 
           )}
           <Link
             href={buildHref(page)}
-            className={`min-w-[2.5rem] rounded-xl px-3 py-2 text-center font-medium transition-colors ${
+            className={`min-w-[2.75rem] rounded-xl px-3.5 py-2.5 text-center font-medium transition-colors ${
               page === currentPage
                 ? 'bg-brand text-white shadow-sm'
                 : 'text-text-secondary hover:bg-white hover:text-brand'
@@ -66,14 +66,14 @@ export function Pagination({ currentPage, totalPages, basePath, searchParams }: 
       <Link
         href={buildHref(Math.min(totalPages, currentPage + 1))}
         aria-disabled={currentPage === totalPages}
-        className={`flex items-center gap-1 rounded-xl px-3.5 py-2 font-medium transition-colors ${
+        className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-medium transition-colors ${
           currentPage === totalPages
             ? 'pointer-events-none text-text-muted'
             : 'text-text-secondary hover:bg-white hover:text-brand'
         }`}
       >
         Tiếp
-        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
       </Link>

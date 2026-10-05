@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     'thuê studio',
     'nhà nguyên căn',
     'cho thuê mặt bằng',
-    'bất động sản cho thuê',
+    'thuê phòng chung cư',
   ],
   openGraph: {
     type: 'website',

@@ -78,6 +78,7 @@ async function main() {
       fullName: 'Quản trị viên Demo',
       role: 'admin',
       passwordHash,
+      email: 'admin@qns.com',
     },
     create: {
       phone: adminPhone,
@@ -85,18 +86,22 @@ async function main() {
       passwordHash,
       role: 'admin',
       isPhoneVerified: true,
+      email: 'admin@qns.com',
     },
   });
 
   const broker = await prisma.user.upsert({
     where: { phone: '0900000002' },
-    update: {},
+    update: {
+      email: 'broker@qns.com',
+    },
     create: {
       phone: '0900000002',
       fullName: 'Chủ nhà',
       passwordHash,
       role: 'broker',
       isPhoneVerified: true,
+      email: 'broker@qns.com',
     },
   });
 

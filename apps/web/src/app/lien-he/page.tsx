@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="bg-surface-subtle min-h-[80vh] py-8 lg:py-12">
-      <div className="container-max max-w-4xl">
+    <div className="bg-surface-subtle min-h-[80vh] py-10 lg:py-14">
+      <div className="container-max max-w-6xl">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-text-muted mb-6">
+        <nav className="flex items-center gap-2 text-xs sm:text-sm text-text-muted mb-6">
           <Link href="/" className="hover:text-brand transition-colors">
             Trang chủ
           </Link>
@@ -22,10 +22,10 @@ export default function ContactPage() {
         </nav>
 
         <div className="rounded-2xl border border-surface-border bg-white p-8 md:p-12 shadow-card">
-          <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-3.5">
             Thông tin Liên hệ &amp; Hỗ trợ
           </h1>
-          <p className="text-sm text-text-secondary leading-relaxed mb-8 border-b border-surface-border pb-4">
+          <p className="text-base text-text-secondary leading-relaxed mb-8 border-b border-surface-border pb-5">
             Ban Quản trị nền tảng QNS BROKER luôn sẵn sàng lắng nghe ý kiến đóng góp, giải đáp thắc mắc và hỗ trợ bạn trong quá trình tìm phòng hoặc đăng tin
           </p>
 

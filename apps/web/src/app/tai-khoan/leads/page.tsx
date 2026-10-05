@@ -104,8 +104,8 @@ export default function MyLeadsPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Tiến độ khách thuê quan tâm phòng</h1>
-            <p className="text-sm text-text-muted mt-1">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary">Tiến độ khách thuê quan tâm phòng</h1>
+            <p className="text-base text-text-muted mt-1.5">
               Có <span className="font-semibold text-brand">{total}</span> yêu cầu đang được {SITE_CONFIG.agentName} ({SITE_CONFIG.agentRole}) trực tiếp điều phối và dẫn xem
             </p>
           </div>

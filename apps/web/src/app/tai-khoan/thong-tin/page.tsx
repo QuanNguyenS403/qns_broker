@@ -133,8 +133,8 @@ export default function ThongTinTaiKhoanPage() {
   if (loading) return null;
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-10">
-      <h1 className="text-2xl font-bold text-text-primary">Thông tin tài khoản</h1>
+    <div className="container-max max-w-4xl py-12 px-4 sm:px-6">
+      <h1 className="text-3xl font-bold text-text-primary">Thông tin tài khoản</h1>
 
       {error && <div className="mt-4 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">{error}</div>}
       {profileSuccess && <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-700">{profileSuccess}</div>}

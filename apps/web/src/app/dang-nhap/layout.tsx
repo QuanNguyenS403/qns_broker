@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Đăng nhập / Đăng ký',
+  title: 'Đăng nhập tài khoản — QNS BROKER',
   description:
-    'Đăng nhập hoặc tạo tài khoản để đăng tin bất động sản, lưu tin yêu thích và xem số điện thoại người đăng',
+    'Đăng nhập hoặc tạo tài khoản để quản lý phòng cho thuê, lưu tin và kết nối nhanh chóng',
   robots: { index: false, follow: false }, // trang auth không cần SEO index
 };
 

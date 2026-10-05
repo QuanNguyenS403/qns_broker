@@ -660,14 +660,28 @@ export class ListingsService {
       throw new ServiceUnavailableException('Cơ sở dữ liệu đang ngoại tuyến');
     }
 
-    const match = idOrSlug.match(/-id(\d+)$/) ?? idOrSlug.match(/^(\d+)$/);
-    if (!match) throw new NotFoundException('Đường dẫn tin đăng không hợp lệ');
-    const id = BigInt(match[1]);
+    let listing: any = null;
+    let listingId: bigint | null = null;
 
-    const listing = await this.prisma.listing.findUnique({
-      where: { id },
-      select: PUBLIC_LISTING_SELECT,
-    });
+    const match = idOrSlug.match(/-id(\d+)$/) ?? idOrSlug.match(/^(\d+)$/);
+    if (match) {
+      listingId = BigInt(match[1]);
+      listing = await this.prisma.listing.findUnique({
+        where: { id: listingId },
+        select: PUBLIC_LISTING_SELECT,
+      });
+    }
+
+    if (!listing) {
+      listing = await this.prisma.listing.findFirst({
+        where: { slug: idOrSlug },
+        select: PUBLIC_LISTING_SELECT,
+      });
+      if (listing) {
+        listingId = listing.id;
+      }
+    }
+
     // Cố tình trả cùng 1 thông báo lỗi cho "không tồn tại" và "tồn tại nhưng chưa active" —
     // không phân biệt 2 trường hợp để không lộ thông tin rằng 1 ID nào đó có tồn tại hay không.
     const now = new Date();
@@ -681,7 +695,9 @@ export class ListingsService {
     }
 
     // Tăng view count (fire-and-forget, không chặn response)
-    this.prisma.listing.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => undefined);
+    if (listingId) {
+      this.prisma.listing.update({ where: { id: listingId }, data: { viewCount: { increment: 1 } } }).catch(() => undefined);
+    }
 
     return serialize(listing);
   }

@@ -25,7 +25,7 @@ export function SaveListingButton({ listingId }: { listingId: string }) {
     }
 
     if (!isLoggedIn()) {
-      if (confirm('Vui lòng đăng nhập để lưu bất động sản vào danh sách yêu thích, chuyển đến trang đăng nhập ngay?')) {
+      if (confirm('Vui lòng đăng nhập để lưu phòng vào danh sách yêu thích, chuyển đến trang đăng nhập ngay?')) {
         router.push('/dang-nhap');
       }
       return;

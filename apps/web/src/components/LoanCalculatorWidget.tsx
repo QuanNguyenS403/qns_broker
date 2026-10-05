@@ -49,9 +49,9 @@ export function LoanCalculatorWidget({ initialPrice }: LoanCalculatorWidgetProps
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Giá trị BĐS */}
+        {/* Tổng giá trị */}
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-600">Giá trị BĐS (VNĐ)</label>
+          <label className="mb-1 block text-xs font-semibold text-gray-600">Tổng giá trị (VNĐ)</label>
           <input
             type="number"
             step="100000000"

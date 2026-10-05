@@ -100,7 +100,7 @@ export function HeroSearchForm() {
     <div ref={containerRef} className="relative">
       <form
         onSubmit={handleSubmit}
-        className="flex overflow-hidden rounded-b-2xl rounded-tr-2xl border border-surface-border bg-white shadow-elevated"
+        className="flex overflow-hidden rounded-2xl border border-surface-border bg-white shadow-elevated"
       >
         <input
           ref={inputRef}
@@ -116,14 +116,14 @@ export function HeroSearchForm() {
             }
           }}
           onKeyDown={handleKeyDown}
-          className="flex-1 px-5 py-4 text-sm text-text-primary placeholder:text-text-muted outline-none"
+          className="flex-1 px-4 sm:px-5 py-3 sm:py-3.5 text-sm sm:text-base text-text-primary placeholder:text-text-muted outline-none"
         />
         <button
           type="submit"
           id="hero-search-button"
-          className="flex items-center gap-2 bg-brand px-7 font-semibold text-white transition-colors hover:bg-brand-700"
+          className="flex items-center gap-2 bg-brand px-5 sm:px-7 text-sm sm:text-base font-semibold text-white transition-colors hover:bg-brand-700 shrink-0"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+          <svg className="h-4.5 w-4.5 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
           Tìm phòng ngay
