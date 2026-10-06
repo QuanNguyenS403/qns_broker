@@ -26,45 +26,21 @@ const OWNER_ADMIN_PROFILE = {
   role: 'admin',
 };
 
-interface PropertyGroup {
-  groupName: string;
-  items: { value: string; label: string }[];
+interface PropertyTypeOption {
+  value: string;
+  label: string;
 }
 
-const PROPERTY_TYPE_GROUPS: PropertyGroup[] = [
-  {
-    groupName: 'Căn hộ',
-    items: [
-      { value: 'can-ho-chung-cu', label: 'Căn hộ chung cư' },
-      { value: 'can-ho-mini', label: 'Căn hộ mini' },
-      { value: 'can-ho-dich-vu', label: 'Căn hộ dịch vụ' },
-      { value: 'can-ho-cao-cap', label: 'Căn hộ cao cấp' },
-    ],
-  },
-  {
-    groupName: 'Studio',
-    items: [
-      { value: 'studio', label: 'Studio tiêu chuẩn' },
-      { value: 'studio-ban-cong', label: 'Studio ban công' },
-      { value: 'studio-gac-lung', label: 'Studio gác lửng' },
-      { value: 'studio-full-noi-that', label: 'Studio full nội thất' },
-    ],
-  },
-  {
-    groupName: 'Phòng trọ & Mặt bằng',
-    items: [
-      { value: 'phong-tro-sinh-vien', label: 'Phòng trọ sinh viên' },
-      { value: 'phong-tro-nguoi-di-lam', label: 'Phòng trọ người đi làm' },
-      { value: 'ky-tuc-xa-tu-nhan', label: 'Ký túc xá / Sleepbox' },
-      { value: 'nha-nguyen-can', label: 'Nhà nguyên căn' },
-      { value: 'mat-bang-kinh-doanh', label: 'Mặt bằng kinh doanh' },
-    ],
-  },
+const PROPERTY_TYPES: PropertyTypeOption[] = [
+  { value: 'chung-cu', label: 'Chung cư' },
+  { value: 'chung-cu-mini', label: 'Chung cư mini' },
+  { value: 'phong-tro', label: 'Phòng trọ' },
+  { value: 'mat-bang-kinh-doanh', label: 'Mặt bằng kinh doanh' },
 ];
 
 export default function DangTinPage() {
   const [locations, setLocations] = useState<LocationItem[]>([]);
-  const [propertyType, setPropertyType] = useState('can-ho-chung-cu');
+  const [propertyType, setPropertyType] = useState('chung-cu');
 
   // Quản lý hình ảnh và xem trước
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -151,10 +127,14 @@ export default function DangTinPage() {
     }
 
     const form = new FormData(e.currentTarget);
-    const locationIdValue = form.get('locationId');
-    if (!locationIdValue) {
-      setError('Vui lòng chọn khu vực cho thuê');
-      return;
+    const rawAddress = addressDetail.trim() || ((form.get('addressDetail') as string) || '').trim();
+
+    // Tự động nhận diện khu vực theo địa chỉ hoặc mặc định khu vực đầu tiên (Hà Nội)
+    let locationIdValue = 1;
+    if (locations.length > 0) {
+      const lowerAddr = rawAddress.toLowerCase();
+      const matched = locations.find((l) => lowerAddr.includes(l.name.toLowerCase()));
+      locationIdValue = matched ? matched.id : locations[0].id;
     }
 
     const depositRaw = ((form.get('depositInput') as string) || (form.get('depositAmount') as string) || '').trim();
@@ -350,7 +330,7 @@ export default function DangTinPage() {
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Đăng tin cho thuê Căn hộ, Studio & Phòng trọ
+              Đăng tin cho thuê phòng
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-600">
               Chế độ dành riêng cho Nguyễn Đức Quân — Đăng tin trực tiếp nhanh chóng, không yêu cầu đăng ký hay đăng nhập
@@ -364,47 +344,30 @@ export default function DangTinPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-surface-border bg-white p-6 sm:p-8 md:p-9 shadow-elevated">
-        {/* Loại hình cho thuê */}
+        {/* Loại hình cho thuê (4 loại rõ ràng) */}
         <div>
-          <label className="mb-2 block text-xs font-semibold text-text-secondary">
+          <label className="mb-2.5 block text-xs font-semibold text-text-secondary">
             Loại hình cho thuê * (Chọn đúng chuyên mục)
           </label>
-          <div className="space-y-3">
-            {PROPERTY_TYPE_GROUPS.map((group) => (
-              <div key={group.groupName} className="rounded-xl border border-surface-border bg-slate-50/50 p-3">
-                <p className="mb-2 text-xs font-bold text-text-primary">{group.groupName}</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {group.items.map((pt) => (
-                    <button
-                      key={pt.value}
-                      type="button"
-                      onClick={() => setPropertyType(pt.value)}
-                      className={`flex items-center justify-center p-2.5 rounded-lg border text-xs text-center transition-all ${
-                        propertyType === pt.value
-                          ? 'border-brand bg-brand text-white font-bold shadow-sm'
-                          : 'border-surface-border bg-white text-text-secondary hover:border-brand/40'
-                      }`}
-                    >
-                      <span>{pt.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {PROPERTY_TYPES.map((pt) => {
+              const isSelected = propertyType === pt.value;
+              return (
+                <button
+                  key={pt.value}
+                  type="button"
+                  onClick={() => setPropertyType(pt.value)}
+                  className={`flex items-center justify-center py-3 px-3 rounded-xl border text-xs sm:text-sm font-medium text-center transition-all ${
+                    isSelected
+                      ? 'border-brand bg-brand text-white font-bold shadow-sm ring-2 ring-brand/20'
+                      : 'border-surface-border bg-white text-text-secondary hover:border-brand/40 hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{pt.label}</span>
+                </button>
+              );
+            })}
           </div>
-        </div>
-
-        {/* Khu vực hành chính */}
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold text-text-secondary">Khu vực (Tỉnh/Quận/Huyện) *</label>
-          <select name="locationId" required className="input-field">
-            <option value="">-- Chọn khu vực --</option>
-            {locations.map((loc) => (
-              <option key={loc.id} value={loc.id}>
-                {loc.level === 'province' ? loc.name : loc.level === 'district' ? `  └─ ${loc.name}` : `     └─ ${loc.name}`}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Khối định vị địa chỉ liên kết Google Maps & Trường Đại học lân cận */}

@@ -46,7 +46,7 @@ export default function AdminPricingSeasonsPage() {
       const res = await authFetch('/admin/pricing-seasons');
       if (res.ok) {
         const data = await res.json();
-        setSeasons(data);
+        setSeasons(Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : []);
       }
     } catch {
       // safe-fail

@@ -72,7 +72,9 @@ export function TopProgressBar() {
       const t2 = setTimeout(() => setProgress(75), 250);
       const t3 = setTimeout(() => setProgress(90), 500);
 
-      // Fallback an toàn: nếu sau 1.5s không có sự kiện đổi URL thì tự động trượt hết và biến mất
+      // Fallback an toàn: chỉ ẩn nếu sau 15s vẫn không đổi URL (VD: link bị chặn)
+      // Trước đây ẩn sau 1.5s — khi route đang biên dịch/tải lâu hơn, thanh tiến trình biến mất
+      // trong khi trang cũ vẫn hiển thị khiến người dùng tưởng bấm không có tác dụng
       const tSafety = setTimeout(() => {
         setProgress(100);
         const tFade = setTimeout(() => {
@@ -80,7 +82,7 @@ export function TopProgressBar() {
           setProgress(0);
         }, 200);
         timersRef.current.push(tFade);
-      }, 1500);
+      }, 15000);
 
       timersRef.current.push(t1, t2, t3, tSafety);
     }

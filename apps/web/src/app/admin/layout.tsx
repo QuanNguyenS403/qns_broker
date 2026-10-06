@@ -27,6 +27,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [badges, setBadges] = useState<BadgeCounts>({ pendingListings: 0, newReports: 0, pendingMemberships: 0 });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Xác thực quyền admin CHỈ MỘT LẦN khi vào khu vực /admin
+  // Trước đây effect phụ thuộc [pathname] nên mỗi lần bấm sang mục khác lại gọi lại /auth/me
+  // và nếu API lỗi tạm thời (VD: DB mất kết nối trả 500) thì tự clearTokens — gây đăng xuất ngầm
   useEffect(() => {
     async function checkAdmin() {
       if (!getAccessToken()) {
@@ -36,45 +39,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       try {
         const res = await authFetch('/auth/me');
-        if (!res.ok) throw new Error('Unauthorized');
-        const data = await res.json();
-        if (data.role === 'admin') {
-          setUser(data);
-          // Lấy số liệu badges
-          try {
-            const dashRes = await authFetch('/admin/dashboard');
-            let pendingMembershipsCount = 0;
-            try {
-              const memRes = await authFetch('/admin/membership-requests?status=pending');
-              if (memRes.ok) {
-                const memData = await memRes.json();
-                pendingMembershipsCount = memData.pagination?.total ?? memData.items?.length ?? 0;
-              }
-            } catch {
-              // ignore
-            }
-
-            if (dashRes.ok) {
-              const dashData = await dashRes.json();
-              setBadges({
-                pendingListings: dashData.stats?.pendingListingsCount ?? 0,
-                newReports: dashData.stats?.newReportsCount ?? 0,
-                pendingMemberships: pendingMembershipsCount,
-              });
-            }
-          } catch {
-            // bỏ qua lỗi badges phụ
-          }
+        if (res.ok) {
+          const data = await res.json();
+          if (data.role === 'admin') setUser(data);
         }
+        // 401 sau khi refresh thất bại đã được authFetch tự clearTokens — không xoá token ở đây
       } catch {
-        clearTokens();
+        // lỗi mạng tạm thời — giữ nguyên token để người dùng thử lại
       } finally {
         setLoading(false);
       }
     }
 
     checkAdmin();
-  }, [pathname]);
+  }, []);
+
+  // Làm mới số liệu badges khi đã xác thực và mỗi khi chuyển mục (không chặn hiển thị trang)
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    async function loadBadges() {
+      try {
+        const [dashRes, memRes] = await Promise.all([
+          authFetch('/admin/dashboard'),
+          authFetch('/admin/membership-requests?status=pending').catch(() => null),
+        ]);
+
+        let pendingMembershipsCount = 0;
+        if (memRes && memRes.ok) {
+          const memData = await memRes.json();
+          pendingMembershipsCount = memData.pagination?.total ?? memData.items?.length ?? 0;
+        }
+
+        if (dashRes.ok && !cancelled) {
+          const dashData = await dashRes.json();
+          setBadges({
+            pendingListings: dashData.stats?.pendingListingsCount ?? 0,
+            newReports: dashData.stats?.newReportsCount ?? 0,
+            pendingMemberships: pendingMembershipsCount,
+          });
+        }
+      } catch {
+        // bỏ qua lỗi badges phụ
+      }
+    }
+
+    loadBadges();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, pathname]);
 
   function handleLogout() {
     clearTokens();
@@ -242,7 +257,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             Nghiệp vụ Quản trị
           </div>
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive =
+              item.href === '/admin'
+                ? pathname === '/admin'
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}

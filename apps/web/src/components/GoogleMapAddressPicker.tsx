@@ -44,6 +44,7 @@ export function GoogleMapAddressPicker({
   const [address, setAddress] = useState(initialAddress);
   const [lat, setLat] = useState<number | null>(initialLat ?? null);
   const [lng, setLng] = useState<number | null>(initialLng ?? null);
+  const [mapType, setMapType] = useState<'hybrid' | 'roadmap'>('hybrid');
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isLocatingGps, setIsLocatingGps] = useState(false);
   const [geoNotice, setGeoNotice] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export function GoogleMapAddressPicker({
     onUniversitiesChange?.(list);
   }, [selectedUnis, onUniversitiesChange]);
 
-  // Hàm xử lý định vị địa chỉ bất kỳ qua Geocoding API
+  // Hàm xử lý định vị địa chỉ bất kỳ qua Geocoding API và hiển thị vệ tinh
   async function handleGeocodeAddress(queryAddress?: string) {
     const targetQuery = (queryAddress ?? address).trim();
     if (!targetQuery) {
@@ -111,7 +112,8 @@ export function GoogleMapAddressPicker({
     }
 
     setIsGeocoding(true);
-    setGeoNotice('Đang kết nối Google Maps để định vị địa chỉ...');
+    setGeoNotice('Đang kết nối Google Maps để định vị vệ tinh...');
+    setMapType('hybrid'); // Tự động chuyển sang bản đồ vệ tinh
 
     try {
       // 1. Kiểm tra khớp tên trường ĐH trong danh bạ chuẩn
@@ -126,42 +128,61 @@ export function GoogleMapAddressPicker({
       if (matchedUni) {
         setLat(matchedUni.lat);
         setLng(matchedUni.lng);
-        setGeoNotice(`Đã định vị chính xác khu vực ${matchedUni.name} trên Google Maps`);
+        setGeoNotice(`Đã định vị chính xác khu vực ${matchedUni.name} trên bản đồ vệ tinh`);
         setIsGeocoding(false);
         return;
       }
 
-      // 2. Geocoding trực tiếp qua dịch vụ bản đồ vệ tinh tiếng Việt
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      // 2. Geocoding trực tiếp qua dịch vụ bản đồ (thử chuỗi gốc, sau đó thử chuỗi lược bỏ số nhà/ngõ ngách nếu cần)
+      const tryQueries = [
+        targetQuery,
+        // Lược bỏ tiền tố số nhà/ngõ để định vị tới đúng đường/phường
+        targetQuery.replace(/^(số|ngõ|ngách|hẻm)?\s*\d+[a-zA-Z]?(\/\d+)*\s*,?\s*/i, '').trim(),
+      ].filter((q, idx, arr) => q && arr.indexOf(q) === idx);
 
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&countrycodes=vn&limit=1&q=${encodeURIComponent(
-          targetQuery,
-        )}`,
-        {
-          headers: { 'User-Agent': 'QNS-RealEstate-Broker/2.0' },
-          signal: controller.signal,
-        },
-      );
-      clearTimeout(timeoutId);
+      let foundCoords: { lat: number; lng: number } | null = null;
 
-      if (res.ok) {
-        const results = await res.json();
-        if (Array.isArray(results) && results.length > 0 && results[0].lat && results[0].lon) {
-          const newLat = parseFloat(results[0].lat);
-          const newLng = parseFloat(results[0].lon);
-          setLat(newLat);
-          setLng(newLng);
-          setGeoNotice('Đã xác định tọa độ và ghim vị trí chính xác trên bản đồ Google Maps');
-          return;
+      for (const q of tryQueries) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&countrycodes=vn&limit=1&q=${encodeURIComponent(
+              q,
+            )}`,
+            {
+              headers: { 'User-Agent': 'QNS-RealEstate-Broker/2.0' },
+              signal: controller.signal,
+            },
+          );
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            const results = await res.json();
+            if (Array.isArray(results) && results.length > 0 && results[0].lat && results[0].lon) {
+              foundCoords = {
+                lat: parseFloat(results[0].lat),
+                lng: parseFloat(results[0].lon),
+              };
+              break;
+            }
+          }
+        } catch {
+          // thử phương án tiếp theo
         }
       }
 
-      // Nếu không tìm thấy tọa độ cụ thể, giữ bản đồ theo từ khóa
-      setGeoNotice('Đã liên kết vị trí bản đồ Google Maps theo địa chỉ bạn nhập');
+      if (foundCoords) {
+        setLat(foundCoords.lat);
+        setLng(foundCoords.lng);
+        setGeoNotice('Đã xác định tọa độ và ghim vị trí chính xác trên bản đồ vệ tinh Google Maps');
+      } else {
+        // Vẫn ghim Google Maps trực tiếp bằng chuỗi địa chỉ chi tiết ở chế độ vệ tinh
+        setGeoNotice('Đã định vị vị trí trên bản đồ vệ tinh Google Maps theo địa chỉ nhập');
+      }
     } catch {
-      setGeoNotice('Bản đồ Google Maps hiển thị theo địa chỉ nhập thực tế');
+      setGeoNotice('Đã hiển thị bản đồ vệ tinh Google Maps theo địa chỉ thực tế');
     } finally {
       setIsGeocoding(false);
     }
@@ -315,9 +336,33 @@ export function GoogleMapAddressPicker({
 
       {/* Bản đồ Google Maps Embed hiển thị trực quan */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-text-primary">Bản đồ định vị vệ tinh</span>
+            <span className="font-semibold text-text-primary">Bản đồ định vị</span>
+            <div className="inline-flex rounded-lg border border-slate-300 bg-white p-0.5 shadow-xs">
+              <button
+                type="button"
+                onClick={() => setMapType('hybrid')}
+                className={`px-2.5 py-0.5 text-[11px] font-bold rounded-md transition-all ${
+                  mapType === 'hybrid'
+                    ? 'bg-brand text-white shadow-xs'
+                    : 'text-slate-600 hover:text-brand'
+                }`}
+              >
+                Vệ tinh
+              </button>
+              <button
+                type="button"
+                onClick={() => setMapType('roadmap')}
+                className={`px-2.5 py-0.5 text-[11px] font-bold rounded-md transition-all ${
+                  mapType === 'roadmap'
+                    ? 'bg-brand text-white shadow-xs'
+                    : 'text-slate-600 hover:text-brand'
+                }`}
+              >
+                Bản đồ số
+              </button>
+            </div>
             {lat != null && lng != null && (
               <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
                 Tọa độ: {lat.toFixed(5)}, {lng.toFixed(5)}
@@ -333,7 +378,7 @@ export function GoogleMapAddressPicker({
               {showCoordinateInputs ? 'Ẩn tọa độ số' : 'Nhập tọa độ thủ công'}
             </button>
             <a
-              href={getGoogleMapsViewUrl({ lat: activeLat, lng: activeLng, address })}
+              href={getGoogleMapsViewUrl({ lat: activeLat, lng: activeLng, address }, { satellite: mapType === 'hybrid' })}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:underline"
@@ -346,8 +391,12 @@ export function GoogleMapAddressPicker({
         {/* Khung bản đồ */}
         <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-surface-border bg-slate-200 shadow-inner">
           <iframe
+            key={`${mapType}-${activeLat}-${activeLng}-${address}`}
             title="Google Maps Location"
-            src={getGoogleMapsEmbedUrl({ lat: activeLat, lng: activeLng, address: address || 'Hà Nội' })}
+            src={getGoogleMapsEmbedUrl(
+              { lat: activeLat, lng: activeLng, address: address || 'Hà Nội' },
+              { mapType, zoom: 17 },
+            )}
             className="h-full w-full border-0"
             loading="lazy"
             allowFullScreen
