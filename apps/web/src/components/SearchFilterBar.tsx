@@ -3,7 +3,9 @@
 import { useState, useTransition, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { HANOI_DISTRICT_GROUPS } from '@/lib/hanoi-wards';
 import { VIETNAM_UNIVERSITIES } from '@/lib/vietnam-universities';
+import { triggerPageLoading } from '@/lib/nav-utils';
 
 interface UniversityOption {
   slug: string;
@@ -25,31 +27,18 @@ interface SearchFilterBarProps {
   subtitle?: string;
 }
 
-export const PROPERTY_TYPES_CAN_HO = [
-  { value: '', label: 'Tất cả loại căn hộ' },
-  { value: 'can_ho_chung_cu', label: 'Căn hộ chung cư' },
-  { value: 'can_ho_mini', label: 'Căn hộ mini' },
-  { value: 'can_ho_dich_vu', label: 'Căn hộ dịch vụ' },
-  { value: 'can_ho_cao_cap', label: 'Căn hộ cao cấp' },
-];
-
-export const PROPERTY_TYPES_STUDIO = [
-  { value: '', label: 'Tất cả loại Studio' },
-  { value: 'studio', label: 'Studio tiêu chuẩn' },
-  { value: 'studio_ban_cong', label: 'Studio ban công thoáng mát' },
-  { value: 'studio_gac_lung', label: 'Studio duplex / gác lửng' },
-  { value: 'studio_full_noi_that', label: 'Studio full nội thất' },
-];
-
-const PROPERTY_TYPES = [
-  { value: '', label: 'Tất cả loại phòng' },
-  { value: 'can_ho', label: 'Căn hộ' },
-  { value: 'studio', label: 'Studio' },
-  { value: 'phong_tro', label: 'Phòng trọ sinh viên' },
-  { value: 'ky_tuc_xa', label: 'Ký túc xá / Sleepbox' },
-  { value: 'nha_rieng', label: 'Nhà riêng / Nguyên căn' },
+// 4 loại phòng chuẩn theo đúng yêu cầu: Phòng trọ, Chung cư, Chung cư mini, Mặt bằng kinh doanh
+export const PROPERTY_TYPES_STANDARD = [
+  { value: '', label: 'Loại phòng' },
+  { value: 'phong_tro', label: 'Phòng trọ' },
+  { value: 'can_ho', label: 'Chung cư' },
+  { value: 'chung_cu_mini', label: 'Chung cư mini' },
   { value: 'mat_bang', label: 'Mặt bằng kinh doanh' },
 ];
+
+export const PROPERTY_TYPES_CAN_HO = PROPERTY_TYPES_STANDARD;
+export const PROPERTY_TYPES_STUDIO = PROPERTY_TYPES_STANDARD;
+const PROPERTY_TYPES = PROPERTY_TYPES_STANDARD;
 
 const DEFAULT_UNIVERSITIES: UniversityOption[] = VIETNAM_UNIVERSITIES;
 
@@ -83,7 +72,7 @@ export function SearchFilterBar({
   initialParams = {},
   propertyTypes: propPropertyTypes,
   universities = DEFAULT_UNIVERSITIES,
-  placeholder = 'Tìm theo khu vực, tên đường, trường đại học...',
+  placeholder = 'Tìm theo khu vực, tên đường, loại phòng...',
   title: propTitle,
   subtitle: propSubtitle,
 }: SearchFilterBarProps) {
@@ -92,8 +81,9 @@ export function SearchFilterBar({
 
   const [keyword, setKeyword] = useState(initialParams.keyword ?? '');
   const [propertyType, setPropertyType] = useState(initialParams.propertyType ?? '');
-  const [universitySlug, setUniversitySlug] = useState(initialParams.universitySlug ?? '');
-  const [utilitiesIncluded, setUtilitiesIncluded] = useState(initialParams.utilitiesIncluded === 'true');
+  const [locationWard, setLocationWard] = useState(
+    initialParams.locationSlug ?? initialParams.ward ?? ''
+  );
   const [petAllowed, setPetAllowed] = useState(initialParams.petAllowed === 'true');
   const [electricVehicle, setElectricVehicle] = useState(initialParams.electricVehicle === 'true');
 
@@ -127,13 +117,7 @@ export function SearchFilterBar({
     };
   }, [isPriceOpen]);
 
-  const availablePropertyTypes =
-    propPropertyTypes ??
-    (initialParams.categoryGroup === 'thue_studio'
-      ? PROPERTY_TYPES_STUDIO
-      : initialParams.categoryGroup === 'thue_can_ho'
-        ? PROPERTY_TYPES_CAN_HO
-        : PROPERTY_TYPES);
+  const availablePropertyTypes = propPropertyTypes ?? PROPERTY_TYPES_STANDARD;
 
   // Tính toán Tiêu đề & Subtitle đồng bộ theo các mục ở trang chủ (Chung cư, CCMN, Phòng trọ SV, Mặt bằng)
   const sectionTitle = (() => {
@@ -180,14 +164,12 @@ export function SearchFilterBar({
     if (e) e.preventDefault();
     const params = new URLSearchParams();
 
-    // Giữ nguyên location & category filter
-    if (initialParams.locationSlug) params.set('locationSlug', initialParams.locationSlug);
+    // Giữ nguyên categoryGroup và locationId nếu có
     if (initialParams.locationId) params.set('locationId', initialParams.locationId);
     if (initialParams.categoryGroup) params.set('categoryGroup', initialParams.categoryGroup);
     if (keyword.trim()) params.set('keyword', keyword.trim());
+    if (locationWard) params.set('locationSlug', locationWard);
     if (propertyType) params.set('propertyType', propertyType);
-    if (universitySlug) params.set('universitySlug', universitySlug);
-    if (utilitiesIncluded) params.set('utilitiesIncluded', 'true');
     if (petAllowed) params.set('petAllowed', 'true');
     if (electricVehicle) params.set('electricVehicle', 'true');
 
@@ -200,39 +182,40 @@ export function SearchFilterBar({
     // Reset về trang 1 khi lọc mới
     params.set('page', '1');
 
+    const targetUrl = `${basePath}?${params.toString()}`;
+    triggerPageLoading(targetUrl);
     startTransition(() => {
-      router.push(`${basePath}?${params.toString()}`);
+      router.push(targetUrl);
     });
   }
 
   function handleReset() {
     setKeyword('');
+    setLocationWard('');
     setPropertyType('');
-    setUniversitySlug('');
-    setUtilitiesIncluded(false);
     setPetAllowed(false);
     setElectricVehicle(false);
     setMinPrice(0);
     setMaxPrice(MAX_PRICE_LIMIT);
     setIsPriceOpen(false);
 
+    const resetParams = new URLSearchParams();
+    if (initialParams.locationId) resetParams.set('locationId', initialParams.locationId);
+    if (initialParams.categoryGroup) resetParams.set('categoryGroup', initialParams.categoryGroup);
+    const queryStr = resetParams.toString();
+    const targetUrl = queryStr ? `${basePath}?${queryStr}` : basePath;
+    triggerPageLoading(targetUrl);
     startTransition(() => {
-      const resetParams = new URLSearchParams();
-      if (initialParams.locationSlug) resetParams.set('locationSlug', initialParams.locationSlug);
-      if (initialParams.locationId) resetParams.set('locationId', initialParams.locationId);
-      if (initialParams.categoryGroup) resetParams.set('categoryGroup', initialParams.categoryGroup);
-      const queryStr = resetParams.toString();
-      router.push(queryStr ? `${basePath}?${queryStr}` : basePath);
+      router.push(targetUrl);
     });
   }
 
   // Đếm số lượng điều kiện lọc đang kích hoạt
   let activeFilterCount = 0;
   if (keyword.trim()) activeFilterCount++;
+  if (locationWard) activeFilterCount++;
   if (propertyType) activeFilterCount++;
-  if (universitySlug) activeFilterCount++;
   if (minPrice > 0 || maxPrice < MAX_PRICE_LIMIT) activeFilterCount++;
-  if (utilitiesIncluded) activeFilterCount++;
   if (petAllowed) activeFilterCount++;
   if (electricVehicle) activeFilterCount++;
 
@@ -293,39 +276,27 @@ export function SearchFilterBar({
           )}
         </div>
 
-        {/* Dropdown 1: Khu vực / Trường ĐH */}
+        {/* Dropdown 1: Khu vực — Tất cả các phường thuộc thành phố Hà Nội */}
         <div className="relative col-span-1 lg:flex-[1.2] lg:min-w-[170px]">
           <select
-            value={universitySlug}
-            onChange={(e) => setUniversitySlug(e.target.value)}
+            value={locationWard}
+            onChange={(e) => setLocationWard(e.target.value)}
             className={`h-12 w-full appearance-none rounded-xl border bg-white pl-3.5 pr-8 text-sm sm:text-[14.5px] outline-none transition-all duration-150 focus:border-brand focus:ring-2 focus:ring-brand/20 hover:border-slate-300 cursor-pointer text-ellipsis overflow-hidden ${
-              universitySlug
+              locationWard
                 ? 'border-brand/50 text-brand font-medium bg-teal-50/20'
                 : 'border-slate-200 text-slate-700'
             }`}
           >
-            <option value="">Khu vực / Trường ĐH</option>
-            {['TP. Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng & Miền Trung', 'Cần Thơ & Miền Tây', 'Miền Bắc khác'].map((reg) => {
-              const items = universities.filter((u) => u.region === reg);
-              if (items.length === 0) return null;
-              return (
-                <optgroup key={reg} label={reg}>
-                  {items.map((u) => (
-                    <option key={u.slug} value={u.slug}>
-                      {u.abbreviation ? `${u.abbreviation} — ${u.name}` : u.name}
-                    </option>
-                  ))}
-                </optgroup>
-              );
-            })}
-            {universities.some((u) => !u.region) &&
-              universities
-                .filter((u) => !u.region)
-                .map((u) => (
-                  <option key={u.slug} value={u.slug}>
-                    {u.abbreviation ? `${u.abbreviation} — ${u.name}` : u.name}
+            <option value="">Khu vực</option>
+            {HANOI_DISTRICT_GROUPS.map((group) => (
+              <optgroup key={group.districtSlug} label={group.district}>
+                {group.wards.map((ward) => (
+                  <option key={ward.slug} value={ward.slug}>
+                    {ward.name}
                   </option>
                 ))}
+              </optgroup>
+            ))}
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -533,33 +504,15 @@ export function SearchFilterBar({
         </div>
       </div>
 
-      {/* Khu vực Bộ lọc thêm (Bao điện nước, Thú cưng, Xe điện) & Đặt lại (Đã bỏ Gợi ý nhanh theo yêu cầu) */}
+      {/* Khu vực Bộ lọc thêm (Nuôi thú cưng, Sạc xe điện) & Đặt lại (Đã xóa Bao điện nước theo yêu cầu) */}
       <div className="mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
-        {/* Nhóm Bộ lọc thêm: 3 mục Bao điện nước, Nuôi thú cưng, Sạc xe điện */}
+        {/* Nhóm Bộ lọc thêm: 2 mục Nuôi thú cưng, Sạc xe điện */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs sm:text-sm font-medium text-slate-500 whitespace-nowrap">
             Bộ lọc thêm:
           </span>
 
-          {/* Mục 1: Bao điện nước */}
-          <button
-            type="button"
-            onClick={() => setUtilitiesIncluded(!utilitiesIncluded)}
-            className={`inline-flex items-center gap-1.5 h-9 rounded-full px-3.5 text-xs sm:text-sm font-medium transition-all duration-150 border cursor-pointer ${
-              utilitiesIncluded
-                ? 'border-brand bg-teal-50 text-brand font-semibold shadow-xs'
-                : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:border-slate-300'
-            }`}
-          >
-            {utilitiesIncluded && (
-              <svg className="w-3.5 h-3.5 text-brand" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            )}
-            <span>Bao điện nước</span>
-          </button>
-
-          {/* Mục 2: Nuôi thú cưng */}
+          {/* Mục 1: Nuôi thú cưng */}
           <button
             type="button"
             onClick={() => setPetAllowed(!petAllowed)}
@@ -577,7 +530,7 @@ export function SearchFilterBar({
             <span>Nuôi thú cưng</span>
           </button>
 
-          {/* Mục 3: Sạc xe điện */}
+          {/* Mục 2: Sạc xe điện */}
           <button
             type="button"
             onClick={() => setElectricVehicle(!electricVehicle)}

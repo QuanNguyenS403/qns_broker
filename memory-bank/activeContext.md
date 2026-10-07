@@ -1,6 +1,67 @@
 # Trạng thái phiên làm việc hiện tại
 
-**Việc vừa hoàn thành (05/10/2026 — TINH GỌN KÍCH THƯỚC KHUNG MODAL ĐẶT LỊCH XEM PHÒNG):**
+**Việc vừa hoàn thành (08/10/2026 — CẬP NHẬT TRANG ĐĂNG TIN THEO 2 ẢNH CUNG CẤP):**
+- Đã chỉnh sửa toàn diện trang Đăng tin ([apps/web/src/app/dang-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-tin/page.tsx)) cùng các trang hiển thị liên quan ([tin/[slug]/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/[slug]/page.tsx), [admin/tin-cho-duyet/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/admin/tin-cho-duyet/page.tsx)):
+  1. **Đối với ảnh 1**: Xóa bỏ hoàn toàn cả 3 ô nhập liệu: "Diện tích sử dụng (m²) *", "Số phòng ngủ", "Số phòng tắm / WC" khỏi giao diện form đăng tin; Tự động điền giá trị ngầm an toàn (`areaM2 = 30`, `bedrooms = 1`, `bathrooms = 1`) để đảm bảo yêu cầu API backend luôn hợp lệ.
+  2. **Đối với ảnh 2**: Điều chỉnh tên nhãn trong phần **Nội thất**:
+     - "Nóng lạnh" -> **Bình nóng lạnh**
+     - "Bếp nấu riêng" -> **Bếp**
+     - "Cho nuôi thú cưng" -> **Thú cưng**
+     - "Hỗ trợ xe điện / Sạc xe" -> **Xe điện**
+     - Đồng bộ hóa các nhãn này trên toàn bộ hệ thống (`dang-tin`, chi tiết tin đăng `tin/[slug]`, và duyệt tin `admin/tin-cho-duyet`).
+  3. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — CẬP NHẬT BỘ LỌC SEARCHFILTERBAR THEO 3 ẢNH CUNG CẤP):**
+- Đã chỉnh sửa toàn diện component bộ lọc [SearchFilterBar.tsx](file:///d:/B%C4%90S/apps/web/src/components/SearchFilterBar.tsx) cùng các trang danh sách [thue/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/thue/page.tsx), [cho-thue-tro/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-tro/page.tsx), [cho-thue-mat-bang/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/cho-thue-mat-bang/page.tsx) theo đúng 3 yêu cầu:
+  1. **Đối với ảnh 1**: Xóa bỏ hoàn toàn nút "Bao điện nước" trong khu vực "Bộ lọc thêm:", chỉ giữ lại 2 tiện ích nổi bật "Nuôi thú cưng" và "Sạc xe điện". Đồng thời dọn sạch biến và logic tính toán liên quan.
+  2. **Đối với ảnh 2**: Thay đổi hoàn toàn nhãn "Khu vực / Trường ĐH" thành "Khu vực". Tạo file dữ liệu chuẩn [hanoi-wards.ts](file:///d:/B%C4%90S/apps/web/src/lib/hanoi-wards.ts) tích hợp toàn bộ các phường thuộc 12 quận và Thị xã Sơn Tây (cùng các thị trấn trung tâm) của thành phố Hà Nội được gom nhóm trực quan theo từng Quận (`<optgroup>`). Đồng thời tích hợp hàm tìm kiếm thông minh `findHanoiWard` để tìm chính xác theo tên phường trên các trang danh sách.
+  3. **Đối với ảnh 3**: Chuẩn hóa dropdown "Loại phòng" thành đúng 4 loại: **Phòng trọ**, **Chung cư**, **Chung cư mini**, **Mặt bằng kinh doanh** (với tùy chọn mặc định "Loại phòng"). Đồng bộ cả trên `SearchFilterBar.tsx` và `PROPERTY_TYPES_ROOM` / `PROPERTY_TYPES_SPACE`, đồng thời mở rộng bộ lọc in-memory để nhận diện chính xác tất cả các mã loại phòng tương ứng.
+  4. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — ĐỒNG BỘ TỨC THÌ NÚT ĐĂNG TIN VÀ AVATAR MENU CÙNG LÚC VỚI TRANG):**
+- Đã chỉnh sửa toàn diện component Header ([apps/web/src/components/Header.tsx](file:///d:/B%C4%90S/apps/web/src/components/Header.tsx)) để nút `+ Đăng tin` và nút Avatar `(👤)` xuất hiện đồng thời ngay lập tức cùng với trang web (0ms delay), loại bỏ triệt để hiện tượng tải chậm hay giật:
+  1. **Loại bỏ khối Skeleton & Biến chặn (`checked`)**: Trước đây `Header` đặt cụm nút này sau điều kiện `!checked ? <div className="skeleton ..."/> : ...`, buộc phải chờ client hydrate và gọi API `/auth/me` xong mới hiển thị, gây chậm trễ từ 200ms đến 1 giây so với toàn bộ trang web. Đã xóa bỏ hoàn toàn biến chặn và khung skeleton này.
+  2. **Render trực tiếp tức thì 100%**: Nút `+ Đăng tin` (dạng link tĩnh dẫn đến `/dang-tin`) và nút Avatar `(👤)` (icon SVG mặc định kèm badge phòng đã chọn) được render trực tiếp ngay từ frame đầu tiên (SSR & Initial client render) cùng một lúc với Header.
+  3. **Đồng bộ ngầm không chặn (Non-blocking)**: Trạng thái người dùng được đọc tức thì từ `localStorage.getItem('user')` và lắng nghe sự kiện `storage`. Việc kiểm tra xác thực qua `authFetch('/auth/me')` được đưa về chạy ngầm dưới nền mà không chặn bất kỳ thành phần nào trên giao diện.
+  4. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (07/10/2026 — ĐỒNG BỘ MÀU SẮC KHUNG EMAIL VÀ ĐĂNG NHẬP VỚI MÀU CHỦ ĐẠO WEBSITE):**
+- Đã chỉnh sửa toàn diện màu sắc của khung Email, nút Đăng nhập và toàn bộ hệ thống form xác thực trên cả trang Đăng nhập ([apps/web/src/app/dang-nhap/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-nhap/page.tsx)) và popup modal xác thực ([apps/web/src/components/AuthModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/AuthModal.tsx)):
+  1. **Khung/Nút Email**: Chuyển đổi hoàn toàn từ màu tím cũ (`#9d7fe3`) sang màu xanh Teal tươi sáng thương hiệu QNS BROKER (`bg-teal-500 text-white font-medium shadow-xs`).
+  2. **Khung/Nút Đăng nhập**: Chuyển đổi từ màu tím đậm cũ (`#503e6d`) sang màu Teal chủ đạo chuẩn thương hiệu (`bg-brand hover:bg-brand-700 text-white font-bold shadow-md hover:shadow-lg`).
+  3. **Đồng bộ hóa toàn bộ form**:
+     - Checkbox Ghi nhớ: chuyển sang `text-brand focus:ring-brand`.
+     - Link "Quên mật khẩu?": chuyển sang `hover:text-brand`.
+     - Link chuyển đổi "Đăng ký ngay", "Đăng nhập ngay", "Quay lại đăng nhập": chuyển sang `text-brand hover:text-brand-700`.
+     - Nút submit Đăng ký và Quên mật khẩu: chuyển sang `bg-brand hover:bg-brand-700`.
+     - Viền focus của tất cả các ô input: chuyển sang `focus:border-brand focus:ring-brand/20`.
+  4. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (07/10/2026 — ĐIỀU CHỈNH HỆ THỐNG LOADING TOÀN THỂ WEBSITE CHUYỂN TRANG NGAY SAU 0.5 GIÂY):**
+- Đã nâng cấp toàn diện hệ thống điều phối Loading & Navigation trên toàn bộ website:
+  1. **Nâng cấp component điều phối [TopProgressBar.tsx](file:///d:/B%C4%90S/apps/web/src/components/TopProgressBar.tsx)**:
+     - Tự động bắt mọi sự kiện click vào bất kỳ liên kết nội bộ (`<a>`, `<Link>`), các nút điều hướng mang `data-href` / `data-navigate`, và các hành vi kích hoạt `router.push()` trên toàn bộ website.
+     - Kích hoạt chu kỳ loading tức thì: thanh tiến trình trên đỉnh `h-[3.5px]` gradient xanh teal thương hiệu kèm glow rực rỡ và vòng xoay spinner nhỏ tinh tế ở góc phải trên cùng.
+     - Tiến trình loading chạy mượt mà từ 0% lên 100% trong đúng 500ms (0.5 giây).
+     - **Cam kết chuyển trang dứt khoát đúng 0.5 giây**: Tại mốc 500ms, nếu URL chưa thay đổi sang trang đích (do độ trễ RSC hoặc Next.js transition chờ compile), hệ thống tự động kích hoạt điều hướng ngay lập tức (`window.location.assign`), loại bỏ triệt để hiện tượng đứng im ở trang cũ.
+     - Theo dõi đồng thời cả `pathname` và `searchParams` để kết thúc loading bar mượt mà khi lọc phòng hay phân trang.
+  2. **Bổ sung loading boundary (`loading.tsx`) cho 100% các mục còn lại trên website**:
+     - `cho-thue-tro/loading.tsx`
+     - `cho-thue-mat-bang/loading.tsx`
+     - `tai-khoan/loading.tsx` (áp dụng cho toàn bộ khu vực `thong-tin`, `tin-da-luu`, `quan-ly-tin`, `leads`)
+     - `dang-nhap/loading.tsx`
+     - `gioi-thieu/loading.tsx` & `ve-chung-toi/loading.tsx`
+     - `lien-he/loading.tsx`
+     - `dieu-khoan/loading.tsx` & `chinh-sach/loading.tsx`
+     - `gia-thanh-vien/loading.tsx`
+     - `gia-nha-dat/loading.tsx`
+     - `moi-gioi/loading.tsx`
+     - `du-an/loading.tsx`
+  3. **Tích hợp tiện ích điều hướng toàn cục [nav-utils.ts](file:///d:/B%C4%90S/apps/web/src/lib/nav-utils.ts)**:
+     - Tạo hàm `triggerPageLoading(href)` và tích hợp vào [HeroSearchForm.tsx](file:///d:/B%C4%90S/apps/web/src/components/HeroSearchForm.tsx), [SearchFilterBar.tsx](file:///d:/B%C4%90S/apps/web/src/components/SearchFilterBar.tsx), và [Header.tsx](file:///d:/B%C4%90S/apps/web/src/components/Header.tsx).
+  4. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (05/10/2026 — TINH GỌN KÍCH THƯỚC KHUNG MODAL ĐẶT LỊCH XEM PHÒNG):**
 - Đã chỉnh sửa toàn diện component popup [ContactBrokerModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/ContactBrokerModal.tsx):
   1. **Tối ưu hóa kích thước & tỷ lệ khung (Modal Dimensions)**:
      - Giảm chiều rộng từ `max-w-lg` (512px) xuống `max-w-[440px] sm:max-w-[460px]`, căn giữa màn hình với khoảng cách thở rộng rãi, không còn cảm giác bị bè to hay thô kệch.

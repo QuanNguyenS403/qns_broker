@@ -10,6 +10,7 @@ import { FeedbackModal } from './FeedbackModal';
 import { ConsultationModal } from './ConsultationModal';
 import { SelectedRoomsModal } from './SelectedRoomsModal';
 import { getSelectedRooms, subscribeSelectedRooms, SelectedRoomItem } from '@/lib/selected-rooms';
+import { triggerPageLoading } from '@/lib/nav-utils';
 
 interface CurrentUser {
   id: string;
@@ -24,7 +25,6 @@ export function Header() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [checked, setChecked] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   // Trạng thái các Modal tiện ích (theo yêu cầu các ảnh cung cấp)
@@ -66,28 +66,52 @@ export function Header() {
     });
   }, []);
 
+  // Khởi tạo và đồng bộ trạng thái người dùng từ localStorage ngay tức thì
   useEffect(() => {
-    if (!getAccessToken()) {
-      setChecked(true);
-      return;
+    function syncUserFromStorage() {
+      try {
+        const cached = localStorage.getItem('user');
+        if (cached) {
+          setUser(JSON.parse(cached));
+        } else if (!getAccessToken()) {
+          setUser(null);
+        }
+      } catch {}
     }
+
+    syncUserFromStorage();
+    window.addEventListener('storage', syncUserFromStorage);
+    return () => window.removeEventListener('storage', syncUserFromStorage);
+  }, []);
+
+  // Xác thực ngầm với server trong nền không chặn giao diện
+  useEffect(() => {
+    if (!getAccessToken()) return;
+
     authFetch('/auth/me')
       .then((res) => {
         if (res.status === 401) {
           clearTokens();
           setUser(null);
+          try {
+            localStorage.removeItem('user');
+          } catch {}
           return null;
         }
         if (!res.ok) return null;
         return res.json();
       })
       .then((data) => {
-        if (data) setUser(data);
+        if (data) {
+          setUser(data);
+          try {
+            localStorage.setItem('user', JSON.stringify(data));
+          } catch {}
+        }
       })
       .catch((err) => {
         console.warn('Lỗi kết nối /auth/me tạm thời:', err);
-      })
-      .finally(() => setChecked(true));
+      });
   }, []);
 
   async function handleLogout() {
@@ -98,7 +122,11 @@ export function Header() {
     }
     clearTokens();
     setUser(null);
+    try {
+      localStorage.removeItem('user');
+    } catch {}
     setMenuOpen(false);
+    triggerPageLoading('/');
     router.push('/');
   }
 
@@ -155,53 +183,49 @@ export function Header() {
           </Link>
         </nav>
 
-        {/* Actions bên phải */}
+        {/* Actions bên phải — Luôn hiển thị tức thì 100% đồng bộ với trang */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          {!checked ? (
-            <div className="h-8.5 w-20 skeleton bg-white/20 rounded-lg sm:rounded-xl" />
-          ) : (
-            <>
-              {user && user.role === 'admin' && (
-                <Link
-                  href="/admin"
-                  className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg sm:rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm"
-                >
-                  <span>Quản trị</span>
-                </Link>
+          {user && user.role === 'admin' && (
+            <Link
+              href="/admin"
+              className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg sm:rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm"
+            >
+              <span>Quản trị</span>
+            </Link>
+          )}
+
+          {/* Nút + Đăng tin — Đồng bộ tức thì cùng trang */}
+          <Link
+            href="/dang-tin"
+            className="inline-flex items-center gap-1.5 rounded-lg sm:rounded-xl bg-white text-brand px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold shadow-sm transition-all hover:bg-teal-50 active:scale-[0.98]"
+          >
+            <span>+ Đăng tin</span>
+          </Link>
+
+          {/* Nút Avatar Menu — Đồng bộ tức thì cùng trang */}
+          <div className="relative">
+            <button
+              id="user-profile-menu-button"
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              className="relative flex h-8.5 w-8.5 sm:h-9.5 sm:w-9.5 items-center justify-center rounded-full border border-white/30 bg-white/10 hover:bg-white/20 transition-all text-white focus:outline-none"
+              aria-label="Menu cá nhân và tiện ích"
+            >
+              {user ? (
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-brand font-bold text-[11px] shadow-sm">
+                  {initials}
+                </span>
+              ) : (
+                <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
               )}
-
-              {/* Nút + Đăng tin */}
-              <Link
-                href="/dang-tin"
-                className="inline-flex items-center gap-1.5 rounded-lg sm:rounded-xl bg-white text-brand px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold shadow-sm transition-all hover:bg-teal-50 active:scale-[0.98]"
-              >
-                <span>+ Đăng tin</span>
-              </Link>
-
-              {/* Nút Avatar Menu (Khớp hình ảnh dropdown cung cấp) */}
-              <div className="relative">
-                <button
-                  id="user-profile-menu-button"
-                  type="button"
-                  onClick={() => setMenuOpen((v) => !v)}
-                  className="relative flex h-8.5 w-8.5 sm:h-9.5 sm:w-9.5 items-center justify-center rounded-full border border-white/30 bg-white/10 hover:bg-white/20 transition-all text-white focus:outline-none"
-                  aria-label="Menu cá nhân và tiện ích"
-                >
-                  {user ? (
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-brand font-bold text-[11px] shadow-sm">
-                      {initials}
-                    </span>
-                  ) : (
-                    <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                    </svg>
-                  )}
-                  {selectedRoomsCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-brand">
-                      {selectedRoomsCount > 9 ? '9+' : selectedRoomsCount}
-                    </span>
-                  )}
-                </button>
+              {selectedRoomsCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-brand">
+                  {selectedRoomsCount > 9 ? '9+' : selectedRoomsCount}
+                </span>
+              )}
+            </button>
 
                 {menuOpen && (
                   <>
@@ -347,8 +371,6 @@ export function Header() {
                   </>
                 )}
               </div>
-            </>
-          )}
 
           {/* Mobile menu toggle */}
           <button

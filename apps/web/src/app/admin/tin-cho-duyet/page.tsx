@@ -91,14 +91,16 @@ const AMENITY_LABELS: Record<string, string> = {
   free_time: 'Giờ giấc tự do',
   private_bathroom: 'Vệ sinh khép kín',
   water_heater: 'Bình nóng lạnh',
+  nongLanh: 'Bình nóng lạnh',
   washing_machine: 'Máy giặt',
   refrigerator: 'Tủ lạnh',
-  kitchen: 'Kệ bếp nấu ăn',
+  kitchen: 'Bếp',
+  bepRieng: 'Bếp',
   elevator: 'Thang máy',
   balcony: 'Ban công',
   fingerprint_lock: 'Khóa vân tay',
-  thuCung: 'Cho nuôi thú cưng',
-  xeDien: 'Hỗ trợ xe điện',
+  thuCung: 'Thú cưng',
+  xeDien: 'Xe điện',
 };
 
 const DEFAULT_REASONS = [

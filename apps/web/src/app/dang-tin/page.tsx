@@ -168,7 +168,8 @@ export default function DangTinPage() {
 
     const titleValue = form.get('title') as string;
     const priceValue = Number(form.get('price'));
-    const areaM2Value = Number(form.get('areaM2'));
+    const areaM2Raw = form.get('areaM2');
+    const areaM2Value = areaM2Raw ? Number(areaM2Raw) : 30;
 
     const payload = {
       transactionType: 'rent',
@@ -197,8 +198,8 @@ export default function DangTinPage() {
       utilitiesIncluded: form.get('utilitiesIncluded') === 'on',
       amenities,
       areaM2: areaM2Value,
-      bedrooms: form.get('bedrooms') ? Number(form.get('bedrooms')) : undefined,
-      bathrooms: form.get('bathrooms') ? Number(form.get('bathrooms')) : undefined,
+      bedrooms: form.get('bedrooms') ? Number(form.get('bedrooms')) : 1,
+      bathrooms: form.get('bathrooms') ? Number(form.get('bathrooms')) : 1,
     };
 
     setLoading(true);
@@ -490,7 +491,7 @@ export default function DangTinPage() {
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_nongLanh" defaultChecked className="rounded text-brand" />
-              <span>Nóng lạnh</span>
+              <span>Bình nóng lạnh</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_tuLanh" className="rounded text-brand" />
@@ -522,50 +523,16 @@ export default function DangTinPage() {
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_bepRieng" className="rounded text-brand" />
-              <span>Bếp nấu riêng</span>
+              <span>Bếp</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_thuCung" className="rounded text-brand" />
-              <span>Cho nuôi thú cưng</span>
+              <span>Thú cưng</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" name="amenity_xeDien" className="rounded text-brand" />
-              <span>Hỗ trợ xe điện / Sạc xe</span>
+              <span>Xe điện</span>
             </label>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-text-secondary">Diện tích sử dụng (m²) *</label>
-            <input
-              name="areaM2"
-              required
-              type="number"
-              step="0.1"
-              placeholder="VD: 30"
-              className="input-field"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-text-secondary">Số phòng ngủ</label>
-            <input
-              name="bedrooms"
-              type="number"
-              placeholder="VD: 1"
-              defaultValue={1}
-              className="input-field"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-text-secondary">Số phòng tắm / WC</label>
-            <input
-              name="bathrooms"
-              type="number"
-              placeholder="VD: 1"
-              defaultValue={1}
-              className="input-field"
-            />
           </div>
         </div>
 

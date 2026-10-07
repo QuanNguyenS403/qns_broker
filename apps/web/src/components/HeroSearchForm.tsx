@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { searchSuggestions, getCategoryLabel, removeDiacritics, type SearchSuggestion } from '@/lib/search-suggestions-data';
+import { triggerPageLoading } from '@/lib/nav-utils';
 
 export function HeroSearchForm() {
   const router = useRouter();
@@ -35,11 +36,9 @@ export function HeroSearchForm() {
   const executeSearch = useCallback((queryText?: string) => {
     const text = (queryText !== undefined ? queryText : keyword).trim();
     setShowDropdown(false);
-    if (text) {
-      router.push(`/thue?keyword=${encodeURIComponent(text)}`);
-    } else {
-      router.push('/thue');
-    }
+    const targetUrl = text ? `/thue?keyword=${encodeURIComponent(text)}` : '/thue';
+    triggerPageLoading(targetUrl);
+    router.push(targetUrl);
   }, [keyword, router]);
 
   const handleSelect = useCallback((text: string) => {

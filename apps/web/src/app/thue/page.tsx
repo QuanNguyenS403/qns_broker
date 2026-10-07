@@ -9,6 +9,7 @@ import {
   PROPERTY_TYPES_CAN_HO,
   PROPERTY_TYPES_STUDIO,
 } from '@/components/SearchFilterBar';
+import { findHanoiWard } from '@/lib/hanoi-wards';
 import {
   ALL_DEMO_LISTINGS,
   DEMO_CAN_HO_RENT_LISTINGS,
@@ -134,7 +135,27 @@ export default async function ThuePage({ searchParams }: Props) {
     );
   }
   if (searchParams.locationSlug) {
-    displayItems = displayItems.filter((it) => it.location?.slug === searchParams.locationSlug);
+    const loc = searchParams.locationSlug.toLowerCase().trim();
+    const wardObj = findHanoiWard(loc);
+    const wardShortName = wardObj ? wardObj.shortName.toLowerCase() : '';
+    const wardName = wardObj ? wardObj.name.toLowerCase() : '';
+    const districtName = wardObj ? wardObj.district.replace('Quận ', '').toLowerCase() : '';
+
+    displayItems = displayItems.filter((it) => {
+      if (it.location?.slug?.toLowerCase() === loc) return true;
+      if (wardShortName && (
+        it.addressDetail?.toLowerCase().includes(wardShortName) ||
+        it.title?.toLowerCase().includes(wardShortName) ||
+        it.description?.toLowerCase().includes(wardShortName) ||
+        it.location?.name?.toLowerCase().includes(wardShortName)
+      )) return true;
+      if (wardName && (
+        it.addressDetail?.toLowerCase().includes(wardName) ||
+        it.location?.name?.toLowerCase().includes(wardName)
+      )) return true;
+      if (districtName && it.location?.name?.toLowerCase().includes(districtName)) return true;
+      return false;
+    });
   }
   if (searchParams.priceMin) {
     const min = Number(searchParams.priceMin);
@@ -153,7 +174,48 @@ export default async function ThuePage({ searchParams }: Props) {
     displayItems = displayItems.filter((it) => Number(it.areaM2) <= max);
   }
   if (searchParams.propertyType) {
-    displayItems = displayItems.filter((it) => it.propertyType === searchParams.propertyType);
+    const pt = searchParams.propertyType;
+    displayItems = displayItems.filter((it) => {
+      if (it.propertyType === pt) return true;
+      if (pt === 'phong_tro') {
+        return (
+          it.propertyType === 'phong_tro' ||
+          it.propertyType === 'phong-tro' ||
+          it.propertyType === 'nha_tro' ||
+          it.propertyType === 'ky_tuc_xa'
+        );
+      }
+      if (pt === 'can_ho') {
+        return (
+          it.propertyType === 'can_ho' ||
+          it.propertyType === 'chung-cu' ||
+          it.propertyType === 'chung_cu' ||
+          it.propertyType === 'can_ho_chung_cu' ||
+          it.propertyType === 'can_ho_dich_vu' ||
+          it.propertyType === 'can_ho_cao_cap'
+        );
+      }
+      if (pt === 'chung_cu_mini') {
+        return (
+          it.propertyType === 'chung_cu_mini' ||
+          it.propertyType === 'chung-cu-mini' ||
+          it.propertyType === 'studio' ||
+          it.propertyType === 'can_ho_mini' ||
+          it.propertyType?.startsWith('studio_')
+        );
+      }
+      if (pt === 'mat_bang') {
+        return (
+          it.propertyType === 'mat_bang' ||
+          it.propertyType === 'mat-bang-kinh-doanh' ||
+          it.propertyType === 'cua_hang' ||
+          it.propertyType === 'shophouse' ||
+          it.propertyType === 'kho_xuong' ||
+          it.propertyType === 'van_phong'
+        );
+      }
+      return false;
+    });
   }
   if (searchParams.universitySlug) {
     displayItems = displayItems.filter((it) =>

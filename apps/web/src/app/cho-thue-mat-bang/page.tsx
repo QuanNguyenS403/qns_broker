@@ -4,6 +4,7 @@ import { fetchListings } from '@/lib/api';
 import { ListingCard } from '@/components/ListingCard';
 import { Pagination } from '@/components/Pagination';
 import { SearchFilterBar } from '@/components/SearchFilterBar';
+import { findHanoiWard } from '@/lib/hanoi-wards';
 import { DEMO_SPACE_RENT_LISTINGS } from '@/lib/demo-data';
 
 export const metadata: Metadata = {
@@ -13,12 +14,11 @@ export const metadata: Metadata = {
 };
 
 const PROPERTY_TYPES_SPACE = [
-  { value: '', label: 'Tất cả loại mặt bằng' },
-  { value: 'mat_bang', label: 'Mặt bằng kinh doanh / Mặt phố' },
-  { value: 'cua_hang', label: 'Cửa hàng / Ki-ốt' },
-  { value: 'shophouse', label: 'Shophouse khối đế' },
-  { value: 'kho_xuong', label: 'Kho xưởng / Bãi đất' },
-  { value: 'van_phong', label: 'Văn phòng kinh doanh' },
+  { value: '', label: 'Loại phòng' },
+  { value: 'phong_tro', label: 'Phòng trọ' },
+  { value: 'can_ho', label: 'Chung cư' },
+  { value: 'chung_cu_mini', label: 'Chung cư mini' },
+  { value: 'mat_bang', label: 'Mặt bằng kinh doanh' },
 ];
 
 const PRICE_PRESETS_SPACE = [
@@ -116,7 +116,27 @@ export default async function ChoThueMatBangPage({ searchParams }: Props) {
     );
   }
   if (searchParams.locationSlug) {
-    displayItems = displayItems.filter((it) => it.location?.slug === searchParams.locationSlug);
+    const loc = searchParams.locationSlug.toLowerCase().trim();
+    const wardObj = findHanoiWard(loc);
+    const wardShortName = wardObj ? wardObj.shortName.toLowerCase() : '';
+    const wardName = wardObj ? wardObj.name.toLowerCase() : '';
+    const districtName = wardObj ? wardObj.district.replace('Quận ', '').toLowerCase() : '';
+
+    displayItems = displayItems.filter((it) => {
+      if (it.location?.slug?.toLowerCase() === loc) return true;
+      if (wardShortName && (
+        it.addressDetail?.toLowerCase().includes(wardShortName) ||
+        it.title?.toLowerCase().includes(wardShortName) ||
+        it.description?.toLowerCase().includes(wardShortName) ||
+        it.location?.name?.toLowerCase().includes(wardShortName)
+      )) return true;
+      if (wardName && (
+        it.addressDetail?.toLowerCase().includes(wardName) ||
+        it.location?.name?.toLowerCase().includes(wardName)
+      )) return true;
+      if (districtName && it.location?.name?.toLowerCase().includes(districtName)) return true;
+      return false;
+    });
   }
   if (searchParams.priceMin) {
     const min = Number(searchParams.priceMin);
@@ -135,7 +155,48 @@ export default async function ChoThueMatBangPage({ searchParams }: Props) {
     displayItems = displayItems.filter((it) => Number(it.areaM2) <= max);
   }
   if (searchParams.propertyType) {
-    displayItems = displayItems.filter((it) => it.propertyType === searchParams.propertyType);
+    const pt = searchParams.propertyType;
+    displayItems = displayItems.filter((it) => {
+      if (it.propertyType === pt) return true;
+      if (pt === 'phong_tro') {
+        return (
+          it.propertyType === 'phong_tro' ||
+          it.propertyType === 'phong-tro' ||
+          it.propertyType === 'nha_tro' ||
+          it.propertyType === 'ky_tuc_xa'
+        );
+      }
+      if (pt === 'can_ho') {
+        return (
+          it.propertyType === 'can_ho' ||
+          it.propertyType === 'chung-cu' ||
+          it.propertyType === 'chung_cu' ||
+          it.propertyType === 'can_ho_chung_cu' ||
+          it.propertyType === 'can_ho_dich_vu' ||
+          it.propertyType === 'can_ho_cao_cap'
+        );
+      }
+      if (pt === 'chung_cu_mini') {
+        return (
+          it.propertyType === 'chung_cu_mini' ||
+          it.propertyType === 'chung-cu-mini' ||
+          it.propertyType === 'studio' ||
+          it.propertyType === 'can_ho_mini' ||
+          it.propertyType?.startsWith('studio_')
+        );
+      }
+      if (pt === 'mat_bang') {
+        return (
+          it.propertyType === 'mat_bang' ||
+          it.propertyType === 'mat-bang-kinh-doanh' ||
+          it.propertyType === 'cua_hang' ||
+          it.propertyType === 'shophouse' ||
+          it.propertyType === 'kho_xuong' ||
+          it.propertyType === 'van_phong'
+        );
+      }
+      return false;
+    });
   }
   if (searchParams.universitySlug) {
     displayItems = displayItems.filter((it) =>

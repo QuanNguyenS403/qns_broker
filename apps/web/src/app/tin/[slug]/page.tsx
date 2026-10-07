@@ -66,9 +66,9 @@ const FURNITURE_NAMES: Record<string, string> = {
   dieuHoa: 'Điều hòa',
   airConditioner: 'Điều hòa',
   air_conditioner: 'Điều hòa',
-  nongLanh: 'Nóng lạnh',
-  waterHeater: 'Nóng lạnh',
-  water_heater: 'Nóng lạnh',
+  nongLanh: 'Bình nóng lạnh',
+  waterHeater: 'Bình nóng lạnh',
+  water_heater: 'Bình nóng lạnh',
   tuLanh: 'Tủ lạnh',
   refrigerator: 'Tủ lạnh',
   mayGiat: 'Máy giặt',
@@ -81,8 +81,8 @@ const FURNITURE_NAMES: Record<string, string> = {
   banGhe: 'Bàn ghế làm việc',
   sofa: 'Ghế sofa',
   smartTv: 'Tivi',
-  bepRieng: 'Bếp nấu riêng',
-  kitchen: 'Kệ bếp nấu ăn',
+  bepRieng: 'Bếp',
+  kitchen: 'Bếp',
   gacLung: 'Gác lửng',
   mezzanine: 'Gác lửng',
   banCong: 'Ban công',
@@ -97,6 +97,8 @@ const FURNITURE_NAMES: Record<string, string> = {
   freeTime: 'Giờ giấc tự do',
   choDeXe: 'Chỗ để xe',
   parking: 'Nhà để xe',
+  thuCung: 'Thú cưng',
+  xeDien: 'Xe điện',
 };
 
 function formatJoinedDuration(createdAt: string): string {
@@ -217,7 +219,7 @@ export default async function ListingDetailPage({ params }: Props) {
       if (!list.includes('Tủ quần áo')) list.push('Tủ quần áo');
     }
     if (desc.includes('bếp') || desc.includes('kệ bếp') || desc.includes('nấu ăn')) {
-      if (!list.includes('Bếp nấu riêng')) list.push('Bếp nấu riêng');
+      if (!list.includes('Bếp')) list.push('Bếp');
     }
     if (desc.includes('sofa')) {
       if (!list.includes('Ghế sofa')) list.push('Ghế sofa');
@@ -242,7 +244,7 @@ export default async function ListingDetailPage({ params }: Props) {
     }
 
     if (list.length === 0) {
-      return ['Điều hòa', 'Nóng lạnh', 'Giường nệm', 'Tủ quần áo', 'Bếp nấu riêng', 'Chỗ để xe', 'Wifi tốc độ cao', 'Giờ giấc tự do'];
+      return ['Điều hòa', 'Bình nóng lạnh', 'Giường nệm', 'Tủ quần áo', 'Bếp', 'Chỗ để xe', 'Wifi tốc độ cao', 'Giờ giấc tự do'];
     }
 
     return list;
