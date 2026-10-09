@@ -25,19 +25,19 @@ const VALUE_PROPOSITIONS = [
   },
   {
     title: 'Tìm kiếm nhanh chóng, tiện lợi',
-    desc: 'Dễ dàng lọc theo khu vực, mức giá, diện tích và loại hình phòng phù hợp với mọi nhu cầu sinh hoạt và ngân sách',
+    desc: 'Dễ dàng lọc theo khu vực, mức giá và loại hình phòng phù hợp với nhu cầu mỗi cá nhân',
     color: 'from-blue-500/10 to-blue-500/5',
     border: 'border-blue-200',
   },
   {
     title: 'Tư vấn và trực tiếp dẫn xem',
-    desc: 'Chuyên viên Đức Quân tiếp nhận nhu cầu, tư vấn chi tiết và trực tiếp dẫn xem phòng thực tế tận nơi',
+    desc: 'Chuyên viên Đức Quân tiếp nhận nhu cầu, tư vấn chi tiết và trực tiếp dẫn xem phòng',
     color: 'from-amber-500/10 to-amber-500/5',
     border: 'border-amber-200',
   },
   {
-    title: '100% Miễn phí cho người thuê',
-    desc: 'Khách thuê không phải trả bất kỳ khoản phí môi giới nào, ký hợp đồng và thanh toán trực tiếp với bên có quyền cho thuê',
+    title: 'Miễn phí môi giới',
+    desc: 'Khách thuê không phải trả bất kỳ khoản phí môi giới nào, ký hợp đồng và thanh toán trực tiếp với chủ nhà',
     color: 'from-emerald-500/10 to-emerald-500/5',
     border: 'border-emerald-200',
   },

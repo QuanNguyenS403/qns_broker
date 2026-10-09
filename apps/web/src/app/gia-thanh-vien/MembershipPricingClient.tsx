@@ -31,7 +31,7 @@ export function MembershipPricingClient() {
                 </span>
               </div>
               <p className="text-xs text-teal-100 mt-1 max-w-3xl leading-relaxed">
-                Hệ thống chính thức chuyển đổi sang mô hình môi giới phòng cho thuê trực tiếp do chuyên viên Đức Quân điều phối độc quyền. Ngừng bán toàn bộ các gói thành viên đăng tin tự do. Chủ trọ đăng tin hoàn toàn miễn phí, chỉ chi trả 40% phí thành công khi có người thuê dọn vào ở
+                Hệ thống chính thức chuyển đổi sang mô hình môi giới phòng cho thuê trực tiếp do Chủ nhà điều phối độc quyền. Ngừng bán toàn bộ các gói thành viên đăng tin tự do. Chủ trọ đăng tin hoàn toàn miễn phí, chỉ chi trả 40% phí thành công khi có người thuê dọn vào ở
               </p>
             </div>
           </div>
@@ -139,7 +139,7 @@ export function MembershipPricingClient() {
                 Đầu mối điều phối
               </span>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Đức Quân</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Chủ nhà</h3>
             <p className="text-xs text-slate-600 leading-relaxed mb-6">
               Người tư vấn và trực tiếp dẫn khách xem phòng trên toàn hệ thống, đại diện dịch vụ môi giới cho thuê QNS BROKER
             </p>

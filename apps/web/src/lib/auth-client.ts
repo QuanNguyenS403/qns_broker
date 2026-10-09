@@ -27,16 +27,69 @@ export function getRefreshToken(): string | null {
   return typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
 }
 
-export function setTokens(accessToken: string, refreshToken: string) {
+export function setTokens(accessToken: string, refreshToken: string, user?: any) {
+  if (typeof window === 'undefined') return;
   localStorage.setItem('accessToken', accessToken);
   localStorage.setItem('refreshToken', refreshToken);
   localStorage.removeItem('access_token'); // Xóa key cũ để thống nhất 1 key duy nhất
+  if (user) {
+    try {
+      localStorage.setItem('user', JSON.stringify(user));
+    } catch {}
+  }
+  window.dispatchEvent(new Event('storage'));
+}
+
+export function setCurrentUser(user: any) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('user', JSON.stringify(user));
+  } catch {}
+  window.dispatchEvent(new Event('storage'));
+}
+
+export function getCurrentUser(): any | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Giải mã Google ID token JWT an toàn phía client (hỗ trợ đầy đủ tiếng Việt UTF-8) */
+export function parseGoogleJwt(token: string): {
+  sub?: string;
+  email?: string;
+  name?: string;
+  picture?: string;
+  email_verified?: boolean;
+} | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
 }
 
 export function clearTokens() {
+  if (typeof window === 'undefined') return;
   localStorage.removeItem('accessToken');
   localStorage.removeItem('access_token');
   localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+  window.dispatchEvent(new Event('storage'));
 }
 
 export function isLoggedIn(): boolean {

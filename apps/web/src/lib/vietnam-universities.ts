@@ -1158,16 +1158,22 @@ export function getNearbyUniversities(
  */
 export function getGoogleMapsEmbedUrl(
   location: { lat?: number; lng?: number; address?: string },
-  options?: { mapType?: 'satellite' | 'hybrid' | 'roadmap'; zoom?: number },
+  options?: { mapType?: 'satellite' | 'hybrid' | 'roadmap'; zoom?: number; preferAddress?: boolean },
 ): string {
   // t=k: vệ tinh nguyên bản, t=h: vệ tinh kết hợp tên đường & địa danh (hybrid), t=m: bản đồ đường phố
   const mapTypeParam = options?.mapType === 'roadmap' ? 'm' : options?.mapType === 'satellite' ? 'k' : 'h';
-  const zoom = options?.zoom ?? (location.lat != null && location.lng != null ? 17 : 16);
+  const zoom = options?.zoom ?? 17;
+  const cleanAddress = location.address?.trim();
+
+  // Ưu tiên hiển thị theo địa chỉ chi tiết người dùng nhập nếu được chỉ định
+  if (options?.preferAddress && cleanAddress) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(cleanAddress)}&t=${mapTypeParam}&z=${zoom}&ie=UTF8&iwloc=&output=embed`;
+  }
 
   if (location.lat != null && location.lng != null && !isNaN(location.lat) && !isNaN(location.lng)) {
     return `https://maps.google.com/maps?q=${location.lat},${location.lng}&t=${mapTypeParam}&z=${zoom}&ie=UTF8&iwloc=&output=embed`;
   }
-  const query = location.address?.trim() || 'Hà Nội';
+  const query = cleanAddress || 'Hà Nội';
   return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=${mapTypeParam}&z=${zoom}&ie=UTF8&iwloc=&output=embed`;
 }
 
@@ -1176,13 +1182,19 @@ export function getGoogleMapsEmbedUrl(
  */
 export function getGoogleMapsViewUrl(
   location: { lat?: number; lng?: number; address?: string },
-  options?: { satellite?: boolean },
+  options?: { satellite?: boolean; preferAddress?: boolean },
 ): string {
   const isSatellite = options?.satellite ?? true;
+  const cleanAddress = location.address?.trim();
+
+  if (options?.preferAddress && cleanAddress) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanAddress)}${isSatellite ? '&t=k' : ''}`;
+  }
+
   if (location.lat != null && location.lng != null && !isNaN(location.lat) && !isNaN(location.lng)) {
     return `https://www.google.com/maps?q=${location.lat},${location.lng}${isSatellite ? '&t=k' : ''}`;
   }
-  const query = location.address?.trim() || 'Hà Nội';
+  const query = cleanAddress || 'Hà Nội';
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}${isSatellite ? '&t=k' : ''}`;
 }
 

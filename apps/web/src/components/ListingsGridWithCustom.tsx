@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Listing } from '@/lib/api';
 import { ListingCard } from './ListingCard';
+import { healCustomListingsInLocalStorage, sanitizeListingImages } from '@/lib/image-compressor';
 
 interface Props {
   initialListings: Listing[];
@@ -14,11 +15,16 @@ export function ListingsGridWithCustom({ initialListings }: Props) {
   useEffect(() => {
     function loadCustomListings() {
       try {
+        healCustomListingsInLocalStorage();
         const raw = localStorage.getItem('qns_custom_listings');
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
-            setCustomListings(parsed);
+            const cleaned = parsed.map((item) => ({
+              ...item,
+              images: sanitizeListingImages(item.images),
+            }));
+            setCustomListings(cleaned);
           }
         }
       } catch (err) {

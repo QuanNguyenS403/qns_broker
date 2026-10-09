@@ -75,18 +75,18 @@ async function main() {
   const admin = await prisma.user.upsert({
     where: { phone: adminPhone },
     update: {
-      fullName: 'Quản trị viên Demo',
+      fullName: 'Chủ nhà',
       role: 'admin',
       passwordHash,
-      email: 'admin@qns.com',
+      email: 'ducquan16102006@gmail.com',
     },
     create: {
       phone: adminPhone,
-      fullName: 'Quản trị viên Demo',
+      fullName: 'Chủ nhà',
       passwordHash,
       role: 'admin',
       isPhoneVerified: true,
-      email: 'admin@qns.com',
+      email: 'ducquan16102006@gmail.com',
     },
   });
 

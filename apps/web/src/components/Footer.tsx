@@ -65,6 +65,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/danh-gia" className="text-xs sm:text-sm text-white/80 hover:text-white transition-colors">
+                  Đánh giá
+                </Link>
+              </li>
+              <li>
                 <Link href="/gioi-thieu" className="text-xs sm:text-sm text-white/80 hover:text-white transition-colors">
                   Về chúng tôi
                 </Link>
@@ -112,7 +117,7 @@ export function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-white/15">
         <div className="container-max flex flex-col items-center justify-between gap-2 py-3 sm:py-3.5 sm:flex-row">
-          <p className="text-xs text-white/70">
+          <p className="text-xs text-white/70" suppressHydrationWarning>
             © {new Date().getFullYear()} QNS BROKER
           </p>
           <div className="flex items-center gap-5 text-xs text-white/80">

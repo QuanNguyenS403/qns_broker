@@ -16,6 +16,12 @@ export class CreateLeadDto {
   @IsNotEmpty({ message: 'listingId là bắt buộc' })
   listingId!: string;
 
+  @ApiPropertyOptional({ description: 'Tiêu đề tin đăng / phòng quan tâm' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  listingTitle?: string;
+
   @ApiProperty({ description: 'Họ và tên người liên hệ' })
   @IsString()
   @MinLength(2, { message: 'Họ tên tối thiểu 2 ký tự' })

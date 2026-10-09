@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Listing, formatPrice } from '@/lib/api';
+import { DEFAULT_ROOM_FALLBACK_IMAGES } from '@/lib/image-compressor';
 
 function formatTimeAgo(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
@@ -15,7 +16,8 @@ function formatTimeAgo(dateStr: string | null | undefined): string {
 }
 
 export function ListingCard({ listing }: { listing: Listing }) {
-  const cover = listing.images?.[0]?.imageUrl;
+  const rawCover = listing.images?.[0]?.imageUrl;
+  const cover = (!rawCover || rawCover.startsWith('blob:')) ? DEFAULT_ROOM_FALLBACK_IMAGES[0] : rawCover;
   const timeLabel = formatTimeAgo(listing.publishedAt);
   const isSample = listing.title?.startsWith('[MẪU]');
   const displayTitle = isSample ? listing.title.replace(/^\[MẪU\]\s*/, '') : (listing.title ?? 'Phòng cho thuê');
@@ -33,6 +35,12 @@ export function ListingCard({ listing }: { listing: Listing }) {
               alt={displayTitle}
               loading="lazy"
               decoding="async"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.includes('unsplash.com')) {
+                  target.src = DEFAULT_ROOM_FALLBACK_IMAGES[0];
+                }
+              }}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               style={{ willChange: 'transform', transform: 'translateZ(0)' }}
             />
@@ -100,8 +108,8 @@ export function ListingCard({ listing }: { listing: Listing }) {
       {/* Thông tin thời gian */}
       {timeLabel ? (
         <div className="px-4 sm:px-4.5 pb-3.5 pt-0">
-          <div className="flex items-center justify-end border-t border-surface-border pt-2.5 text-xs text-text-muted">
-            <span>{timeLabel}</span>
+          <div className="flex items-center justify-end border-t border-surface-border pt-2.5 text-xs text-text-muted" suppressHydrationWarning>
+            <span suppressHydrationWarning>{timeLabel}</span>
           </div>
         </div>
       ) : null}

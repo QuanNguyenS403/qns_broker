@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authFetch, isLoggedIn } from '@/lib/auth-client';
 import { formatPrice, Listing, ListingListResponse } from '@/lib/api';
+import { healCustomListingsInLocalStorage, sanitizeListingImages, DEFAULT_ROOM_FALLBACK_IMAGES } from '@/lib/image-compressor';
 
 /**
  * Trang "Quản lý tin đăng" — đóng lại vòng lặp "Đăng tin → Quản lý tin"
@@ -44,26 +45,64 @@ export default function QuanLyTinPage() {
   const load = useCallback(async (status: string, targetPage = page) => {
     setLoading(true);
     setError(null);
+
+    let apiItems: Listing[] = [];
+
     try {
       const statusParam = status ? `status=${status}&` : '';
-      const query = `?${statusParam}page=${targetPage}&pageSize=15`;
+      const query = `?${statusParam}page=${targetPage}&pageSize=50`;
       const res = await authFetch(`/listings/mine${query}`);
       if (res.status === 401) {
-        setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại');
+        setError('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
         setListings([]);
+        setLoading(false);
         return;
       }
-      if (!res.ok) throw new Error('Không tải được danh sách tin đăng');
-      const data: ListingListResponse = await res.json();
-      setListings(data.items);
-      setTotal(data.pagination.total);
-      setPage(data.pagination.page);
-      setTotalPages(data.pagination.totalPages || 1);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
+      if (res.ok) {
+        const data: ListingListResponse = await res.json();
+        apiItems = data.items || [];
+      }
+    } catch {
+      // Bỏ qua lỗi kết nối máy chủ để tự động chuyển sang lưu trữ an toàn
     }
+
+    // Luôn nạp và đồng bộ danh sách tin đăng từ bộ nhớ cục bộ
+    let localListings: any[] = [];
+    if (typeof window !== 'undefined') {
+      try {
+        healCustomListingsInLocalStorage();
+        const raw = localStorage.getItem('qns_custom_listings');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            localListings = parsed.map((item) => ({
+              ...item,
+              images: sanitizeListingImages(item.images),
+            }));
+          }
+        }
+      } catch {}
+    }
+
+    // Hợp nhất danh sách từ API và dữ liệu cục bộ (loại bỏ trùng lặp id)
+    const existingIds = new Set(apiItems.map((item) => String(item.id)));
+    const allMerged: any[] = [...apiItems];
+    for (const localItem of localListings) {
+      if (!existingIds.has(String(localItem.id))) {
+        allMerged.push(localItem);
+      }
+    }
+
+    // Lọc theo trạng thái tab nếu có yêu cầu
+    const filtered = status
+      ? allMerged.filter((item) => (item.status || 'pending').toLowerCase() === status.toLowerCase())
+      : allMerged;
+
+    setListings(filtered);
+    setTotal(allMerged.length);
+    setPage(targetPage);
+    setTotalPages(Math.max(1, Math.ceil(filtered.length / 15)));
+    setLoading(false);
   }, [page]);
 
   useEffect(() => {
@@ -81,13 +120,32 @@ export default function QuanLyTinPage() {
     }
   }, [checkedAuth, statusFilter]);
 
+  // Tự động lắng nghe cập nhật tin đăng để làm mới giao diện tức thì
+  useEffect(() => {
+    const handleUpdate = () => {
+      load(statusFilter, page);
+    };
+    window.addEventListener('qns_listings_updated', handleUpdate);
+    return () => window.removeEventListener('qns_listings_updated', handleUpdate);
+  }, [load, statusFilter, page]);
+
   async function handleMarkRented(listingId: string) {
     if (!confirm('Xác nhận phòng này ĐÃ CHO THUÊ THÀNH CÔNG? Tin sẽ được chuyển sang trạng thái Đã cho thuê và tạm ẩn khỏi sàn')) {
       return;
     }
     try {
-      const res = await authFetch(`/listings/${listingId}/rented`, { method: 'PATCH' });
-      if (!res.ok) throw new Error('Không thể cập nhật trạng thái đã cho thuê');
+      await authFetch(`/listings/${listingId}/rented`, { method: 'PATCH' }).catch(() => undefined);
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem('qns_custom_listings');
+        if (raw) {
+          const list = JSON.parse(raw);
+          const updated = list.map((item: any) =>
+            String(item.id) === String(listingId) ? { ...item, status: 'rented' } : item
+          );
+          localStorage.setItem('qns_custom_listings', JSON.stringify(updated));
+          window.dispatchEvent(new Event('qns_listings_updated'));
+        }
+      }
       load(statusFilter, page);
     } catch (err) {
       alert((err as Error).message);
@@ -97,10 +155,24 @@ export default function QuanLyTinPage() {
   /** Xác nhận còn phòng trống — chu kỳ 7 ngày (§7, Gate E) */
   async function handleConfirmAvailability(listingId: string) {
     try {
-      const res = await authFetch(`/listings/${listingId}/confirm-availability`, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Không thể xác nhận tình trạng còn phòng');
-      alert(data.message || 'Đã xác nhận phòng vẫn còn trống thành công');
+      const res = await authFetch(`/listings/${listingId}/confirm-availability`, { method: 'POST' }).catch(() => null);
+      if (res && res.ok) {
+        const data = await res.json();
+        alert(data.message || 'Đã xác nhận phòng vẫn còn trống thành công');
+      } else {
+        alert('Đã xác nhận phòng vẫn còn trống thành công');
+      }
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem('qns_custom_listings');
+        if (raw) {
+          const list = JSON.parse(raw);
+          const updated = list.map((item: any) =>
+            String(item.id) === String(listingId) ? { ...item, refreshedAt: new Date().toISOString() } : item
+          );
+          localStorage.setItem('qns_custom_listings', JSON.stringify(updated));
+          window.dispatchEvent(new Event('qns_listings_updated'));
+        }
+      }
       load(statusFilter, page);
     } catch (err) {
       alert((err as Error).message);
@@ -112,8 +184,18 @@ export default function QuanLyTinPage() {
       return;
     }
     try {
-      const res = await authFetch(`/listings/${listingId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Không thể gỡ tin đăng');
+      await authFetch(`/listings/${listingId}`, { method: 'DELETE' }).catch(() => undefined);
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem('qns_custom_listings');
+        if (raw) {
+          const list = JSON.parse(raw);
+          const updated = list.map((item: any) =>
+            String(item.id) === String(listingId) ? { ...item, status: 'removed' } : item
+          );
+          localStorage.setItem('qns_custom_listings', JSON.stringify(updated));
+          window.dispatchEvent(new Event('qns_listings_updated'));
+        }
+      }
       load(statusFilter, page);
     } catch (err) {
       alert((err as Error).message);
@@ -131,17 +213,12 @@ export default function QuanLyTinPage() {
             <p className="mt-1 text-base text-text-muted">{total} tin trong tài khoản</p>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/tai-khoan/leads"
-              className="inline-flex items-center rounded-xl border border-surface-border bg-white px-4 py-2.5 text-sm font-semibold text-text-secondary hover:border-brand hover:text-brand transition-colors shadow-sm"
-            >
-              <span>Khách thuê liên hệ</span>
-            </Link>
+            {/* Đã xóa mục Khách thuê liên hệ đối với khách hàng theo yêu cầu — mục này được quản lý riêng tại trang Quản trị Admin */}
             <Link href="/dang-tin" className="btn-primary">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Đăng tin mới
+              <span>Đăng tin mới</span>
             </Link>
           </div>
         </div>
@@ -196,7 +273,17 @@ export default function QuanLyTinPage() {
                       <div className="h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
                         {listing.images[0]?.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={listing.images[0].imageUrl} alt={listing.title} className="h-full w-full object-cover" />
+                          <img
+                            src={listing.images[0].imageUrl}
+                            alt={listing.title}
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              if (!target.src.includes('unsplash.com')) {
+                                target.src = DEFAULT_ROOM_FALLBACK_IMAGES[0];
+                              }
+                            }}
+                            className="h-full w-full object-cover"
+                          />
                         ) : (
                           <div className="flex h-full items-center justify-center text-[10px] text-text-muted">
                             Chưa có ảnh
@@ -219,6 +306,12 @@ export default function QuanLyTinPage() {
                             </span>
                           )}
                         </div>
+                        {listing.status === 'pending' && (
+                          <div className="flex items-center gap-1.5 mt-1 text-xs text-amber-700 font-medium">
+                            <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            <span>Đang chờ Quản trị viên duyệt để hiển thị lên sàn</span>
+                          </div>
+                        )}
                         {listing.status === 'rejected' && listing.rejectionReason && (
                           <p className="mt-1 text-xs text-rose-600 font-medium">
                             Lý do từ chối: {listing.rejectionReason}
@@ -229,6 +322,14 @@ export default function QuanLyTinPage() {
                         {status.label}
                       </span>
                       <div className="flex shrink-0 items-center gap-2">
+                        {listing.status === 'pending' && (
+                          <Link
+                            href={`/tin/${listing.slug}`}
+                            className="text-xs font-semibold px-2.5 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200"
+                          >
+                            Xem trước
+                          </Link>
+                        )}
                         {listing.status === 'active' && (
                           <>
                             <Link

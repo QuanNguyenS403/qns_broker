@@ -9,7 +9,7 @@ export const SITE_CONFIG = {
     'Nền tảng tìm chỗ thuê minh bạch chi phí, giúp người thuê kết nối trực tiếp với bên có quyền cho thuê, từ phòng trọ đến căn hộ',
   hotline: '0981 753 082',
   hotlineDisplay: '0981 753 082 (24/7)',
-  agentName: 'Đức Quân',
+  agentName: 'Chủ nhà',
   agentRole: 'Người tư vấn và trực tiếp dẫn xem',
   zalo: '0981 753 082',
   email: 'contact@qns.com',

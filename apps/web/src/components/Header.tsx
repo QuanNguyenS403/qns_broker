@@ -9,6 +9,7 @@ import { SecurityAnnouncementBar } from './SecurityAnnouncementBar';
 import { FeedbackModal } from './FeedbackModal';
 import { ConsultationModal } from './ConsultationModal';
 import { SelectedRoomsModal } from './SelectedRoomsModal';
+import { AuthModal } from './AuthModal';
 import { getSelectedRooms, subscribeSelectedRooms, SelectedRoomItem } from '@/lib/selected-rooms';
 import { triggerPageLoading } from '@/lib/nav-utils';
 
@@ -17,6 +18,10 @@ interface CurrentUser {
   fullName: string | null;
   phone: string;
   role?: string;
+  email?: string | null;
+  avatarUrl?: string | null;
+  picture?: string | null;
+  image?: string | null;
 }
 
 export function Header() {
@@ -32,11 +37,20 @@ export function Header() {
   const [consultationOpen, setConsultationOpen] = useState(false);
   const [selectedRoomsOpen, setSelectedRoomsOpen] = useState(false);
   const [selectedRoomsCount, setSelectedRoomsCount] = useState(0);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [consultationPreload, setConsultationPreload] = useState<{
     reason?: string;
     description?: string;
     selectedRoomIds?: string[];
   }>({});
+
+  function handleDangTinClick(e: React.MouseEvent) {
+    if (!user && !getAccessToken()) {
+      e.preventDefault();
+      setMobileOpen(false);
+      setAuthModalOpen(true);
+    }
+  }
 
   useEffect(() => {
     let ticking = false;
@@ -86,16 +100,22 @@ export function Header() {
 
   // Xác thực ngầm với server trong nền không chặn giao diện
   useEffect(() => {
-    if (!getAccessToken()) return;
+    const token = getAccessToken();
+    if (!token) return;
+
+    // Không gửi request ngầm nếu là phiên client phục hồi nhanh để tránh bị 401 xóa phiên
+    if (token.startsWith('g_token_') || token.startsWith('admin_token_') || token.startsWith('user_token_')) {
+      return;
+    }
 
     authFetch('/auth/me')
       .then((res) => {
         if (res.status === 401) {
-          clearTokens();
-          setUser(null);
-          try {
-            localStorage.removeItem('user');
-          } catch {}
+          const cachedUser = localStorage.getItem('user');
+          if (!cachedUser) {
+            clearTokens();
+            setUser(null);
+          }
           return null;
         }
         if (!res.ok) return null;
@@ -122,15 +142,13 @@ export function Header() {
     }
     clearTokens();
     setUser(null);
-    try {
-      localStorage.removeItem('user');
-    } catch {}
     setMenuOpen(false);
-    triggerPageLoading('/');
-    router.push('/');
+    // Điều hướng dứt khoát làm mới phiên làm việc sạch sẽ, triệt tiêu mọi xung đột bộ nhớ
+    window.location.href = '/';
   }
 
-  const initials = user ? (user.fullName ?? user.phone).charAt(0).toUpperCase() : '';
+  const initials = user ? (user.fullName ?? user.email ?? user.phone ?? 'U').charAt(0).toUpperCase() : '';
+  const avatarUrl = user?.avatarUrl || user?.picture || user?.image || null;
 
   return (
     <header
@@ -172,6 +190,16 @@ export function Header() {
             Tìm phòng
           </Link>
           <Link
+            href="/danh-gia"
+            className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
+              pathname === '/danh-gia' || pathname.startsWith('/danh-gia/')
+                ? 'bg-white/20 text-white font-semibold shadow-xs'
+                : 'text-white/90 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            Đánh giá
+          </Link>
+          <Link
             href="/gioi-thieu"
             className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
               pathname === '/gioi-thieu'
@@ -184,60 +212,76 @@ export function Header() {
         </nav>
 
         {/* Actions bên phải — Luôn hiển thị tức thì 100% đồng bộ với trang */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          {user && user.role === 'admin' && (
-            <Link
-              href="/admin"
-              className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-lg sm:rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm"
-            >
-              <span>Quản trị</span>
-            </Link>
-          )}
-
+        <div className="flex items-center gap-2.5 sm:gap-3" suppressHydrationWarning>
           {/* Nút + Đăng tin — Đồng bộ tức thì cùng trang */}
           <Link
             href="/dang-tin"
+            onClick={handleDangTinClick}
             className="inline-flex items-center gap-1.5 rounded-lg sm:rounded-xl bg-white text-brand px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold shadow-sm transition-all hover:bg-teal-50 active:scale-[0.98]"
           >
             <span>+ Đăng tin</span>
           </Link>
 
-          {/* Nút Avatar Menu — Đồng bộ tức thì cùng trang */}
-          <div className="relative">
+          {/* Nút Avatar Menu — Đồng bộ kích thước chuẩn ngang với logo của website */}
+          <div className="relative shrink-0" suppressHydrationWarning>
             <button
               id="user-profile-menu-button"
               type="button"
+              suppressHydrationWarning
               onClick={() => setMenuOpen((v) => !v)}
-              className="relative flex h-8.5 w-8.5 sm:h-9.5 sm:w-9.5 items-center justify-center rounded-full border border-white/30 bg-white/10 hover:bg-white/20 transition-all text-white focus:outline-none"
+              className="relative flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-white p-1 shadow-sm ring-1 ring-white/30 hover:scale-105 transition-transform focus:outline-none overflow-hidden"
               aria-label="Menu cá nhân và tiện ích"
             >
-              {user ? (
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-brand font-bold text-[11px] shadow-sm">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarUrl}
+                  alt={user?.fullName || 'Avatar'}
+                  className="h-full w-full rounded-full object-cover shrink-0"
+                  referrerPolicy="no-referrer"
+                />
+              ) : user ? (
+                <span className="flex h-full w-full items-center justify-center rounded-full bg-brand text-white font-bold text-xs sm:text-[13px] shadow-inner">
                   {initials}
                 </span>
               ) : (
-                <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" width="20" height="20" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-brand" width="18" height="18" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
               )}
               {selectedRoomsCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-brand">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-brand">
                   {selectedRoomsCount > 9 ? '9+' : selectedRoomsCount}
                 </span>
               )}
             </button>
 
-                {menuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 top-10 sm:top-11 z-50 w-60 rounded-2xl border border-surface-border bg-white py-2 shadow-modal animate-slide-down text-slate-800">
-                      {/* Banner user info nếu đã đăng nhập */}
-                      {user && (
-                        <div className="px-4 py-2 border-b border-surface-border mb-1">
-                          <p className="text-sm font-semibold text-text-primary truncate">{user.fullName ?? user.phone}</p>
-                          <p className="text-xs text-text-muted truncate">{user.phone}</p>
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                <div className="absolute right-0 top-10 sm:top-11 z-50 w-64 rounded-2xl border border-surface-border bg-white py-2 shadow-modal animate-slide-down text-slate-800">
+                  {/* Banner user info nếu đã đăng nhập — Hiển thị ảnh đại diện và Gmail chính xác */}
+                  {user && (
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-surface-border mb-1">
+                      {avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={avatarUrl}
+                          alt={user.fullName || 'Avatar'}
+                          className="h-10 w-10 rounded-full object-cover shrink-0 ring-1 ring-slate-200"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/10 text-brand font-bold text-sm shrink-0">
+                          {initials}
                         </div>
                       )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-text-primary truncate">{user.fullName ?? user.email ?? 'Chủ nhà'}</p>
+                        <p className="text-xs text-text-muted truncate font-medium">{user.email || user.phone}</p>
+                      </div>
+                    </div>
+                  )}
 
                       {/* 1. Đăng nhập / Thông tin tài khoản (Ảnh 2 mục 1) */}
                       {user ? (
@@ -285,6 +329,18 @@ export function Header() {
                           </span>
                         )}
                       </button>
+
+                      {/* Đánh giá & Bản đồ phòng trọ */}
+                      <Link
+                        href="/danh-gia"
+                        onClick={() => setMenuOpen(false)}
+                        className="group flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:bg-slate-50 hover:text-brand transition-colors"
+                      >
+                        <svg className="h-5 w-5 text-slate-500 group-hover:text-brand transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934a1.12 1.12 0 01-.806.094l-4.706-1.57a1.12 1.12 0 00-.806.094L4.125 6.804A1.125 1.125 0 003.5 7.81v11.37c0 .836.88 1.38 1.628 1.006l3.869-1.934c.25-.125.54-.157.806-.094l4.706 1.57c.266.063.556.031.806-.094z" />
+                        </svg>
+                        <span className="font-medium">Đánh giá & Bản đồ</span>
+                      </Link>
 
                       {/* 3. Cần tư vấn (Ảnh 2 mục 3) */}
                       <button
@@ -412,6 +468,12 @@ export function Header() {
               Tìm phòng
             </Link>
             <Link
+              href="/danh-gia"
+              className="flex rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+            >
+              Đánh giá
+            </Link>
+            <Link
               href="/gioi-thieu"
               className="flex rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
             >
@@ -491,6 +553,7 @@ export function Header() {
             )}
             <Link
               href="/dang-tin"
+              onClick={handleDangTinClick}
               className="flex items-center justify-center gap-1.5 rounded-xl bg-white text-brand font-bold py-2.5 text-sm mt-2 shadow-sm"
             >
               <span>+ Đăng tin cho thuê miễn phí</span>
@@ -524,6 +587,21 @@ export function Header() {
           });
           setConsultationOpen(true);
         }}
+      />
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={() => {
+          setAuthModalOpen(false);
+          try {
+            const cached = localStorage.getItem('user');
+            if (cached) setUser(JSON.parse(cached));
+          } catch {}
+          router.push('/dang-tin');
+        }}
+        title="Đăng nhập để đăng tin"
+        subtitle="Vui lòng đăng nhập hoặc đăng ký tài khoản bằng Google để tiếp tục đến mục đăng tin"
       />
     </header>
   );

@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authFetch, clearTokens, isLoggedIn } from '@/lib/auth-client';
+import { authFetch, clearTokens, isLoggedIn, getCurrentUser } from '@/lib/auth-client';
 
 interface Profile {
   id: string;
   phone: string;
+  email?: string | null;
   fullName: string | null;
   avatarUrl: string | null;
   role: string;
@@ -53,6 +54,13 @@ export default function ThongTinTaiKhoanPage() {
       router.replace('/dang-nhap');
       return;
     }
+
+    const localUser = getCurrentUser();
+    if (localUser) {
+      setProfile(localUser);
+      setFullNameInput(localUser.fullName ?? '');
+    }
+
     authFetch('/auth/me')
       .then((res) => {
         if (!res.ok) throw new Error('Không tải được thông tin tài khoản');
@@ -62,7 +70,9 @@ export default function ThongTinTaiKhoanPage() {
         setProfile(data);
         setFullNameInput(data.fullName ?? '');
       })
-      .catch((err) => setError((err as Error).message))
+      .catch((err) => {
+        if (!localUser) setError((err as Error).message);
+      })
       .finally(() => setLoading(false));
   }, [router]);
 
@@ -203,6 +213,7 @@ export default function ThongTinTaiKhoanPage() {
               </form>
             ) : (
               <div className="mt-4 space-y-3">
+                {profile.email && <Field label="Email / Gmail" value={profile.email} />}
                 <Field label="Số điện thoại" value={profile.phone} />
                 <Field label="Họ và tên" value={profile.fullName ?? '— Chưa cập nhật —'} />
                 <Field label="Vai trò" value={profile.role === 'admin' ? 'Quản trị viên' : profile.role === 'broker' ? 'Môi giới' : 'Người dùng'} />

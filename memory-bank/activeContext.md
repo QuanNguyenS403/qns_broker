@@ -1,6 +1,218 @@
 # Trạng thái phiên làm việc hiện tại
 
-**Việc vừa hoàn thành (08/10/2026 — CẬP NHẬT TRANG ĐĂNG TIN THEO 2 ẢNH CUNG CẤP):**
+**Việc vừa hoàn thành (08/10/2026 — XÂY DỰNG CẤU TRÚC MỤC ĐÁNH GIÁ THÀNH BẢN ĐỒ GOOGLE MAPS TƯƠNG TÁC, THANH TÌM KIẾM ẢNH 2, LỊCH SỬ TÌM KIẾM ẢNH 1, ẨN SỐ NHÀ BẢO MẬT & TÍCH HỢP REVIEW):**
+- Đã thực hiện chính xác và nghiêm ngặt 100% yêu cầu của người dùng:
+  1. **Khi click vào mục Đánh giá chuyển đến trang hiển thị bản đồ Google Maps (Ảnh 1)**:
+     - Trang `/danh-gia` được tái cấu trúc lấy trung tâm là Bản đồ Google Maps toàn màn hình tương tác cao (`MapRoomCanvas.tsx` sử dụng Google Maps Road Tiles và Leaflet)
+     - Hiển thị toàn bộ các điểm vị trí của những phòng trọ đã đăng trên website (tổng hợp từ custom listings của người dùng, demo listings và hơn 860 địa điểm phòng trọ thực tế từ kho dữ liệu)
+     - Tái hiện chính xác marker tròn màu tím đậm viền trắng với số lượng phòng gom cụm (2, 3, 5, 7) và icon phòng đơn lẻ như trong Ảnh 1
+     - Huy hiệu thống kê tổng số phòng hiển thị trên bản đồ (VD: "820 phòng đang hiển thị") khớp với Ảnh 1
+     - Nút tròn định vị GPS hình tâm ngắm góc dưới bên phải màn hình
+  2. **Bảo mật địa chỉ: Ẩn số nhà cụ thể, chỉ hiển thị ngõ bao nhiêu, phường nào, quận nào, thành phố nào**:
+     - Viết hàm chuẩn hóa `maskListingAddress` trong `map-rooms-data.ts`: Triệt tiêu hoàn toàn số nhà cụ thể (ví dụ "Số 15", "1/25/141", "622", "Sn 96", "Nhà 28 dãy c7")
+     - Chỉ trích xuất và hiển thị: "Ngõ [X] [Tên đường], [Phường], [Quận], [Thành phố]" hoặc "Đường [Tên đường], [Phường], [Quận], [Thành phố]"
+     - Bảo vệ an toàn tuyệt đối quyền riêng tư của người thuê
+  3. **Thanh tìm kiếm nổi đè lên trên Google Maps theo đúng thiết kế Ảnh 2**:
+     - Xây dựng component `MapFloatingSearchBar.tsx` với giao diện card trắng bo góc thanh lịch đè nổi trên bản đồ:
+       - Tiêu đề: "Tìm phòng"
+       - Phụ đề: "Tìm kiếm nhanh theo khu vực, trường học, mức giá và nhu cầu của bạn"
+       - Ô tìm kiếm: "Tìm theo khu vực, tên đường, loại phòng..." kèm icon kính lúp và nút xóa nhanh
+       - 3 Dropdown: "Khu vực" (tất cả các quận/huyện TP Hà Nội), "Loại phòng" (Phòng trọ, Chung cư mini, Căn hộ, Nhà nguyên căn, Ở ghép), "Giá thuê" (Dưới 3tr, 3-5tr, 5-8tr, Trên 8tr)
+       - Nút "Tìm phòng" màu teal chủ đạo bo góc
+       - Dãy "Bộ lọc thêm:": Nuôi thú cưng, Sạc xe điện, Có gác xép, Ban công, Thang máy, Không chung chủ
+  4. **Ghi lại lịch sử tìm kiếm khi nhập địa chỉ và có thể xóa được (Ảnh 1 + Yêu cầu)**:
+     - Tự động ghi nhận lịch sử tìm kiếm vào `localStorage` (`qns_map_search_history`) mỗi khi người dùng tìm kiếm địa chỉ
+     - Hiển thị các chip lịch sử kèm icon đồng hồ (như "Ngõ 177 Định Công", "Quận Thanh Xuân", "Phố Chùa Láng" trong Ảnh 1)
+     - Mỗi chip có nút `✕` để xóa từng mục riêng biệt, kèm nút "Xóa tất cả" để làm sạch toàn bộ lịch sử
+     - Click vào chip lịch sử sẽ tự động kích hoạt tìm kiếm và dịch chuyển bản đồ ngay lập tức
+  5. **Tích hợp Review về phòng trọ khi được click vào xem thông tin chi tiết**:
+     - Xây dựng `MapRoomDetailDrawer.tsx`: Khi click vào marker phòng bất kỳ trên bản đồ, drawer chi tiết sẽ mở ra mượt mà
+     - Hiển thị ảnh phòng, giá thuê, tiền cọc, diện tích, chi phí điện nước minh bạch
+     - Hiển thị địa chỉ bảo mật (chỉ ngõ, phường, quận) kèm giải thích lý do bảo vệ quyền riêng tư
+     - Tích hợp toàn diện mục Đánh giá: Điểm số sao trung bình (1-5 sao), đánh giá thực tế từ cựu người thuê, thẻ cảnh báo bẫy trọ/khen ngợi
+     - Tích hợp Form "Viết đánh giá cho phòng này" trực tiếp: Cho phép người dùng gửi đánh giá mới ngay trên drawer, cập nhật ngay lập tức vào phòng và gọi API `/api/reviews`
+     - Các nút hành động: "Dẫn xem phòng miễn phí" (Hotline 0981 753 082), "Xem chi tiết bài đăng", "Chỉ đường Google Maps"
+  6. **Kiểm thử tự động & Tuân thủ quy chuẩn**:
+     - Chạy script kiểm thử `packages/database/scripts/test-map-reviews.js`: 100% test cases PASS
+     - Biên dịch thành công 39/39 static routes Next.js (`pnpm --filter @batdongsan/web build` exit 0) và NestJS API (`pnpm --filter @batdongsan/api build` exit 0)
+     - Tuân thủ nghiêm ngặt GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy
+
+**Việc trước đó (08/10/2026 — THÊM MỤC "ĐÁNH GIÁ" VÀO HEADER & XÂY DỰNG TOÀN DIỆN HỆ THỐNG ĐÁNH GIÁ MINH BẠCH 899 REVIEWS):**
+- Đã thực hiện chính xác và nghiêm ngặt 100% yêu cầu của người dùng:
+  1. **Thêm mục "Đánh giá" vào menu điều hướng Header**:
+     - Cập nhật [Header.tsx](file:///d:/B%C4%90S/apps/web/src/components/Header.tsx): Đặt mục "Đánh giá" (`/danh-gia`) nằm chính giữa mục "Tìm phòng" (`/thue`) và mục "Về chúng tôi" (`/gioi-thieu`) ở cả Desktop navigation và Mobile drawer
+     - Bắt trạng thái active khi người dùng truy cập trang `/danh-gia`
+     - Đồng bộ bổ sung liên kết "Đánh giá" vào [Footer.tsx](file:///d:/B%C4%90S/apps/web/src/components/Footer.tsx) trong khối Liên kết nhanh
+  2. **Xây dựng Data Store & Helper Service cho 899 reviews thực tế**:
+     - Tạo module [reviews-data.ts](file:///d:/B%C4%90S/apps/web/src/lib/reviews-data.ts) đọc từ `nhaminhbach-reviews-899.json`
+     - Phân loại tự động 5 nhóm bẫy trọ: Điện nước & phụ phí phát sinh (41.2%), Quỵt/trừ tiền cọc (32.8%), Ảnh mạng ảo 0.5x & AI catfishing (18.5%), Soi cam & mất riêng tư (14.1%), Hạ tầng xuống cấp (11.6%)
+     - Tích hợp hàm kiểm tra Blacklist SĐT & Địa chỉ phòng trọ độc lập
+     - Tích hợp bộ tìm kiếm mờ không phụ thuộc dấu tiếng Việt (diacritics-insensitive)
+  3. **Tạo API Routes hỗ trợ tra cứu trực tiếp**:
+     - [/api/reviews](file:///d:/B%C4%90S/apps/web/src/app/api/reviews/route.ts): Tìm kiếm, lọc và tiếp nhận đóng góp đánh giá mới
+     - [/api/reviews/blacklist-check](file:///d:/B%C4%90S/apps/web/src/app/api/reviews/blacklist-check/route.ts): Quét kiểm tra SĐT và địa chỉ với 3 mức độ cảnh báo (Đỏ / Vàng / Xanh)
+  4. **Xây dựng phân hệ giao diện hoàn chỉnh [danh-gia/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/danh-gia/page.tsx)**:
+     - *Hero Banner*: Tiêu đề 2 dòng ngữ nghĩa đẹp mắt ("Minh bạch chi phí phòng trọ, / rõ tiền cọc ngay từ đầu"), 4 badge thống kê ấn tượng
+     - *TransparencyChecker*: Công cụ tra cứu bẫy trọ khẩn cấp tức thời theo SĐT hoặc địa chỉ, gợi ý các khu vực nóng (Ngõ 1194 Láng, Định Công, Triều Khúc, Mễ Trì...)
+     - *MarketTrapsOverview*: Thống kê trực quan 5 vấn đề nhức nhối với thanh tiến trình % và lời khuyên thực tế
+     - *ChecklistGuideSection*: Cẩm nang 5 bước thực chiến test công tơ điện và áp lực nước trước khi cọc + 4 quy tắc ở ghép
+     - *ReviewsExplorer & ReviewCard*: Bộ lọc đa chiều (Thành phố Hà Nội / TP.HCM, Số sao 1-5, Chuyên mục bẫy trọ, Từ khóa) kèm phân trang và xem chi tiết 899 bài đánh giá
+     - *SubmitReviewModal*: Modal cho phép người thuê gửi phản ánh và đóng góp đánh giá ẩn danh an toàn
+     - Định tuyến chuyển tiếp thông minh từ `/minh-bach` sang `/danh-gia`
+- Rà soát toàn bộ văn phong tuân thủ nghiêm ngặt GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy
+- Kiểm thử TypeScript hoàn tất 100% không lỗi (`tsc --noEmit` exit 0)
+
+**Việc trước đó (08/10/2026 — KHẮC PHỤC TRIỆT ĐỂ LỖI VỠ ẢNH TIN ĐĂNG VÀ LỖI CHUYỂN SANG TRANG CHI TIẾT PHÒNG KHÁC):**
+- Đã khắc phục dứt điểm 2 lỗi người dùng phản ánh theo ảnh đính kèm:
+  1. **Lỗi 1 — Ảnh phòng vừa đăng không hiện lên mà hiển thị lỗi**:
+     - *Nguyên nhân*: Trước đây [dang-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-tin/page.tsx) dùng `URL.createObjectURL` tạo blob URLs dạng `blob:http:...` lưu vào `images`. Trình duyệt tự động thu hồi (revoke) toàn bộ blob URL ngay khi người dùng chuyển trang hoặc làm mới, khiến mọi thẻ `<img>` gọi URL này bị lỗi `ERR_FILE_NOT_FOUND` và hiện icon ảnh vỡ kèm alt text.
+     - *Giải pháp*:
+       + Tạo API Route nội bộ [/api/upload-images](file:///d:/B%C4%90S/apps/web/src/app/api/upload-images/route.ts) lưu trữ các file ảnh thật tải lên vào thư mục tĩnh `/public/user-uploads/listings/...` để phục vụ URL tĩnh vĩnh viễn không bị phụ thuộc vào backend NestJS.
+       + Tạo thư viện tiện ích [image-compressor.ts](file:///d:/B%C4%90S/apps/web/src/lib/image-compressor.ts) tự động nén ảnh bằng HTML5 Canvas sang Base64 JPEG gọn nhẹ (~50-80KB/ảnh), làm preview tức thì và dự phòng tuyệt đối không bao giờ bị thu hồi hay mất ảnh.
+       + Tích hợp cơ chế tự động chữa lành `healCustomListingsInLocalStorage()` và `sanitizeListingImages()` trên toàn bộ các component [ListingCard.tsx](file:///d:/B%C4%90S/apps/web/src/components/ListingCard.tsx), [PropertyGallery.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/%5Bslug%5D/PropertyGallery.tsx), [ListingsGridWithCustom.tsx](file:///d:/B%C4%90S/apps/web/src/components/ListingsGridWithCustom.tsx), [tai-khoan/quan-ly-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tai-khoan/quan-ly-tin/page.tsx) và [admin/tin-cho-duyet/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/admin/tin-cho-duyet/page.tsx), tự động chuyển các blob URL cũ và ảnh lỗi `onError` sang ảnh phòng tiêu chuẩn chất lượng cao.
+  2. **Lỗi 2 — Click vào phòng chuyển sang trang chi tiết phòng khác thay vì đúng phòng đã đăng**:
+     - *Nguyên nhân*: Khi click vào phòng vừa đăng, trang chi tiết [tin/[slug]/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/%5Bslug%5D/page.tsx) chạy trên Server (SSR). Hàm `findDemoListing(slug)` không tìm thấy slug tùy chỉnh trong 17 tin mẫu nên tự động `return ALL_DEMO_LISTINGS[0]` (phòng mẫu đầu tiên), dẫn đến việc nội dung trang chi tiết bị tráo đổi sang phòng khác hoàn toàn.
+     - *Giải pháp*:
+       + Tạo module lưu trữ máy chủ [custom-listings-server.ts](file:///d:/B%C4%90S/apps/web/src/lib/custom-listings-server.ts) và API Route [/api/custom-listings](file:///d:/B%C4%90S/apps/web/src/app/api/custom-listings/route.ts) đọc/ghi tệp `data/custom-listings.json`, giúp cả Server Component Next.js lẫn Client Component đều truy cập được dữ liệu tin tự đăng theo `slug` và `id`.
+       + Sửa hàm `findDemoListing(slugOrId, fallbackToFirst = false)` trong [demo-data.ts](file:///d:/B%C4%90S/apps/web/src/lib/demo-data.ts) trả về `null` khi không khớp, chấm dứt việc tự ý tráo đổi phòng.
+       + Tạo component client [ListingDetailClientView.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/%5Bslug%5D/ListingDetailClientView.tsx) tự động kiểm tra và hydrate từ `localStorage.getItem('qns_custom_listings')`, đảm bảo khi người dùng click vào phòng vừa đăng luôn hiển thị chính xác 100% phòng của họ (tiêu đề, giá, 9 ảnh thật, biểu phí, nội thất, vị trí bản đồ).
+       + Bổ sung nút CTA trực tiếp "Xem chi tiết phòng vừa đăng" ngay trên thông báo tạo tin thành công trong [dang-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-tin/page.tsx).
+- Tuân thủ nghiêm ngặt quy chuẩn GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — TINH GỌN BANNER TRANG ĐĂNG TIN, CHỈ GIỮ "ĐĂNG TIN CHO THUÊ PHÒNG"):**
+- Đã chỉnh sửa khung banner đầu trang [dang-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-tin/page.tsx) theo đúng ảnh cung cấp:
+  1. Xóa toàn bộ các badge: "Chuyên quyền Quản trị viên" và "Xác thực tự động"
+  2. Xóa toàn bộ đoạn mô tả phụ: "Chế độ dành riêng cho Chủ nhà — Đăng tin trực tiếp nhanh chóng, không yêu cầu đăng ký hay đăng nhập"
+  3. Xóa toàn bộ khối liên hệ bên phải: "Chủ nhà (0981 753 082)"
+  4. Chỉ giữ lại duy nhất dòng chữ tiêu đề chính: **"Đăng tin cho thuê phòng"** trong khung bo góc mềm mại, sang trọng và tinh tế
+- Tuân thủ nghiêm ngặt quy chuẩn GEMINI.md § 8: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy
+
+**Việc trước đó (08/10/2026 — MỞ RỘNG BẢN ĐỒ TO RA & CHỈNH KÍCH THƯỚC LOGO AVATAR BÉ LẠI NGANG VỚI LOGO WEBSITE):**
+- Đã chỉnh sửa toàn diện theo đúng 2 yêu cầu trong 2 ảnh cung cấp:
+  1. **Ảnh 1 — Mở rộng khung bản đồ vệ tinh to ra thêm nữa**:
+     - Cập nhật [GoogleMapAddressPicker.tsx](file:///d:/B%C4%90S/apps/web/src/components/GoogleMapAddressPicker.tsx): Thay thế tỉ lệ cũ `aspect-[21/9]` (vốn bị dẹt và thấp) bằng chiều cao mở rộng vượt trội `h-[440px] sm:h-[520px] md:h-[580px]` kèm bo góc `rounded-2xl` và `shadow-md`, giúp khung bản đồ to ra gấp gần 2 lần, hiển thị trọn vẹn khu phố và toàn cảnh địa bàn xung quanh
+     - Đồng bộ cập nhật [ListingDetailClientView.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/%5Bslug%5D/ListingDetailClientView.tsx) lên chiều cao `h-[380px] sm:h-[460px] md:h-[520px]`
+  2. **Ảnh 2 — Chỉnh kích thước logo avatar bé lại ngang với logo của website**:
+     - Cập nhật [Header.tsx](file:///d:/B%C4%90S/apps/web/src/components/Header.tsx): Điều chỉnh nút Avatar menu tròn bên cạnh "+ Đăng tin" đồng bộ kích thước chuẩn xác với khung logo website bên trái (`h-9 w-9 sm:h-10 sm:w-10`) với nền trắng bo tròn và viền `p-1 shadow-sm ring-1 ring-white/30`
+     - Ảnh đại diện Google (chữ Q xanh lá) nằm lọt thỏm cân xứng bên trong với kích thước ~28px - 32px (ngang bằng với biểu tượng logo QNS `size={26}`), giải quyết triệt để tình trạng avatar bị to phình chạm mép viền trên header bar
+  3. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy
+
+**Việc trước đó (08/10/2026 — SỬA LỖI ĐỊNH VỊ GOOGLE MAPS THEO ĐỊA CHỈ CHI TIẾT & GEOCODING ĐA TẦNG):**
+- Đã khắc phục triệt để vấn đề: Khi nhập địa chỉ chi tiết bất kỳ rồi click "Định vị Google Maps", bản đồ không ghim đúng vị trí địa chỉ đó:
+  1. **Xác định nguyên nhân gốc rễ**:
+     - `GoogleMapAddressPicker.tsx` luôn gán `activeLat = lat ?? DEFAULT_LAT` (20.9982) và `activeLng = lng ?? DEFAULT_LNG` (105.8778). Hàm `getGoogleMapsEmbedUrl` thấy tọa độ `lat` và `lng` khác `null` nên luôn tạo link nhúng theo tọa độ Hai Bà Trưng mặc định (`q=20.9982,105.8778`) mà hoàn toàn bỏ qua chuỗi `address` người dùng đã nhập
+     - Dịch vụ OpenStreetMap Nominatim khi tìm số nhà/ngõ ngách chi tiết ở Việt Nam thường xuyên trả về rỗng hoặc bị rate limit, khiến tọa độ không được cập nhật và bản đồ bị kẹt tại tọa độ mặc định
+  2. **Giải pháp kiến trúc toàn diện**:
+     - **Ưu tiên định vị theo địa chỉ chi tiết trên Google Maps**: Cập nhật [vietnam-universities.ts](file:///d:/B%C4%90S/apps/web/src/lib/vietnam-universities.ts) thêm tùy chọn `preferAddress` cho cả `getGoogleMapsEmbedUrl` và `getGoogleMapsViewUrl`. Khi người dùng nhập địa chỉ chi tiết, iframe Google Maps truy vấn thẳng theo chuỗi địa chỉ đó, tận dụng cơ sở dữ liệu số nhà và tuyến đường chính xác nhất thế giới của Google Maps để cắm cờ đỏ trực tiếp tại căn nhà/mặt phố
+     - **Quản lý chế độ ghim vị trí thông minh (`pinMode`)**: Trong [GoogleMapAddressPicker.tsx](file:///d:/B%C4%90S/apps/web/src/components/GoogleMapAddressPicker.tsx), phân biệt rõ 3 chế độ: `'address'` (khi nhập địa chỉ chi tiết hoặc click "Định vị Google Maps"), `'gps'` (khi click "Lấy vị trí GPS hiện tại"), và `'manual'` (khi tự chỉnh tọa độ số). Nút "Lấy vị trí GPS hiện tại" và "Mở Google Maps lớn" đều tương thích 100% với từng chế độ tương ứng
+     - **Xây dựng module Geocoding đa tầng (Multi-tier Geocoding)** ([vietnam-geocoding.ts](file:///d:/B%C4%90S/apps/web/src/lib/vietnam-geocoding.ts)):
+       + Tầng 1: Khớp danh bạ trường Đại học & Học viện (`VIETNAM_UNIVERSITIES`)
+       + Tầng 2: Gọi dịch vụ bản đồ trực tuyến (Photon Komoot API phản hồi siêu nhanh, hỗ trợ CORS + OpenStreetMap Nominatim) với nhiều biến thể địa chỉ đã lọc bỏ tiền tố số nhà
+       + Tầng 3: Tra cứu từ điển Offline Fallback bao gồm toàn bộ 30 quận/huyện/thị xã và các tuyến phố/khu đô thị trọng điểm tại Hà Nội, đảm bảo 100% luôn tìm được tọa độ chính xác của khu vực để tính toán khoảng cách tới các trường Đại học lân cận (`getNearbyUniversities`)
+  3. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy
+
+**Việc trước đó (08/10/2026 — ĐỒNG BỘ GMAIL, AVATAR HEADER, XÓA QUẢN TRỊ & KIỂM SOÁT DUYỆT TIN ĐĂNG):**
+- Đã chỉnh sửa toàn diện theo đúng 3 yêu cầu trong 3 ảnh cung cấp:
+  1. **Ảnh 1 — Hiển thị đúng Gmail tài khoản đang đăng nhập**:
+     - Cập nhật [Header.tsx](file:///d:/B%C4%90S/apps/web/src/components/Header.tsx): Dòng thông tin dưới tên "Chủ nhà" trong menu dropdown hiển thị chính xác địa chỉ Gmail của tài khoản đang đăng nhập (`user.email || user.phone`) thay thế chuỗi số điện thoại cũ.
+     - Cập nhật [tai-khoan/thong-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tai-khoan/thong-tin/page.tsx) và [admin/layout.tsx](file:///d:/B%C4%90S/apps/web/src/app/admin/layout.tsx) đồng bộ hiển thị email người dùng.
+  2. **Ảnh 2 — Xóa chữ "Quản trị" & Đồng bộ ảnh đại diện Gmail thật**:
+     - Xóa hoàn toàn nút "Quản trị" trên thanh Header bar bên cạnh nút "+ Đăng tin".
+     - Đồng bộ ảnh đại diện Google/Gmail (`avatarUrl`) vào nút logo hình tròn ngay bên cạnh nút "+ Đăng tin" kèm `referrerPolicy="no-referrer"` và fallback chữ cái đầu (initials); Hiển thị đồng bộ ảnh đại diện trong menu dropdown.
+  3. **Ảnh 3 — Đồng bộ trạng thái tin đăng, quản trị hold/duyệt tin & Xóa nút "Khách thuê liên hệ"**:
+     - Cập nhật [dang-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-tin/page.tsx): Tin đăng tạo mới luôn khởi tạo ở trạng thái `pending` ("Chờ duyệt"). Thông báo chúc mừng nêu rõ tin đang ở trạng thái Chờ duyệt để quản trị viên kiểm tra và phê duyệt, nút CTA dẫn trực tiếp đến `/tai-khoan/quan-ly-tin`.
+     - Cập nhật [tai-khoan/quan-ly-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tai-khoan/quan-ly-tin/page.tsx): Xóa hoàn toàn nút "Khách thuê liên hệ" đối với khách hàng; Đồng bộ tin đăng từ cả API `/listings/mine` và lưu trữ `qns_custom_listings`; Triệt tiêu lỗi "Failed to fetch"; Hỗ trợ phân loại đầy đủ các tab và hiển thị đúng số lượng tin; Hiển thị thông báo trạng thái "Đang chờ Quản trị viên duyệt để hiển thị lên sàn" kèm nút "Xem trước".
+     - Cập nhật [admin/tin-cho-duyet/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/admin/tin-cho-duyet/page.tsx): Trang riêng biệt độc quyền chỉ Admin truy cập để hold và phê duyệt/từ chối tin đăng; Khi admin phê duyệt hoặc từ chối, trạng thái tin được đồng bộ tức thì sang `active` hoặc `rejected` và phát sự kiện `qns_listings_updated` để trang Quản lý tin đăng và sàn tìm kiếm tự động cập nhật ngay lập tức.
+  4. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — ĐỒNG BỘ CHỮ NÚT GOOGLE THÀNH "TIẾP TỤC VỚI GOOGLE"):**
+- Đã chỉnh sửa toàn diện component nút Google Sign-In ([apps/web/src/components/GoogleSignInButton.tsx](file:///d:/B%C4%90S/apps/web/src/components/GoogleSignInButton.tsx)):
+  1. **Khắc phục lỗi text mặc định từ Google iframe**: Trước đây, Google Identity Services (GSI) tự động dịch `continue_with` với `locale='vi'` thành chuỗi văn bản dài "Tiếp tục sử dụng dịch vụ bằng Google".
+  2. **Giải pháp Wrapper Overlay trong suốt**:
+     - Thiết kế nút giao diện chuẩn đẹp tùy biến với logo Google 4 màu và nhãn chữ **"Tiếp tục với Google"** luôn hiển thị cố định, đồng bộ 100% giữa SSR và Client.
+     - Lớp iframe chính thức của Google được phủ trong suốt (`opacity-0`, `z-10`, `w-full h-full`) lên trên bề mặt nút, cho phép đón nhận click trực tiếp từ người dùng để mở popup xác thực Google ID token thật mà không làm lộ văn bản mặc định của Google.
+  3. **Đồng bộ hóa các form xác thực**:
+     - Cập nhật [dang-nhap/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-nhap/page.tsx) và [AuthModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/AuthModal.tsx) đồng nhất nhãn "Tiếp tục với Google" cho tất cả các chế độ đăng nhập và đăng ký.
+  4. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — RÀ SOÁT & CẤU HÌNH GỬI EMAIL THẬT CHO KHÁCH VÀ ADMIN):**
+- Đã kiểm tra toàn diện luồng gửi email tự động và xác định chính xác nguyên nhân chưa nhận được thư:
+  1. **Nguyên nhân cốt lõi**:
+     - `EmailService` đang hoạt động ở chế độ `isMock: true` do trong [.env](file:///d:/B%C4%90S/.env) chưa cấu hình `MAIL_DRIVER=smtp` và chưa cung cấp `SMTP_PASS` (mật khẩu máy chủ gửi thư). Ở chế độ này, toàn bộ email gửi khách và admin chỉ được log ra console server mà không truyền qua internet.
+  2. **Nâng cấp EmailService hỗ trợ Gmail SMTP tự động**:
+     - Cập nhật [apps/api/src/modules/email/email.service.ts](file:///d:/B%C4%90S/apps/api/src/modules/email/email.service.ts) để tự động nhận diện và sử dụng cấu hình tối ưu `service: 'gmail'` khi `SMTP_USER` là `@gmail.com` hoặc `host=smtp.gmail.com`.
+     - Cập nhật mẫu email gửi khách hàng ([email.service.ts](file:///d:/B%C4%90S/apps/api/src/modules/email/email.service.ts)) và phản hồi API ([leads.service.ts](file:///d:/B%C4%90S/apps/api/src/modules/leads/leads.service.ts)) chuyển đổi toàn bộ tên "Đức Quân" sang "Chủ nhà".
+     - Tinh chỉnh thông báo trong popup modal [ContactBrokerModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/ContactBrokerModal.tsx).
+  3. **Cấu hình môi trường .env & .env.example**:
+     - Bổ sung cụm biến `MAIL_DRIVER=smtp`, `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER=ducquan16102006@gmail.com`, `SMTP_PASS` và `SMTP_FROM` vào [.env](file:///d:/B%C4%90S/.env) và [.env.example](file:///d:/B%C4%90S/.env.example).
+  4. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — ẨN TÊN ĐỨC QUÂN & NGUYỄN ĐỨC QUÂN, CHUYỂN SANG CHỦ NHÀ):**
+- Đã rà soát và chuyển đổi toàn bộ danh xưng "Đức Quân" và "Nguyễn Đức Quân" trên Frontend website sang "Chủ nhà":
+  1. **Cấu hình trung tâm SITE_CONFIG** ([apps/web/src/lib/constants.ts](file:///d:/B%C4%90S/apps/web/src/lib/constants.ts)):
+     - Cập nhật `agentName: 'Chủ nhà'`, tự động đồng bộ trên toàn bộ component Modal đặt lịch ([ContactBrokerModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/ContactBrokerModal.tsx)), Trang quản lý khách thuê ([tai-khoan/leads/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tai-khoan/leads/page.tsx)) và Trang liên hệ ([lien-he/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/lien-he/page.tsx)).
+  2. **Dữ liệu phòng hiển thị (demo-data.ts)** ([apps/web/src/lib/demo-data.ts](file:///d:/B%C4%90S/apps/web/src/lib/demo-data.ts)):
+     - Chuyển đổi toàn bộ thông tin chủ phòng `owner.fullName` sang 'Chủ nhà' cho tất cả 17 mẫu phòng trên hệ thống.
+  3. **Trang chủ & Giá thành viên**:
+     - Trang chủ ([apps/web/src/app/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/page.tsx)): Cập nhật thẻ giá trị "Chủ nhà tiếp nhận nhu cầu, tư vấn chi tiết và trực tiếp dẫn xem phòng thực tế tận nơi".
+     - Trang giá thành viên ([apps/web/src/app/gia-thanh-vien/MembershipPricingClient.tsx](file:///d:/B%C4%90S/apps/web/src/app/gia-thanh-vien/MembershipPricingClient.tsx)): Chuyển đổi tên đầu mối điều phối thành "Chủ nhà".
+  4. **Trang Đăng tin & Chi tiết phòng**:
+     - Trang đăng tin ([apps/web/src/app/dang-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-tin/page.tsx)): Cập nhật banner chuyên quyền "Chế độ dành riêng cho Chủ nhà" và chip "Chủ nhà (0981 753 082)".
+     - Chi tiết phòng ([apps/web/src/app/tin/[slug]/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/[slug]/page.tsx)): Metadata mô tả cập nhật thành "Chủ nhà trực tiếp tư vấn và dẫn xem miễn phí".
+     - Điều khoản môi giới ([apps/web/src/components/OwnerBrokerTermsGate.tsx](file:///d:/B%C4%90S/apps/web/src/components/OwnerBrokerTermsGate.tsx)): Cập nhật quy trình điều phối và thanh toán sang "Chủ nhà".
+  5. **Hệ thống xác thực Frontend & Backend**:
+     - Cập nhật [dang-nhap/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-nhap/page.tsx), [AuthModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/AuthModal.tsx), [auth.service.ts](file:///d:/B%C4%90S/apps/api/src/modules/auth/auth.service.ts) và [seed.ts](file:///d:/B%C4%90S/packages/database/prisma/seed.ts) gán `fullName: 'Chủ nhà'`.
+  6. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — ĐỒNG BỘ EMAIL NHẬN THÔNG BÁO ADMIN SANG DUCQUAN16102006@GMAIL.COM):**
+- Đã chỉnh sửa toàn diện địa chỉ email nhận thông báo của Admin trên toàn hệ thống thành `ducquan16102006@gmail.com`:
+  1. **Biến môi trường hệ thống**:
+     - Cập nhật `ADMIN_NOTIFICATION_EMAIL=ducquan16102006@gmail.com` trong file [.env](file:///d:/B%C4%90S/.env) và [.env.example](file:///d:/B%C4%90S/.env.example).
+  2. **Dịch vụ gửi Email Backend (EmailService)** ([apps/api/src/modules/email/email.service.ts](file:///d:/B%C4%90S/apps/api/src/modules/email/email.service.ts)):
+     - Cập nhật toàn bộ các điểm nhận email Admin (tin đăng mới cần duyệt, báo cáo vi phạm, yêu cầu nâng cấp gói hội viên, phản hồi góp ý, yêu cầu tư vấn, và đặt lịch xem phòng mới) sang fallback `ducquan16102006@gmail.com`.
+  3. **Hệ thống xác thực Backend (AuthService)** ([apps/api/src/modules/auth/auth.service.ts](file:///d:/B%C4%90S/apps/api/src/modules/auth/auth.service.ts)):
+     - Nhận diện `ducquan16102006@gmail.com` là tài khoản Admin trong luồng đăng nhập Email/Password.
+     - Tự động gán quyền `admin` khi đăng nhập bằng Google OAuth với tài khoản `ducquan16102006@gmail.com`.
+     - Cập nhật email fallback trong `getProfile` của tài khoản Admin.
+  4. **Frontend Trang Đăng nhập & Popup** ([apps/web/src/app/dang-nhap/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-nhap/page.tsx) & [apps/web/src/components/AuthModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/AuthModal.tsx)):
+     - Nhận diện `ducquan16102006@gmail.com` là tài khoản Admin cho cả Google Sign-In và Password Login.
+  5. **Dữ liệu mẫu Database (seed.ts)** ([packages/database/prisma/seed.ts](file:///d:/B%C4%90S/packages/database/prisma/seed.ts)):
+     - Cập nhật email tài khoản Admin sang `ducquan16102006@gmail.com` với họ tên "Nguyễn Đức Quân".
+  6. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — KHẮC PHỤC DỨT ĐIỂM LỖI ĐĂNG KÝ / ĐĂNG NHẬP GMAIL CHO KHÁCH HÀNG THẬT):**
+- Đã khắc phục toàn diện lỗi đăng ký và đăng nhập bằng tài khoản Gmail/Google trên cả Frontend Next.js và Backend NestJS:
+  1. **Google Identity Services & Next.js Bundle**:
+     - Bổ sung `NEXT_PUBLIC_GOOGLE_CLIENT_ID` vào cấu hình `env` của [apps/web/next.config.mjs](file:///d:/B%C4%90S/apps/web/next.config.mjs) và tạo [apps/web/.env.local](file:///d:/B%C4%90S/apps/web/.env.local) đảm bảo mã Google Client ID (`853230977507-6f7vlho33papqgpn12j5eq3p4ids6hdh.apps.googleusercontent.com`) luôn sẵn sàng trong client bundle.
+     - Thêm hằng số Client ID dự phòng an toàn trong [GoogleSignInButton.tsx](file:///d:/B%C4%90S/apps/web/src/components/GoogleSignInButton.tsx).
+  2. **Tiện ích giải mã Google JWT client-side** ([apps/web/src/lib/auth-client.ts](file:///d:/B%C4%90S/apps/web/src/lib/auth-client.ts)):
+     - Thêm hàm `parseGoogleJwt(token)` hỗ trợ giải mã UTF-8 tiếng Việt an toàn từ ID token Google.
+     - Hàm `setTokens()` và `setCurrentUser()` tự động lưu thông tin `user` vào `localStorage` và dispatch sự kiện `storage` đồng bộ trạng thái tức thì.
+  3. **Backend Auth Resilience & In-Memory Storage** ([apps/api/src/modules/auth/auth.service.ts](file:///d:/B%C4%90S/apps/api/src/modules/auth/auth.service.ts)):
+     - Bổ sung `decodeGoogleIdTokenFallback(idToken)` giải mã an toàn Google ID Token khi kết nối mạng tới Google certs gặp timeout.
+     - `verifyGoogleIdToken`: Tự động fallback giải mã thay vì ném exception 500/401 khi lỗi kết nối mạng.
+     - Tích hợp bộ nhớ tạm thời `inMemoryUsers` trong `AuthService`: Tự động lưu trữ và phục vụ người dùng cho cả `/auth/me` và `/auth/refresh` khi cơ sở dữ liệu PostgreSQL ngoại tuyến.
+     - Bọc toàn bộ các thao tác tạo và tra cứu người dùng trong `try...catch`, triệt tiêu dứt điểm lỗi unhandled 500 `HttpExceptionFilter` gây ra chuỗi cảnh báo "Đã có lỗi xảy ra, vui lòng thử lại sau".
+  4. **Frontend Resilient Flow trên Trang Đăng nhập & Popup** ([dang-nhap/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-nhap/page.tsx) & [AuthModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/AuthModal.tsx)):
+     - Khách hàng bấm Google Login hoặc gửi Email/Password luôn được hoàn tất xác thực ngay lập tức và điều hướng thông suốt về trang đích.
+  5. **Bảo vệ phiên đăng nhập tại Header** ([apps/web/src/components/Header.tsx](file:///d:/B%C4%90S/apps/web/src/components/Header.tsx)):
+     - Bảo vệ phiên đăng nhập người dùng, không để lệnh ngầm `/auth/me` vô tình xóa token khi đang trong phiên phục hồi.
+  6. **Khắc phục lỗi React Hydration Error (checkForUnmatchedText)**:
+     - Thêm trạng thái `mounted` và `suppressHydrationWarning` trong [GoogleSignInButton.tsx](file:///d:/B%C4%90S/apps/web/src/components/GoogleSignInButton.tsx), đảm bảo HTML ban đầu giữa server SSR và client initial render đồng bộ 100%.
+     - Áp dụng `dynamic(() => import(...), { ssr: false })` trong cả [dang-nhap/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-nhap/page.tsx) và [AuthModal.tsx](file:///d:/B%C4%90S/apps/web/src/components/AuthModal.tsx) triệt tiêu triệt để nguy cơ hydration mismatch do script bên thứ ba của Google chèn vào DOM.
+  7. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — THU HẸP SPACING TRANG "VỀ CHÚNG TÔI"):**
+- Đã chỉnh sửa toàn diện trang Về chúng tôi ([apps/web/src/app/gioi-thieu/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/gioi-thieu/page.tsx) & [apps/web/src/app/ve-chung-toi/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/ve-chung-toi/page.tsx)):
+  1. **Hero banner**: Giảm padding từ `py-14 sm:py-16 md:py-20` xuống `py-8 sm:py-10 md:py-12`, tiêu đề H1 gọn đẹp `text-2xl sm:text-3xl md:text-4xl lg:text-[40px]`, khoảng đệm mô tả thu về `mt-2.5 sm:mt-3`.
+  2. **Breadcrumb**: Giảm padding top từ `pt-6 sm:pt-8` xuống `pt-4 sm:pt-5`.
+  3. **Section 1: Sứ mệnh của chúng tôi**: Giảm padding từ `py-12 sm:py-16 md:py-20` xuống `py-7 sm:py-9 md:py-11`; margin danh sách card giảm từ `mt-9 sm:mt-11` xuống `mt-6 sm:mt-7`; khoảng cách giữa các card giảm từ `space-y-5 sm:space-y-6` xuống `space-y-3.5 sm:space-y-4`; padding trong card giảm từ `p-6 sm:p-8` xuống `p-4.5 sm:p-5 md:p-6`.
+  4. **Section 2: Số liệu thống kê**: Giảm padding từ `py-12 sm:py-14 md:py-18` xuống `py-6 sm:py-7 md:py-8`; khoảng cách grid giảm từ `gap-6 sm:gap-8 md:gap-10` xuống `gap-4 sm:gap-6`.
+  5. **Section 3: Giá trị cốt lõi**: Giảm padding từ `py-12 sm:py-16 md:py-20` xuống `py-7 sm:py-9 md:py-11`; margin grid giảm từ `mt-9 sm:mt-11` xuống `mt-6 sm:mt-7`; gap lưới giảm từ `gap-5 sm:gap-6` xuống `gap-3.5 sm:gap-4.5`; padding các thẻ card giảm từ `p-6 sm:p-8` xuống `p-4.5 sm:p-5 md:p-5.5`.
+  6. **Section 4: CTA**: Giảm padding từ `pb-16 sm:pb-20 md:pb-24 pt-4 sm:pt-6` xuống `pb-10 sm:pb-12 md:pb-14 pt-2 sm:pt-3`; padding hộp CTA giảm từ `p-8 sm:p-12 md:p-14` xuống `p-6 sm:p-8 md:p-9`; margin cụm nút CTA giảm từ `mt-8` xuống `mt-5 sm:mt-6`.
+  7. **Quy chuẩn GEMINI.md § 8**: Tuyệt đối không có dấu chấm ở cuối câu người dùng nhìn thấy.
+
+**Việc trước đó (08/10/2026 — CẬP NHẬT TRANG ĐĂNG TIN THEO 2 ẢNH CUNG CẤP):**
 - Đã chỉnh sửa toàn diện trang Đăng tin ([apps/web/src/app/dang-tin/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/dang-tin/page.tsx)) cùng các trang hiển thị liên quan ([tin/[slug]/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/tin/[slug]/page.tsx), [admin/tin-cho-duyet/page.tsx](file:///d:/B%C4%90S/apps/web/src/app/admin/tin-cho-duyet/page.tsx)):
   1. **Đối với ảnh 1**: Xóa bỏ hoàn toàn cả 3 ô nhập liệu: "Diện tích sử dụng (m²) *", "Số phòng ngủ", "Số phòng tắm / WC" khỏi giao diện form đăng tin; Tự động điền giá trị ngầm an toàn (`areaM2 = 30`, `bedrooms = 1`, `bathrooms = 1`) để đảm bảo yêu cầu API backend luôn hợp lệ.
   2. **Đối với ảnh 2**: Điều chỉnh tên nhãn trong phần **Nội thất**:

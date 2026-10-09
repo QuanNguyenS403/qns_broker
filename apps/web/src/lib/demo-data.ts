@@ -42,7 +42,7 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 7, name: 'Quận 7, TP.HCM', slug: 'quan-7', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
     nearbyUniversities: [
       {
         distanceMeters: 450,
@@ -96,7 +96,7 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 7, name: 'Quận 7, TP.HCM', slug: 'quan-7', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
     nearbyUniversities: [
       {
         distanceMeters: 450,
@@ -142,7 +142,7 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 1, name: 'Cầu Giấy, Hà Nội', slug: 'cau-giay', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
     nearbyUniversities: [
       {
         distanceMeters: 600,
@@ -197,7 +197,7 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 1, name: 'Cầu Giấy, Hà Nội', slug: 'cau-giay', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
     nearbyUniversities: [
       {
         distanceMeters: 500,
@@ -249,7 +249,7 @@ export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 2, name: 'Quận 1, TP.HCM', slug: 'quan-1', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
     nearbyUniversities: [
       {
         distanceMeters: 1200,
@@ -296,7 +296,7 @@ export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 1, name: 'Cầu Giấy, Hà Nội', slug: 'cau-giay', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
     nearbyUniversities: [
       {
         distanceMeters: 600,
@@ -345,7 +345,7 @@ export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 7, name: 'Quận 7, TP.HCM', slug: 'quan-7', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
     nearbyUniversities: [
       {
         distanceMeters: 400,
@@ -397,7 +397,7 @@ export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 2, name: 'TP. Thủ Đức, TP.HCM', slug: 'tp-thu-duc', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
   },
   {
     id: '12',
@@ -437,7 +437,7 @@ export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 2, name: 'Bình Thạnh, TP.HCM', slug: 'binh-thanh', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
   },
   {
     id: '14',
@@ -474,7 +474,7 @@ export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 1, name: 'Đống Đa, Hà Nội', slug: 'dong-da', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
   },
 ];
 
@@ -510,7 +510,7 @@ export const DEMO_HOUSE_RENT_LISTING: Listing = {
   ],
   location: { id: 1, name: 'Cầu Giấy, Hà Nội', slug: 'cau-giay', level: 'district' },
   project: null,
-  owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+  owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
 };
 
 export const DEMO_SPACE_RENT_LISTINGS: Listing[] = [
@@ -540,7 +540,7 @@ export const DEMO_SPACE_RENT_LISTINGS: Listing[] = [
     ],
     location: { id: 3, name: 'Thanh Xuân, Hà Nội', slug: 'thanh-xuan', level: 'district' },
     project: null,
-    owner: { id: '1', fullName: 'Nguyễn Đức Quân', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    owner: { id: '1', fullName: 'Chủ nhà', avatarUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
   },
 ];
 
@@ -587,11 +587,11 @@ export const DEMO_SLUG_ALIASES: Record<string, string> = {
 };
 
 /**
- * Tìm kiếm tin demo theo slug hoặc ID với độ tin cậy tuyệt đối
- * Không bao giờ để trang chi tiết phòng bị lỗi 404
+ * Tìm kiếm tin demo theo slug hoặc ID
+ * Khi fallbackToFirst = true mới trả về tin đầu tiên, mặc định trả về null khi không khớp
  */
-export function findDemoListing(slugOrId: string): Listing {
-  if (!slugOrId) return ALL_DEMO_LISTINGS[0];
+export function findDemoListing(slugOrId: string, fallbackToFirst = false): Listing | null {
+  if (!slugOrId) return fallbackToFirst ? ALL_DEMO_LISTINGS[0] : null;
 
   // 1. Tìm chính xác theo slug
   const directMatch = ALL_DEMO_LISTINGS.find((item) => item.slug === slugOrId);
@@ -629,6 +629,7 @@ export function findDemoListing(slugOrId: string): Listing {
   );
   if (partialMatch) return partialMatch;
 
-  // 6. Nếu không khớp bất kỳ tiêu chí nào, trả về tin phòng trọ / studio tiêu biểu đầu tiên (tuyệt đối KHÔNG 404)
-  return ALL_DEMO_LISTINGS[0];
+  // 6. Nếu không khớp bất kỳ tiêu chí nào
+  return fallbackToFirst ? ALL_DEMO_LISTINGS[0] : null;
 }
+

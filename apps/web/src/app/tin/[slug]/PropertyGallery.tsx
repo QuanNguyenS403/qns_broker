@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { DEFAULT_ROOM_FALLBACK_IMAGES, sanitizeListingImages } from '@/lib/image-compressor';
 
 interface PropertyGalleryProps {
   images: { imageUrl: string; sortOrder: number }[];
   title: string;
 }
 
-export function PropertyGallery({ images, title }: PropertyGalleryProps) {
+export function PropertyGallery({ images: rawImages, title }: PropertyGalleryProps) {
+  const images = sanitizeListingImages(rawImages);
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (!images || images.length === 0) {
@@ -52,6 +54,14 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
     setTouchStartX(null);
   }
 
+  function handleImageError(e: React.SyntheticEvent<HTMLImageElement, Event>, index: number) {
+    const target = e.currentTarget;
+    const fallback = DEFAULT_ROOM_FALLBACK_IMAGES[index % DEFAULT_ROOM_FALLBACK_IMAGES.length];
+    if (target.src !== fallback) {
+      target.src = fallback;
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-2xl bg-white p-2 shadow-card space-y-2">
       {/* Ảnh chính có hỗ trợ vuốt chạm trên mobile */}
@@ -65,6 +75,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
           src={activeImage.imageUrl}
           alt={`${title} - ảnh ${activeIndex + 1}`}
           decoding="async"
+          onError={(e) => handleImageError(e, activeIndex)}
           className="h-full w-full object-cover transition-all duration-200"
           style={{ willChange: 'transform', transform: 'translateZ(0)' }}
         />
@@ -111,7 +122,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
         <div className="grid grid-cols-5 gap-1.5">
           {images.slice(0, 5).map((img, idx) => (
             <button
-              key={img.imageUrl}
+              key={`${img.imageUrl}-${idx}`}
               type="button"
               aria-label={`Chọn ảnh số ${idx + 1}`}
               onClick={() => setActiveIndex(idx)}
@@ -127,6 +138,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
                 alt=""
                 loading="lazy"
                 decoding="async"
+                onError={(e) => handleImageError(e, idx)}
                 className="h-full w-full object-cover"
               />
               {idx === 4 && images.length > 5 && (

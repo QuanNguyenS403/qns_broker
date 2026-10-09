@@ -9,6 +9,7 @@ import {
   type UniversityData,
   type NearbyUniversityResult,
 } from '@/lib/vietnam-universities';
+import { geocodeAddressPipeline } from '@/lib/vietnam-geocoding';
 
 export interface SelectedUniversityDistance {
   universityId?: number;
@@ -42,6 +43,7 @@ export function GoogleMapAddressPicker({
   const DEFAULT_LNG = 105.8778;
 
   const [address, setAddress] = useState(initialAddress);
+  const [activeSearchAddress, setActiveSearchAddress] = useState(initialAddress);
   const [lat, setLat] = useState<number | null>(initialLat ?? null);
   const [lng, setLng] = useState<number | null>(initialLng ?? null);
   const [mapType, setMapType] = useState<'hybrid' | 'roadmap'>('hybrid');
@@ -51,6 +53,10 @@ export function GoogleMapAddressPicker({
   const [showCoordinateInputs, setShowCoordinateInputs] = useState(false);
   const [customSearchUni, setCustomSearchUni] = useState('');
   const [selectedUnis, setSelectedUnis] = useState<Record<string, SelectedUniversityDistance>>({});
+  // Chế độ ghim bản đồ: 'address' (định vị địa chỉ chi tiết), 'gps' (vị trí GPS thiết bị), 'manual' (nhập tọa độ tay)
+  const [pinMode, setPinMode] = useState<'address' | 'gps' | 'manual'>(
+    initialLat != null && initialLng != null ? 'gps' : 'address',
+  );
   const [, startTransition] = useTransition();
 
   // Tọa độ hiển thị trên bản đồ (fallback về tọa độ mặc định nếu chưa có)
@@ -72,7 +78,7 @@ export function GoogleMapAddressPicker({
     }
   }, [lat, lng, onCoordinatesChange]);
 
-  // Tự động ghim các trường ĐH gần nhất (< 3km) vào danh sách đề xuất
+  // Tự động ghim các trường ĐH gần nhất (< 3.5km) vào danh sách đề xuất
   useEffect(() => {
     if (nearbyUnis.length > 0) {
       const topClosest = nearbyUnis.filter((u) => u.distanceKm <= 3.5);
@@ -103,7 +109,7 @@ export function GoogleMapAddressPicker({
     onUniversitiesChange?.(list);
   }, [selectedUnis, onUniversitiesChange]);
 
-  // Hàm xử lý định vị địa chỉ bất kỳ qua Geocoding API và hiển thị vệ tinh
+  // Hàm xử lý định vị địa chỉ bất kỳ qua Geocoding Pipeline và ghim vệ tinh Google Maps
   async function handleGeocodeAddress(queryAddress?: string) {
     const targetQuery = (queryAddress ?? address).trim();
     if (!targetQuery) {
@@ -112,74 +118,22 @@ export function GoogleMapAddressPicker({
     }
 
     setIsGeocoding(true);
-    setGeoNotice('Đang kết nối Google Maps để định vị vệ tinh...');
+    setGeoNotice('Đang kết nối Google Maps để định vị vệ tinh');
     setMapType('hybrid'); // Tự động chuyển sang bản đồ vệ tinh
+    setPinMode('address');
+    setActiveSearchAddress(targetQuery);
 
     try {
-      // 1. Kiểm tra khớp tên trường ĐH trong danh bạ chuẩn
-      const lowerQuery = targetQuery.toLowerCase();
-      const matchedUni = VIETNAM_UNIVERSITIES.find(
-        (u) =>
-          lowerQuery.includes(u.name.toLowerCase()) ||
-          lowerQuery.includes(u.abbreviation.toLowerCase()) ||
-          (u.abbreviation && lowerQuery.includes(u.abbreviation.toLowerCase().replace(/[^a-z0-9]/g, ''))),
-      );
+      const geocodeResult = await geocodeAddressPipeline(targetQuery);
 
-      if (matchedUni) {
-        setLat(matchedUni.lat);
-        setLng(matchedUni.lng);
-        setGeoNotice(`Đã định vị chính xác khu vực ${matchedUni.name} trên bản đồ vệ tinh`);
-        setIsGeocoding(false);
-        return;
-      }
-
-      // 2. Geocoding trực tiếp qua dịch vụ bản đồ (thử chuỗi gốc, sau đó thử chuỗi lược bỏ số nhà/ngõ ngách nếu cần)
-      const tryQueries = [
-        targetQuery,
-        // Lược bỏ tiền tố số nhà/ngõ để định vị tới đúng đường/phường
-        targetQuery.replace(/^(số|ngõ|ngách|hẻm)?\s*\d+[a-zA-Z]?(\/\d+)*\s*,?\s*/i, '').trim(),
-      ].filter((q, idx, arr) => q && arr.indexOf(q) === idx);
-
-      let foundCoords: { lat: number; lng: number } | null = null;
-
-      for (const q of tryQueries) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&countrycodes=vn&limit=1&q=${encodeURIComponent(
-              q,
-            )}`,
-            {
-              headers: { 'User-Agent': 'QNS-RealEstate-Broker/2.0' },
-              signal: controller.signal,
-            },
-          );
-          clearTimeout(timeoutId);
-
-          if (res.ok) {
-            const results = await res.json();
-            if (Array.isArray(results) && results.length > 0 && results[0].lat && results[0].lon) {
-              foundCoords = {
-                lat: parseFloat(results[0].lat),
-                lng: parseFloat(results[0].lon),
-              };
-              break;
-            }
-          }
-        } catch {
-          // thử phương án tiếp theo
-        }
-      }
-
-      if (foundCoords) {
-        setLat(foundCoords.lat);
-        setLng(foundCoords.lng);
-        setGeoNotice('Đã xác định tọa độ và ghim vị trí chính xác trên bản đồ vệ tinh Google Maps');
+      if (geocodeResult) {
+        setLat(geocodeResult.lat);
+        setLng(geocodeResult.lng);
+        const labelText = geocodeResult.label ? ` (${geocodeResult.label})` : '';
+        setGeoNotice(`Đã xác định vị trí chính xác trên bản đồ Google Maps${labelText}`);
       } else {
         // Vẫn ghim Google Maps trực tiếp bằng chuỗi địa chỉ chi tiết ở chế độ vệ tinh
-        setGeoNotice('Đã định vị vị trí trên bản đồ vệ tinh Google Maps theo địa chỉ nhập');
+        setGeoNotice('Đã ghim vị trí theo địa chỉ chi tiết trên bản đồ vệ tinh Google Maps');
       }
     } catch {
       setGeoNotice('Đã hiển thị bản đồ vệ tinh Google Maps theo địa chỉ thực tế');
@@ -196,7 +150,7 @@ export function GoogleMapAddressPicker({
     }
 
     setIsLocatingGps(true);
-    setGeoNotice('Đang yêu cầu tọa độ GPS vệ tinh...');
+    setGeoNotice('Đang yêu cầu tọa độ GPS vệ tinh');
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -204,6 +158,7 @@ export function GoogleMapAddressPicker({
         const newLng = Number(pos.coords.longitude.toFixed(6));
         setLat(newLat);
         setLng(newLng);
+        setPinMode('gps');
         setIsLocatingGps(false);
         setGeoNotice(`Đã lấy vị trí GPS chính xác: ${newLat}, ${newLng}`);
       },
@@ -253,6 +208,49 @@ export function GoogleMapAddressPicker({
         u.address.toLowerCase().includes(q),
     ).slice(0, 5);
   }, [customSearchUni]);
+
+  // URL nhúng Google Maps iframe (hỗ trợ phân biệt chế độ định vị địa chỉ vs GPS/tọa độ tay)
+  const mapEmbedUrl = useMemo(() => {
+    // 1. Chế độ GPS thiết bị hoặc tọa độ tay thủ công
+    if ((pinMode === 'gps' || pinMode === 'manual') && lat != null && lng != null) {
+      return getGoogleMapsEmbedUrl({ lat, lng }, { mapType, zoom: 17 });
+    }
+
+    // 2. Chế độ định vị địa chỉ chi tiết (ưu tiên ghim đúng chuỗi địa chỉ người dùng đã nhập)
+    const targetQuery = (activeSearchAddress || address).trim();
+    if (targetQuery) {
+      return getGoogleMapsEmbedUrl(
+        { address: targetQuery, lat: lat ?? undefined, lng: lng ?? undefined },
+        { mapType, zoom: 17, preferAddress: true },
+      );
+    }
+
+    // 3. Fallback mặc định
+    return getGoogleMapsEmbedUrl(
+      { lat: activeLat, lng: activeLng, address: 'Hà Nội' },
+      { mapType, zoom: 17 },
+    );
+  }, [pinMode, lat, lng, address, activeSearchAddress, activeLat, activeLng, mapType]);
+
+  // Link mở Google Maps trong tab mới
+  const mapLargeViewUrl = useMemo(() => {
+    if ((pinMode === 'gps' || pinMode === 'manual') && lat != null && lng != null) {
+      return getGoogleMapsViewUrl({ lat, lng }, { satellite: mapType === 'hybrid' });
+    }
+
+    const targetQuery = (activeSearchAddress || address).trim();
+    if (targetQuery) {
+      return getGoogleMapsViewUrl(
+        { address: targetQuery, lat: lat ?? undefined, lng: lng ?? undefined },
+        { satellite: mapType === 'hybrid', preferAddress: true },
+      );
+    }
+
+    return getGoogleMapsViewUrl(
+      { lat: activeLat, lng: activeLng },
+      { satellite: mapType === 'hybrid' },
+    );
+  }, [pinMode, lat, lng, address, activeSearchAddress, activeLat, activeLng, mapType]);
 
   return (
     <div className="space-y-4 rounded-2xl border border-surface-border bg-slate-50/70 p-4 sm:p-5 shadow-sm">
@@ -310,6 +308,7 @@ export function GoogleMapAddressPicker({
                 type="button"
                 onClick={() => {
                   setAddress('');
+                  setActiveSearchAddress('');
                   onAddressChange?.('');
                 }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
@@ -378,7 +377,7 @@ export function GoogleMapAddressPicker({
               {showCoordinateInputs ? 'Ẩn tọa độ số' : 'Nhập tọa độ thủ công'}
             </button>
             <a
-              href={getGoogleMapsViewUrl({ lat: activeLat, lng: activeLng, address }, { satellite: mapType === 'hybrid' })}
+              href={mapLargeViewUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand hover:underline"
@@ -388,15 +387,12 @@ export function GoogleMapAddressPicker({
           </div>
         </div>
 
-        {/* Khung bản đồ */}
-        <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden rounded-xl border border-surface-border bg-slate-200 shadow-inner">
+        {/* Khung bản đồ mở rộng to rõ ràng theo yêu cầu */}
+        <div className="relative h-[440px] sm:h-[520px] md:h-[580px] w-full overflow-hidden rounded-2xl border border-surface-border bg-slate-200 shadow-md">
           <iframe
-            key={`${mapType}-${activeLat}-${activeLng}-${address}`}
+            key={`${mapType}-${pinMode}-${mapEmbedUrl}`}
             title="Google Maps Location"
-            src={getGoogleMapsEmbedUrl(
-              { lat: activeLat, lng: activeLng, address: address || 'Hà Nội' },
-              { mapType, zoom: 17 },
-            )}
+            src={mapEmbedUrl}
             className="h-full w-full border-0"
             loading="lazy"
             allowFullScreen
@@ -412,7 +408,10 @@ export function GoogleMapAddressPicker({
                 type="number"
                 step="0.000001"
                 value={lat ?? ''}
-                onChange={(e) => setLat(e.target.value ? parseFloat(e.target.value) : null)}
+                onChange={(e) => {
+                  setPinMode('manual');
+                  setLat(e.target.value ? parseFloat(e.target.value) : null);
+                }}
                 placeholder="VD: 20.9982"
                 className="input-field text-xs py-1.5"
               />
@@ -423,7 +422,10 @@ export function GoogleMapAddressPicker({
                 type="number"
                 step="0.000001"
                 value={lng ?? ''}
-                onChange={(e) => setLng(e.target.value ? parseFloat(e.target.value) : null)}
+                onChange={(e) => {
+                  setPinMode('manual');
+                  setLng(e.target.value ? parseFloat(e.target.value) : null);
+                }}
                 placeholder="VD: 105.8778"
                 className="input-field text-xs py-1.5"
               />

@@ -117,7 +117,7 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
               Hệ thống QNS BROKER hoạt động theo mô hình môi giới chuyên biệt cho thuê phòng trọ, chung cư mini, chung cư và mặt bằng kinh doanh
             </p>
             <p>
-              Chuyên viên Đức Quân trực tiếp tiếp nhận tin đăng, liên hệ chủ nhà để xác minh thông tin, khảo sát thực tế và điều phối dẫn khách thuê tới xem phòng trực tiếp tại địa chỉ cho thuê
+              Chủ nhà trực tiếp tiếp nhận tin đăng, liên hệ để xác minh thông tin, khảo sát thực tế và điều phối dẫn khách thuê tới xem phòng trực tiếp tại địa chỉ cho thuê
             </p>
             <p className="font-medium text-emerald-800 bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200/60">
               Khách thuê phòng được phục vụ hoàn toàn miễn phí 0 đồng, không phải trả bất kỳ chi phí dịch vụ môi giới nào
@@ -157,7 +157,7 @@ export function OwnerBrokerTermsGate({ onAccepted }: OwnerBrokerTermsGateProps) 
               Mọi khoản tiền đặt cọc và tiền thuê phòng do Khách thuê và Chủ nhà giao dịch, ký nhận trực tiếp tại địa điểm thuê bằng hợp đồng và biên bản bàn giao thực tế.
             </p>
             <p>
-              Phí dịch vụ môi giới được Chủ nhà thanh toán trực tiếp hoặc chuyển khoản cho chuyên viên Đức Quân sau khi giao dịch chốt thuê hoàn tất.
+              Phí dịch vụ môi giới được thanh toán trực tiếp hoặc chuyển khoản cho Chủ nhà sau khi giao dịch chốt thuê hoàn tất
             </p>
           </section>
 

@@ -11,6 +11,8 @@ interface AdminUser {
   phone: string;
   fullName: string | null;
   role: string;
+  email?: string | null;
+  avatarUrl?: string | null;
 }
 
 interface BadgeCounts {
@@ -94,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   function handleLogout() {
     clearTokens();
     setUser(null);
-    router.push('/dang-nhap');
+    window.location.href = '/dang-nhap';
   }
 
   if (loading) {
@@ -305,14 +307,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-4 border-t border-slate-800 bg-slate-900/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-9 h-9 rounded-full bg-teal-600/30 border border-teal-500/50 text-teal-300 flex items-center justify-center font-bold text-sm shrink-0">
-                {(user.fullName ?? user.phone).charAt(0).toUpperCase()}
-              </div>
+              {user.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.avatarUrl}
+                  alt={user.fullName || 'Admin'}
+                  className="w-9 h-9 rounded-full object-cover shrink-0 ring-1 ring-teal-500/50"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-teal-600/30 border border-teal-500/50 text-teal-300 flex items-center justify-center font-bold text-sm shrink-0">
+                  {(user.fullName ?? user.email ?? user.phone ?? 'A').charAt(0).toUpperCase()}
+                </div>
+              )}
               <div className="overflow-hidden">
                 <p className="text-sm font-semibold text-white truncate">
                   {user.fullName ?? 'Quản trị viên'}
                 </p>
-                <p className="text-xs text-slate-400 truncate">{user.phone}</p>
+                <p className="text-xs text-slate-400 truncate">{user.email || user.phone}</p>
               </div>
             </div>
             <button

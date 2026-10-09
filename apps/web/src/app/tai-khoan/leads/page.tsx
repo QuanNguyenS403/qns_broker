@@ -35,12 +35,12 @@ const STATUS_LABELS: Record<string, { label: string; color: string; desc: string
   new: {
     label: 'Khách mới',
     color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    desc: 'Đức Quân đang tiếp nhận nhu cầu',
+    desc: 'Chủ nhà đang tiếp nhận nhu cầu',
   },
   contacted: {
     label: 'Đang tư vấn',
     color: 'bg-blue-100 text-blue-800 border-blue-200',
-    desc: 'Đức Quân đã liên hệ và sàng lọc nhu cầu',
+    desc: 'Chủ nhà đã liên hệ và sàng lọc nhu cầu',
   },
   qualified: {
     label: 'Đang xếp lịch xem',
@@ -137,7 +137,7 @@ export default function MyLeadsPage() {
                 color: 'bg-gray-100 text-gray-800 border-gray-200',
                 desc: 'Đang xử lý',
               };
-              const agentName = lead.assignedAgent?.fullName || SITE_CONFIG.agentName;
+              const agentName = lead.assignedAgent?.fullName?.replace(/Nguyễn Đức Quân|Đức Quân/g, 'Chủ nhà') || SITE_CONFIG.agentName;
 
               return (
                 <div
@@ -183,7 +183,7 @@ export default function MyLeadsPage() {
                     </div>
                   )}
 
-                  {/* Thông tin điều phối bởi người môi giới (Đức Quân) */}
+                  {/* Thông tin điều phối bởi người môi giới (Chủ nhà) */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
                     <div className="flex items-center gap-1.5 text-text-secondary">
                       <span className="font-semibold text-brand">Người phụ trách dẫn khách:</span>

@@ -12,7 +12,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    let message: string | string[] = 'Đã có lỗi xảy ra, vui lòng thử lại sau.';
+    let message: string | string[] = 'Đã có lỗi xảy ra, vui lòng thử lại sau';
     if (exception instanceof HttpException) {
       const body = exception.getResponse();
       // ValidationPipe (class-validator) ném ra object dạng { statusCode, message: string[], error }
