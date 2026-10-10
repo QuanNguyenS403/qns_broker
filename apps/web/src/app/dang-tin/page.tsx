@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { authFetch, getAccessToken, setTokens, parseGoogleJwt } from '@/lib/auth-client';
+import { useRouter } from 'next/navigation';
+import { authFetch, getAccessToken, setTokens, parseGoogleJwt, saveAccountCustomListing } from '@/lib/auth-client';
 import { GoogleMapAddressPicker, type SelectedUniversityDistance } from '@/components/GoogleMapAddressPicker';
 import { compressImage } from '@/lib/image-compressor';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
@@ -31,6 +32,7 @@ const PROPERTY_TYPES: PropertyTypeOption[] = [
 ];
 
 export default function DangTinPage() {
+  const router = useRouter();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -53,6 +55,18 @@ export default function DangTinPage() {
   const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedUnis, setSelectedUnis] = useState<SelectedUniversityDistance[]>([]);
 
+  const handleAddressChange = useCallback((val: string) => {
+    setAddressDetail(val);
+  }, []);
+
+  const handleCoordinatesChange = useCallback((coords: { lat: number; lng: number } | null) => {
+    setMapCoords(coords);
+  }, []);
+
+  const handleUniversitiesChange = useCallback((unis: SelectedUniversityDistance[]) => {
+    setSelectedUnis(unis);
+  }, []);
+
   // Kiểm tra trạng thái đăng nhập tài khoản thực tế
   useEffect(() => {
     function verifyAuth() {
@@ -64,11 +78,11 @@ export default function DangTinPage() {
           setAuthModalOpen(false);
         } else {
           setCurrentUser(null);
-          setAuthModalOpen(true);
+          setAuthModalOpen(false);
         }
       } catch {
         setCurrentUser(null);
-        setAuthModalOpen(true);
+        setAuthModalOpen(false);
       } finally {
         setAuthChecked(true);
       }
@@ -113,8 +127,8 @@ export default function DangTinPage() {
             lowerEmail === 'admin@qns.com' ||
             lowerEmail === 'contact@qns.com';
           const fallbackUser = {
-            id: googleProfile.sub || (isAdmin ? '1' : `g_${Date.now()}`),
-            fullName: googleProfile.name || (isAdmin ? 'Chủ nhà' : googleProfile.email.split('@')[0]),
+            id: isAdmin ? '1' : (googleProfile.sub || `g_${Date.now()}`),
+            fullName: isAdmin ? 'Chủ nhà' : (googleProfile.name || googleProfile.email.split('@')[0]),
             email: googleProfile.email,
             avatarUrl: googleProfile.picture || null,
             phone: '0981 753 082',
@@ -126,6 +140,27 @@ export default function DangTinPage() {
             : `g_token_${Date.now()}_${btoa(googleProfile.email)}`;
           setTokens(mockToken, mockToken, fallbackUser);
           setCurrentUser(fallbackUser);
+
+          // Luôn đồng bộ tài khoản admin vào kho local
+          if (isAdmin) {
+            try {
+              const savedUsersRaw = localStorage.getItem('qns_registered_users');
+              const savedUsers: any[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+              const idx = savedUsers.findIndex((u) => u.email.toLowerCase() === lowerEmail);
+              const adminEntry = {
+                id: '1',
+                fullName: 'Chủ nhà',
+                email: lowerEmail,
+                password: 'Quannguyenkay6@',
+                phone: '0981 753 082',
+                role: 'admin',
+                createdAt: fallbackUser.createdAt,
+              };
+              if (idx >= 0) savedUsers[idx] = { ...savedUsers[idx], ...adminEntry };
+              else savedUsers.push(adminEntry);
+              localStorage.setItem('qns_registered_users', JSON.stringify(savedUsers));
+            } catch {}
+          }
         }
       }
       setAuthModalOpen(false);
@@ -375,10 +410,12 @@ export default function DangTinPage() {
           ? { id: selectedLoc.id, name: selectedLoc.name, slug: selectedLoc.slug, level: selectedLoc.level }
           : { id: 1, name: 'Hà Nội', slug: 'ha-noi', level: 'province' },
         project: null,
+        ownerId: String(currentUser?.id || '1'),
+        ownerEmail: (currentUser?.email || '').toLowerCase(),
         owner: {
-          id: currentUser?.id || '1',
+          id: String(currentUser?.id || '1'),
           fullName: currentUser?.fullName || 'Chủ nhà',
-          phone: currentUser?.phone || '0981753082',
+          phone: currentUser?.phone || '0981 753 082',
           email: currentUser?.email || null,
           avatarUrl: currentUser?.avatarUrl || null,
           createdAt: new Date().toISOString(),
@@ -408,15 +445,8 @@ export default function DangTinPage() {
         console.warn('Lưu trữ máy chủ Next.js gặp lỗi:', serverSaveErr);
       }
 
-      // 5. Đồng bộ lưu trữ vào bộ nhớ cục bộ localStorage
-      if (typeof window !== 'undefined') {
-        const localListingsKey = 'qns_custom_listings';
-        const existingRaw = localStorage.getItem(localListingsKey);
-        const existingList = existingRaw ? JSON.parse(existingRaw) : [];
-        existingList.unshift(localListingItem);
-        localStorage.setItem(localListingsKey, JSON.stringify(existingList));
-        window.dispatchEvent(new Event('qns_listings_updated'));
-      }
+      // 5. Lưu trữ riêng biệt theo tài khoản người dùng đăng tin (không bị nhảy sang tài khoản khác)
+      saveAccountCustomListing(localListingItem, currentUser);
 
       setCreatedSlug(generatedSlug);
       setMessage('success');
@@ -444,58 +474,12 @@ export default function DangTinPage() {
 
   if (!currentUser) {
     return (
-      <div className="container-max max-w-lg px-4 py-12 md:py-16">
-        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-10 shadow-xl text-center space-y-6">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-brand ring-8 ring-teal-50/60">
-            <svg className="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-            </svg>
-          </div>
-
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Đăng nhập để đăng tin
-            </h1>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Vui lòng đăng ký hoặc đăng nhập tài khoản bằng Google để bắt đầu đăng tin cho thuê phòng
-            </p>
-          </div>
-
-          <div className="pt-2 flex flex-col items-center gap-3">
-            <GoogleSignInButton
-              onSuccess={handleGoogleLoginSuccess}
-              text="continue_with"
-            />
-            <button
-              type="button"
-              onClick={() => setAuthModalOpen(true)}
-              className="text-xs text-brand font-semibold hover:underline mt-1 cursor-pointer"
-            >
-              Mở hộp thoại đăng nhập / đăng ký
-            </button>
-          </div>
-
-          <div className="pt-4 border-t border-slate-100 text-left text-xs text-slate-500 space-y-2.5">
-            <div className="flex items-center gap-2">
-              <span className="text-emerald-600 font-bold">✓</span>
-              <span>Đăng tin cho thuê hoàn toàn miễn phí 0 đồng</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-emerald-600 font-bold">✓</span>
-              <span>Quản lý và cập nhật thông tin phòng dễ dàng</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-emerald-600 font-bold">✓</span>
-              <span>Chuyên viên tiếp nhận và hỗ trợ dẫn khách xem</span>
-            </div>
-          </div>
-        </div>
-
+      <div className="container-max flex min-h-[calc(100vh-140px)] items-center justify-center px-4 py-8 sm:py-14">
         <AuthModal
-          isOpen={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
+          isOpen={true}
+          inline={true}
+          onClose={() => router.push('/')}
           onSuccess={() => {
-            setAuthModalOpen(false);
             try {
               const userRaw = localStorage.getItem('user');
               if (userRaw) setCurrentUser(JSON.parse(userRaw));
@@ -549,9 +533,9 @@ export default function DangTinPage() {
           initialAddress={addressDetail}
           initialLat={mapCoords?.lat}
           initialLng={mapCoords?.lng}
-          onAddressChange={(val) => setAddressDetail(val)}
-          onCoordinatesChange={(coords) => setMapCoords(coords)}
-          onUniversitiesChange={(unis) => setSelectedUnis(unis)}
+          onAddressChange={handleAddressChange}
+          onCoordinatesChange={handleCoordinatesChange}
+          onUniversitiesChange={handleUniversitiesChange}
         />
 
         {/* Tiêu đề & Mô tả */}
@@ -808,6 +792,20 @@ export default function DangTinPage() {
           </button>
         </div>
       </form>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={() => {
+          setAuthModalOpen(false);
+          try {
+            const userRaw = localStorage.getItem('user');
+            if (userRaw) setCurrentUser(JSON.parse(userRaw));
+          } catch {}
+        }}
+        title="Đăng nhập để đăng tin"
+        subtitle="Vui lòng đăng nhập hoặc đăng ký tài khoản bằng Google để tiếp tục đến mục đăng tin"
+      />
     </div>
   );
 }

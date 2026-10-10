@@ -51,8 +51,10 @@ export class EmailService {
     const driver = this.config?.get<string>('MAIL_DRIVER') ?? process.env.MAIL_DRIVER ?? 'mock';
     const host = this.config?.get<string>('SMTP_HOST') ?? process.env.SMTP_HOST;
     const port = Number(this.config?.get<number>('SMTP_PORT') ?? process.env.SMTP_PORT ?? 465);
-    const user = this.config?.get<string>('SMTP_USER') ?? process.env.SMTP_USER;
-    const pass = this.config?.get<string>('SMTP_PASS') ?? process.env.SMTP_PASS;
+    const user = (this.config?.get<string>('SMTP_USER') ?? process.env.SMTP_USER)?.trim();
+    const rawPass = this.config?.get<string>('SMTP_PASS') ?? process.env.SMTP_PASS;
+    // Mật khẩu ứng dụng của Google có thể chứa khoảng trắng phân tách 4 ký tự (ví dụ: abcd efgh ijkl mnop)
+    const pass = rawPass ? rawPass.trim().replace(/\s+/g, '') : '';
 
     if (driver !== 'mock' && user && pass) {
       try {
@@ -61,16 +63,22 @@ export class EmailService {
           ? {
               service: 'gmail',
               auth: { user, pass },
+              pool: true,
+              maxConnections: 5,
+              maxMessages: 100,
             }
           : {
               host: host || 'smtp.gmail.com',
               port,
               secure: port === 465,
               auth: { user, pass },
+              pool: true,
+              maxConnections: 5,
+              maxMessages: 100,
             };
         this.transporter = nodemailer.createTransport(transportConfig);
         this.isMock = false;
-        this.logger.log(`[EmailService] Khởi tạo SMTP transporter thành công (${isGmail ? 'Gmail Service' : `${host}:${port}`})`);
+        this.logger.log(`[EmailService] Khởi tạo SMTP transporter thành công (${isGmail ? 'Gmail Service (Pooled)' : `${host}:${port} (Pooled)`})`);
       } catch (err) {
         this.logger.error(`[EmailService] Không thể kết nối SMTP, fallback về MOCK: ${err}`);
         this.isMock = true;
@@ -82,7 +90,13 @@ export class EmailService {
   }
 
   private async sendEmail(to: string, subject: string, html: string, textSummary: string): Promise<boolean> {
-    const from = this.config?.get<string>('SMTP_FROM') ?? process.env.SMTP_FROM ?? 'QNS BROKER <no-reply@qnsbroker.com>';
+    const rawFrom = this.config?.get<string>('SMTP_FROM') ?? process.env.SMTP_FROM ?? 'QNS BROKER <no-reply@qnsbroker.com>';
+    let from = rawFrom.trim();
+    // Tự động chuẩn hóa nếu SMTP_FROM bị thiếu địa chỉ email (ví dụ chỉ có tên "QNS BROKER")
+    if (from && !from.includes('@')) {
+      const userEmail = (this.config?.get<string>('SMTP_USER') ?? process.env.SMTP_USER)?.trim() || 'ducquan16102006@gmail.com';
+      from = `"${from}" <${userEmail}>`;
+    }
 
     if (this.isMock || !this.transporter) {
       this.logger.log(`\n📧 ========== [MOCK EMAIL NOTIFICATION] ==========
@@ -573,7 +587,7 @@ Content: ${textSummary}
       </div>
     `;
 
-    await this.notifyTelegram(
+    const tgPromise = this.notifyTelegram(
       `🏠 <b>[ĐẶT LỊCH XEM PHÒNG - QNS BROKER]</b>\n` +
       `👤 Khách hàng: <b>${safeName}</b> (<a href="tel:${safePhone}">${safePhone}</a>)\n` +
       `📧 Email: ${safeEmail}\n` +
@@ -581,9 +595,12 @@ Content: ${textSummary}
       `📅 Ngày xem: ${safeDate} (${safeTime})\n` +
       `📝 Ghi chú: <i>${safeNote.slice(0, 300)}</i>\n` +
       `⏰ Tiếp nhận: ${nowStr}`
-    );
+    ).catch(() => {});
 
-    return this.sendEmail(adminEmail, subject, html, summary);
+    const mailPromise = this.sendEmail(adminEmail, subject, html, summary);
+
+    const [, mailRes] = await Promise.all([tgPromise, mailPromise]);
+    return mailRes;
   }
 
   /**
@@ -611,11 +628,11 @@ Content: ${textSummary}
     const safeNote = escapeHtml(appointment.note || 'Không có');
 
     const subject = `[QNS BROKER] Xác nhận đặt lịch xem phòng thành công: ${safeTitle}`;
-    const summary = `Chào ${appointment.fullName}, yêu cầu đặt lịch xem phòng "${appointment.listingTitle || ''}" của bạn đã được tiếp nhận thành công. Chủ nhà (0981 753 082) sẽ sớm liên hệ xác nhận và dẫn bạn xem phòng thực tế`;
+    const summary = `Chào ${appointment.fullName}, yêu cầu đặt lịch xem phòng "${appointment.listingTitle || ''}" của bạn đã được tiếp nhận thành công. Nhân viên phụ trách Đức Quân (0981 753 082) sẽ sớm liên hệ xác nhận và trực tiếp dẫn bạn xem phòng thực tế`;
     const html = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 620px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
         <div style="background: linear-gradient(135deg, #0d9488, #0f766e); padding: 26px 30px; color: #ffffff;">
-          <h2 style="margin: 0; font-size: 21px; font-weight: 700;">✅ Xác Nhận Đặt Lịch Xem Phòng Thành Công</h2>
+          <h2 style="margin: 0; font-size: 21px; font-weight: 700;">Xác Nhận Đặt Lịch Xem Phòng Thành Công</h2>
           <p style="margin: 6px 0 0; font-size: 13.5px; opacity: 0.95;">Cảm ơn bạn đã tin tưởng dịch vụ kết nối thuê phòng tại QNS BROKER</p>
         </div>
         <div style="padding: 26px 30px; background: #ffffff;">
@@ -631,19 +648,13 @@ Content: ${textSummary}
           </div>
 
           <div style="margin: 22px 0; padding: 16px 20px; background: #f8fafc; border-left: 4px solid #0d9488; border-radius: 8px;">
-            <h3 style="margin: 0 0 6px; font-size: 14.5px; font-weight: 700; color: #0f766e;">👤 Người tư vấn và trực tiếp dẫn bạn xem phòng:</h3>
-            <p style="margin: 0 0 4px; font-size: 14px;"><strong>Người phụ trách:</strong> Chủ nhà</p>
-            <p style="margin: 0; font-size: 14px;"><strong>Hotline liên hệ 24/7:</strong> <a href="tel:0981753082" style="color: #0d9488; font-weight: 700; text-decoration: none;">0981 753 082</a></p>
-          </div>
-
-          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px 18px; margin-bottom: 22px;">
-            <p style="margin: 0; font-size: 13px; color: #065f46; line-height: 1.5;">
-              ✨ <strong>Cam kết từ QNS BROKER:</strong> 100% Miễn phí dịch vụ cho người thuê. Bạn không phải trả bất kỳ khoản phí môi giới nào khi xem phòng và ký hợp đồng trực tiếp với bên có quyền cho thuê.
-            </p>
+            <h3 style="margin: 0 0 6px; font-size: 14.5px; font-weight: 700; color: #0f766e;">Người tư vấn và trực tiếp dẫn bạn xem phòng:</h3>
+            <p style="margin: 0 0 4px; font-size: 14px;"><strong>Nhân viên phụ trách:</strong> Đức Quân</p>
+            <p style="margin: 0; font-size: 14px;"><strong>Số điện thoại:</strong> <a href="tel:0981753082" style="color: #0d9488; font-weight: 700; text-decoration: none;">0981 753 082</a></p>
           </div>
 
           <p style="font-size: 13.5px; color: #64748b; margin-bottom: 0;">
-            Chủ nhà sẽ liên hệ lại với bạn qua số điện thoại <strong>${safePhone}</strong> trước giờ hẹn để xác nhận điểm hẹn và trực tiếp đón bạn đi xem phòng thực tế.
+            Đức Quân sẽ liên hệ lại với bạn qua số điện thoại <strong>${safePhone}</strong> trước giờ hẹn để xác nhận điểm hẹn và trực tiếp đón bạn đi xem phòng thực tế.
           </p>
 
           <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0 16px;" />

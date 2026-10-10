@@ -50,12 +50,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const listing = await getListingOrNull(params.slug);
     if (listing) {
-      const desc = listing.description?.slice(0, 160) ?? `${listing.title} tại ${listing.location?.name ?? 'Việt Nam'}`;
+      const cleanTitle = (listing.title ?? 'Phòng cho thuê')
+        .replace(/^\[MẪU\]\s*/i, '')
+        .replace(/\[MẪU\]/gi, '')
+        .trim();
+      const desc = listing.description?.slice(0, 160) ?? `${cleanTitle} tại ${listing.location?.name ?? 'Việt Nam'}`;
       return {
-        title: `${listing.title} | QNS BROKER`,
+        title: `${cleanTitle} | QNS BROKER`,
         description: desc,
         openGraph: {
-          title: listing.title,
+          title: cleanTitle,
           description: desc,
           images: listing.images?.[0] ? [listing.images[0].imageUrl] : [],
         },

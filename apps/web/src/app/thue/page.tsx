@@ -10,6 +10,7 @@ import {
   PROPERTY_TYPES_STUDIO,
 } from '@/components/SearchFilterBar';
 import { findHanoiWard } from '@/lib/hanoi-wards';
+import { VIETNAM_UNIVERSITIES, calculateDistanceKm } from '@/lib/vietnam-universities';
 import {
   ALL_DEMO_LISTINGS,
   DEMO_CAN_HO_RENT_LISTINGS,
@@ -17,6 +18,7 @@ import {
   DEMO_STUDIO_RENT_LISTINGS,
   DEMO_SPACE_RENT_LISTINGS,
 } from '@/lib/demo-data';
+import { getPublicCustomListingsServer } from '@/lib/custom-listings-server';
 
 export const metadata: Metadata = {
   title: 'Cho thuê Chung cư & Chung cư mini giá tốt — QNS BROKER',
@@ -121,7 +123,22 @@ export default async function ThuePage({ searchParams }: Props) {
       mergedMap.set(item.slug, item);
     }
   }
-  let displayItems = Array.from(mergedMap.values());
+
+  // Nạp thêm tin từ server custom listings (chỉ lấy tin active, tự động loại bỏ tin đã cho thuê)
+  try {
+    const serverCustom = getPublicCustomListingsServer();
+    for (const item of serverCustom) {
+      if (item?.slug && !mergedMap.has(item.slug)) {
+        mergedMap.set(item.slug, item as any);
+      }
+    }
+  } catch {}
+
+  // Tự động loại bỏ triệt để mọi bài đăng phòng đã cho thuê hoặc đã gỡ
+  let displayItems = Array.from(mergedMap.values()).filter((it) => {
+    const st = ((it as any).status || 'active').toLowerCase();
+    return st !== 'rented' && st !== 'removed';
+  });
 
   // Hỗ trợ lọc tìm kiếm trên toàn bộ danh mục phòng
   if (searchParams.keyword) {
@@ -218,9 +235,30 @@ export default async function ThuePage({ searchParams }: Props) {
     });
   }
   if (searchParams.universitySlug) {
-    displayItems = displayItems.filter((it) =>
-      it.nearbyUniversities?.some((u) => u.university.slug === searchParams.universitySlug)
-    );
+    const targetSlug = searchParams.universitySlug;
+    const targetUni = VIETNAM_UNIVERSITIES.find((u) => u.slug === targetSlug);
+    const targetKeywords = targetUni
+      ? [
+          targetUni.abbreviation?.toLowerCase(),
+          targetUni.name.toLowerCase(),
+          targetSlug.replace(/-/g, ' '),
+        ].filter(Boolean) as string[]
+      : [targetSlug.replace(/-/g, ' ')];
+
+    displayItems = displayItems.filter((it) => {
+      // 1. Khớp theo nearbyUniversities có sẵn trong tin đăng
+      if (it.nearbyUniversities?.some((u) => u.university.slug === targetSlug)) {
+        return true;
+      }
+      // 2. Tính khoảng cách địa lý theo tọa độ GPS (bán kính <= 4.5km)
+      if (targetUni && it.lat != null && it.lng != null && !isNaN(it.lat) && !isNaN(it.lng)) {
+        const dist = calculateDistanceKm(it.lat, it.lng, targetUni.lat, targetUni.lng);
+        if (dist <= 4.5) return true;
+      }
+      // 3. Khớp theo từ khóa tên trường / tên viết tắt trong tiêu đề, địa chỉ hoặc mô tả
+      const text = `${it.title} ${it.description || ''} ${it.addressDetail || ''} ${it.location?.name || ''}`.toLowerCase();
+      return targetKeywords.some((kw) => kw && text.includes(kw));
+    });
   }
   if (searchParams.utilitiesIncluded === 'true') {
     displayItems = displayItems.filter((it) => it.utilitiesIncluded);
@@ -259,11 +297,17 @@ export default async function ThuePage({ searchParams }: Props) {
     : 'phòng & căn hộ';
   const pageTitle = searchParams.categoryGroup ? `Cho thuê ${categoryLabel}` : 'Cho thuê phòng & căn hộ';
 
+  const selectedUni = searchParams.universitySlug
+    ? VIETNAM_UNIVERSITIES.find((u) => u.slug === searchParams.universitySlug)
+    : null;
+
   const filterSummary = searchParams.keyword
     ? ` — "${searchParams.keyword}"`
-    : searchParams.universitySlug
-      ? ` — Gần ${searchParams.universitySlug.replace(/-/g, ' ').toUpperCase()}`
-      : '';
+    : selectedUni
+      ? ` — Gần ${selectedUni.abbreviation ? `${selectedUni.abbreviation} (${selectedUni.name})` : selectedUni.name}`
+      : searchParams.universitySlug
+        ? ` — Gần ${searchParams.universitySlug.replace(/-/g, ' ').toUpperCase()}`
+        : '';
 
   return (
     <div className="min-h-screen bg-surface-muted">

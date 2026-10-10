@@ -63,7 +63,7 @@ export async function compressImage(file: File, maxWidth = 1200, quality = 0.75)
 
 /**
  * Kiểm tra và chuẩn hóa mảng hình ảnh tin đăng
- * Tự động thay thế các blob URL bị hết hạn bằng ảnh mẫu chất lượng cao
+ * Tự động thay thế các blob URL bị hết hạn bằng ảnh chất lượng cao chuẩn hệ thống
  */
 export function sanitizeListingImages(images?: any[]): { imageUrl: string; sortOrder: number }[] {
   if (!images || !Array.isArray(images) || images.length === 0) {
@@ -117,9 +117,21 @@ export function healCustomListingsInLocalStorage(): any[] {
         if (changed) itemImages = sanitized;
       }
 
+      let itemOwner = item.owner;
+      if (itemOwner) {
+        const rawOwner = itemOwner.fullName || '';
+        if (!rawOwner || /qns broker|dẫn xem|đức quân|môi giới/i.test(rawOwner)) {
+          itemOwner = { ...itemOwner, fullName: 'Chủ nhà' };
+          changed = true;
+        }
+      } else {
+        itemOwner = { fullName: 'Chủ nhà' };
+        changed = true;
+      }
+
       if (changed) {
         hasChange = true;
-        return { ...item, images: itemImages };
+        return { ...item, images: itemImages, owner: itemOwner };
       }
       return item;
     });

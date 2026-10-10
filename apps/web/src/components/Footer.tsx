@@ -1,8 +1,17 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { SITE_CONFIG } from '@/lib/constants';
 import { QnsLogo } from '@/components/QnsLogo';
 
 export function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/qnsbroker/admin')) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-brand-600/30 bg-gradient-to-b from-brand to-brand-700 text-white">
       <div className="container-max py-7 sm:py-8 md:py-9">

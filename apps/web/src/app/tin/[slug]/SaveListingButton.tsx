@@ -20,7 +20,7 @@ export function SaveListingButton({ listingId }: { listingId: string }) {
 
   async function handleToggle() {
     if (listingId.startsWith('demo-')) {
-      alert('Đây là tin mẫu thử nghiệm, không thể lưu vào danh sách yêu thích');
+      alert('Đây là tin thử nghiệm, không thể lưu vào danh sách yêu thích');
       return;
     }
 

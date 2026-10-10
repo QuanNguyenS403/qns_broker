@@ -19,44 +19,8 @@ interface Props {
   similarListings: Listing[];
 }
 
-const FURNITURE_NAMES: Record<string, string> = {
-  dieuHoa: 'Điều hòa',
-  airConditioner: 'Điều hòa',
-  air_conditioner: 'Điều hòa',
-  nongLanh: 'Bình nóng lạnh',
-  waterHeater: 'Bình nóng lạnh',
-  water_heater: 'Bình nóng lạnh',
-  tuLanh: 'Tủ lạnh',
-  refrigerator: 'Tủ lạnh',
-  mayGiat: 'Máy giặt',
-  washingMachine: 'Máy giặt',
-  washing_machine: 'Máy giặt',
-  giuongDem: 'Giường nệm',
-  bed: 'Giường nệm',
-  tuQuanAo: 'Tủ quần áo',
-  wardrobe: 'Tủ quần áo',
-  banGhe: 'Bàn ghế làm việc',
-  sofa: 'Ghế sofa',
-  smartTv: 'Tivi',
-  bepRieng: 'Bếp',
-  kitchen: 'Bếp',
-  gacLung: 'Gác lửng',
-  mezzanine: 'Gác lửng',
-  banCong: 'Ban công',
-  balcony: 'Ban công',
-  khoaVanTay: 'Khóa vân tay',
-  smartLock: 'Khóa vân tay',
-  fingerprint_lock: 'Khóa vân tay',
-  thangMay: 'Thang máy',
-  elevator: 'Thang máy',
-  wifi: 'Wifi tốc độ cao',
-  gioTuDo: 'Giờ giấc tự do',
-  freeTime: 'Giờ giấc tự do',
-  choDeXe: 'Chỗ để xe',
-  parking: 'Nhà để xe',
-  thuCung: 'Thú cưng',
-  xeDien: 'Xe điện',
-};
+import { extractListingFurnitureList } from '@/lib/furniture-utils';
+
 
 function formatJoinedDuration(createdAt: string): string {
   const diffDays = Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86_400_000));
@@ -198,16 +162,19 @@ export function ListingDetailClientView({ initialListing, slug, similarListings 
     );
   }
 
-  const isSample = currentListing.title?.startsWith('[MẪU]');
-  const displayTitle = isSample
-    ? currentListing.title.replace(/^\[MẪU\]\s*/, '')
-    : currentListing.title ?? 'Phòng cho thuê';
+  const rawListingTitle = currentListing.title ?? 'Phòng cho thuê';
+  const displayTitle = rawListingTitle.replace(/^\[MẪU\]\s*/i, '').replace(/\[MẪU\]/gi, '').trim();
 
-  const rawOwnerName = currentListing.owner?.fullName ?? 'Chủ nhà';
+  const rawOwnerName = (currentListing.owner?.fullName ?? 'Chủ nhà').replace(/\s*\(\d+\)\s*/g, '').trim();
+  const lowerOwner = rawOwnerName.toLowerCase();
   const cleanOwnerName =
-    rawOwnerName.toLowerCase().includes('môi giới demo') || rawOwnerName.toLowerCase() === 'môi giới demo'
+    !rawOwnerName ||
+    lowerOwner.includes('môi giới') ||
+    lowerOwner.includes('qns broker') ||
+    lowerOwner.includes('dẫn xem') ||
+    lowerOwner.includes('đức quân')
       ? 'Chủ nhà'
-      : rawOwnerName.replace(/\s*\(\d+\)\s*/g, '').trim();
+      : rawOwnerName;
 
   // Đảm bảo ảnh luôn hợp lệ
   const sanitizedImages = sanitizeListingImages(currentListing.images);
@@ -262,66 +229,7 @@ export function ListingDetailClientView({ initialListing, slug, similarListings 
       currentListing.description?.toLowerCase().includes('sạc xe')
   );
 
-  const furnitureList = (() => {
-    const list: string[] = [];
-    const am = currentListing.amenities || {};
-
-    Object.entries(FURNITURE_NAMES).forEach(([k, label]) => {
-      if (am[k] && !list.includes(label)) {
-        list.push(label);
-      }
-    });
-
-    const desc = (currentListing.description || '').toLowerCase();
-    if (desc.includes('điều hòa') || desc.includes('máy lạnh')) {
-      if (!list.includes('Điều hòa')) list.push('Điều hòa');
-    }
-    if (desc.includes('nóng lạnh') || desc.includes('bình nóng')) {
-      if (!list.includes('Bình nóng lạnh')) list.push('Bình nóng lạnh');
-    }
-    if (desc.includes('tủ lạnh')) {
-      if (!list.includes('Tủ lạnh')) list.push('Tủ lạnh');
-    }
-    if (desc.includes('máy giặt')) {
-      if (!list.includes('Máy giặt')) list.push('Máy giặt');
-    }
-    if (desc.includes('giường') || desc.includes('đệm') || desc.includes('nệm')) {
-      if (!list.includes('Giường nệm')) list.push('Giường nệm');
-    }
-    if (desc.includes('tủ quần áo') || desc.includes('tủ đồ')) {
-      if (!list.includes('Tủ quần áo')) list.push('Tủ quần áo');
-    }
-    if (desc.includes('bếp') || desc.includes('kệ bếp') || desc.includes('nấu ăn')) {
-      if (!list.includes('Bếp')) list.push('Bếp');
-    }
-    if (desc.includes('sofa')) {
-      if (!list.includes('Ghế sofa')) list.push('Ghế sofa');
-    }
-    if (desc.includes('ban công')) {
-      if (!list.includes('Ban công')) list.push('Ban công');
-    }
-    if (desc.includes('khóa vân tay') || desc.includes('vân tay')) {
-      if (!list.includes('Khóa vân tay')) list.push('Khóa vân tay');
-    }
-    if (desc.includes('thang máy')) {
-      if (!list.includes('Thang máy')) list.push('Thang máy');
-    }
-    if (desc.includes('wifi')) {
-      if (!list.includes('Wifi tốc độ cao')) list.push('Wifi tốc độ cao');
-    }
-    if (desc.includes('để xe') || desc.includes('nhà xe')) {
-      if (!list.includes('Chỗ để xe')) list.push('Chỗ để xe');
-    }
-    if (desc.includes('giờ giấc tự do')) {
-      if (!list.includes('Giờ giấc tự do')) list.push('Giờ giấc tự do');
-    }
-
-    if (list.length === 0) {
-      return ['Điều hòa', 'Bình nóng lạnh', 'Giường nệm', 'Tủ quần áo', 'Bếp', 'Chỗ để xe', 'Wifi tốc độ cao', 'Giờ giấc tự do'];
-    }
-
-    return list;
-  })();
+  const furnitureList = extractListingFurnitureList(currentListing);
 
   return (
     <div className="min-h-screen bg-surface-muted">
@@ -351,6 +259,27 @@ export function ListingDetailClientView({ initialListing, slug, similarListings 
           </Link>
         </div>
 
+        {/* Banner cảnh báo nếu phòng đã cho thuê */}
+        {(currentListing.status || '').toLowerCase() === 'rented' && (
+          <div className="mb-5 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-white font-bold text-base shadow-xs">
+                ✓
+              </span>
+              <div>
+                <p className="font-bold text-emerald-950 text-sm sm:text-base">Phòng này đã được cho thuê thành công</p>
+                <p className="text-xs sm:text-sm text-emerald-800 mt-0.5">Hiện tại phòng không còn trống nên không thể tiếp nhận đặt lịch đi xem</p>
+              </div>
+            </div>
+            <Link
+              href="/thue"
+              className="inline-flex items-center justify-center rounded-xl bg-emerald-700 px-4 py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-emerald-800 transition-colors shrink-0 shadow-xs"
+            >
+              Tìm phòng đang còn trống khác →
+            </Link>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-3">
           {/* Cột trái — nội dung chính (2/3 chiều rộng) */}
           <div className="lg:col-span-2 space-y-5 sm:space-y-6">
@@ -359,7 +288,14 @@ export function ListingDetailClientView({ initialListing, slug, similarListings 
 
             {/* Tiêu đề */}
             <div className="rounded-2xl border border-surface-border bg-white p-5 sm:p-6 md:p-7 shadow-card">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary leading-snug">{displayTitle}</h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary leading-snug">{displayTitle}</h1>
+                {(currentListing.status || '').toLowerCase() === 'rented' && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    Đã cho thuê
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Khối Thông tin chính & Biểu phí */}
@@ -368,7 +304,13 @@ export function ListingDetailClientView({ initialListing, slug, similarListings 
               <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-2 md:grid-cols-4">
                 <InfoRow
                   label="Tình trạng phòng"
-                  value={currentListing.status === 'expired' ? 'Hết phòng' : 'Còn phòng'}
+                  value={
+                    (currentListing.status || '').toLowerCase() === 'rented'
+                      ? 'Đã cho thuê'
+                      : currentListing.status === 'expired'
+                        ? 'Hết phòng'
+                        : 'Còn phòng'
+                  }
                 />
                 <InfoRow
                   label="Cọc"
@@ -463,7 +405,14 @@ export function ListingDetailClientView({ initialListing, slug, similarListings 
                   <span>Vị trí trên Google Maps & Tiện ích xung quanh</span>
                 </h2>
                 <p className="text-sm text-text-muted mt-1">
-                  {currentListing.addressDetail ? `${currentListing.addressDetail}, ${currentListing.location?.name ?? 'Khu vực'}` : (currentListing.location?.name ?? 'Khu vực')}
+                  {(() => {
+                    const addr = currentListing.addressDetail?.trim() || '';
+                    const loc = currentListing.location?.name?.trim() || '';
+                    if (!addr && !loc) return 'Khu vực đang cập nhật địa chỉ';
+                    if (!addr) return loc;
+                    if (!loc) return addr;
+                    return addr.toLowerCase().includes(loc.toLowerCase()) ? addr : `${addr}, ${loc}`;
+                  })()}
                 </p>
               </div>
 
@@ -546,7 +495,7 @@ export function ListingDetailClientView({ initialListing, slug, similarListings 
                         </div>
                         <div className="p-3 space-y-1.5">
                           <p className="line-clamp-2 text-xs sm:text-sm font-semibold text-text-primary group-hover:text-brand transition-colors leading-snug">
-                            {item.title.replace(/^\[MẪU\]\s*/, '')}
+                            {item.title.replace(/^\[MẪU\]\s*/i, '').replace(/\[MẪU\]/gi, '').trim()}
                           </p>
                           {item.areaM2 && (
                             <p className="text-xs text-text-muted">{item.areaM2} m²</p>
@@ -579,6 +528,7 @@ export function ListingDetailClientView({ initialListing, slug, similarListings 
                 ownerPostCount={507}
                 contactPhone={(currentListing as any).contactPhone}
                 contactAgent={(currentListing as any).contactAgent}
+                isRented={(currentListing.status || '').toLowerCase() === 'rented'}
               />
             </div>
           </aside>
@@ -591,6 +541,7 @@ export function ListingDetailClientView({ initialListing, slug, similarListings 
         listingTitle={displayTitle}
         priceFormatted={formatExactPrice(currentListing.price)}
         depositFormatted={currentListing.depositAmount ? formatExactPrice(currentListing.depositAmount) : undefined}
+        isRented={(currentListing.status || '').toLowerCase() === 'rented'}
       />
     </div>
   );

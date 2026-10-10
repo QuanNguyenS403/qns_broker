@@ -47,6 +47,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" className={inter.variable}>
+      <head>
+        <link rel="preconnect" href="https://accounts.google.com" />
+        <link rel="dns-prefetch" href="https://accounts.google.com" />
+      </head>
       <body className="flex min-h-screen flex-col bg-surface-muted font-sans antialiased">
         <Suspense fallback={null}>
           <TopProgressBar />

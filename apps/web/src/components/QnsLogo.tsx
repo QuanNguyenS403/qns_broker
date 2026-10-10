@@ -3,7 +3,7 @@ import React from 'react';
 export interface QnsLogoProps {
   /**
    * 'emblem': Chỉ biểu tượng ngôi nhà trong chữ Q (tỉ lệ 1:1, phù hợp avatar, icon, badge)
-   * 'full': Logo đầy đủ dạng dọc (Biểu tượng Q + chữ QNS bên dưới chuẩn mẫu ảnh)
+   * 'full': Logo đầy đủ dạng dọc (Biểu tượng Q + chữ QNS bên dưới chuẩn hình ảnh)
    * 'horizontal': Biểu tượng bên trái + chữ QNS BROKER bên phải (chuẩn thanh header website)
    */
   variant?: 'emblem' | 'full' | 'horizontal';

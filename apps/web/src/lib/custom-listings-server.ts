@@ -24,7 +24,20 @@ export function getCustomListingsServer(): Listing[] {
     if (!fs.existsSync(DATA_FILE_PATH)) return [];
     const content = fs.readFileSync(DATA_FILE_PATH, 'utf-8');
     const parsed = JSON.parse(content);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item) => {
+      const rawOwner = item?.owner?.fullName || '';
+      if (!rawOwner || /qns broker|dẫn xem|đức quân|môi giới/i.test(rawOwner)) {
+        return {
+          ...item,
+          owner: {
+            ...(item?.owner || {}),
+            fullName: 'Chủ nhà',
+          },
+        };
+      }
+      return item;
+    });
   } catch (err) {
     console.warn('Lỗi đọc custom listings từ máy chủ:', err);
     return [];
@@ -70,25 +83,75 @@ export function getCustomListingBySlugServer(slugOrId: string): Listing | null {
 export function saveCustomListingServer(listing: any): Listing {
   try {
     ensureDataFile();
+    const normalizedListing = {
+      ...listing,
+      owner: {
+        ...(listing?.owner || {}),
+        fullName: 'Chủ nhà',
+      },
+    };
     const list = getCustomListingsServer();
     const existingIndex = list.findIndex(
-      (item) => String(item.id) === String(listing.id) || item.slug === listing.slug
+      (item) => String(item.id) === String(normalizedListing.id) || item.slug === normalizedListing.slug
     );
 
     let updatedList: Listing[];
     if (existingIndex >= 0) {
       updatedList = [...list];
-      updatedList[existingIndex] = { ...updatedList[existingIndex], ...listing };
+      updatedList[existingIndex] = { ...updatedList[existingIndex], ...normalizedListing };
     } else {
-      updatedList = [listing, ...list];
+      updatedList = [normalizedListing, ...list];
     }
 
     fs.writeFileSync(DATA_FILE_PATH, JSON.stringify(updatedList, null, 2), 'utf-8');
-    return listing;
+    return normalizedListing;
   } catch (err) {
     console.warn('Lỗi lưu custom listing vào máy chủ:', err);
     return listing;
   }
+}
+
+export function updateCustomListingStatusServer(idOrSlug: string, status: string): boolean {
+  try {
+    ensureDataFile();
+    const list = getCustomListingsServer();
+    const targetIndex = list.findIndex(
+      (item) => String(item.id) === String(idOrSlug) || item.slug === idOrSlug
+    );
+    if (targetIndex < 0) return false;
+    list[targetIndex] = {
+      ...list[targetIndex],
+      status,
+    };
+    fs.writeFileSync(DATA_FILE_PATH, JSON.stringify(list, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.warn('Lỗi cập nhật trạng thái custom listing trên máy chủ:', err);
+    return false;
+  }
+}
+
+export function getCustomListingsByOwnerServer(ownerId?: string, ownerEmail?: string): Listing[] {
+  const list = getCustomListingsServer();
+  const cleanOwnerId = ownerId ? String(ownerId) : '';
+  const cleanEmail = ownerEmail ? ownerEmail.toLowerCase().trim() : '';
+
+  if (!cleanOwnerId && !cleanEmail) return [];
+
+  return list.filter((item: any) => {
+    const itemOwnerId = String(item.ownerId || item.owner?.id || '');
+    const itemOwnerEmail = String(item.ownerEmail || item.owner?.email || '').toLowerCase().trim();
+
+    if (cleanOwnerId && itemOwnerId && itemOwnerId === cleanOwnerId) return true;
+    if (cleanEmail && itemOwnerEmail && itemOwnerEmail === cleanEmail) return true;
+    return false;
+  });
+}
+
+export function getPublicCustomListingsServer(): Listing[] {
+  const list = getCustomListingsServer();
+  // Khách tìm phòng CHỈ thấy tin active, TUYỆT ĐỐI không hiển thị tin đã cho thuê (rented) hoặc đã gỡ (removed)
+  return list.filter((item) => item.status === 'active');
 }
 
 export function deleteCustomListingServer(id: string): boolean {

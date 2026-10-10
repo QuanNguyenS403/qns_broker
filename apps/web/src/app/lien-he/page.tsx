@@ -36,7 +36,7 @@ export default function ContactPage() {
               </h2>
               <div className="space-y-3 text-sm">
                 <div>
-                  <p className="text-xs text-text-muted mb-2">Nhắn tin Zalo trực tiếp chuyên viên:</p>
+                  <p className="text-xs text-text-muted mb-2">Nhắn tin Zalo trực tiếp Chủ nhà:</p>
                   <a
                     href={`https://zalo.me/${SITE_CONFIG.zalo.replace(/\s+/g, '')}`}
                     target="_blank"
@@ -44,7 +44,7 @@ export default function ContactPage() {
                     className="inline-flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-200 px-4 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-100 transition-colors shadow-2xs"
                   >
                     <span className="font-black text-xs">Zalo</span>
-                    <span>Chat Zalo chuyên viên {SITE_CONFIG.agentName}</span>
+                    <span>Chat Zalo {SITE_CONFIG.agentName}</span>
                   </a>
                 </div>
               </div>

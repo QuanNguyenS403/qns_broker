@@ -12,6 +12,7 @@ interface UniversityOption {
   name: string;
   abbreviation?: string | null;
   region?: string;
+  category?: 'dai_hoc' | 'cao_dang';
 }
 
 interface SearchFilterBarProps {
@@ -83,6 +84,9 @@ export function SearchFilterBar({
   const [propertyType, setPropertyType] = useState(initialParams.propertyType ?? '');
   const [locationWard, setLocationWard] = useState(
     initialParams.locationSlug ?? initialParams.ward ?? ''
+  );
+  const [universitySlug, setUniversitySlug] = useState(
+    initialParams.universitySlug ?? ''
   );
   const [petAllowed, setPetAllowed] = useState(initialParams.petAllowed === 'true');
   const [electricVehicle, setElectricVehicle] = useState(initialParams.electricVehicle === 'true');
@@ -169,6 +173,7 @@ export function SearchFilterBar({
     if (initialParams.categoryGroup) params.set('categoryGroup', initialParams.categoryGroup);
     if (keyword.trim()) params.set('keyword', keyword.trim());
     if (locationWard) params.set('locationSlug', locationWard);
+    if (universitySlug) params.set('universitySlug', universitySlug);
     if (propertyType) params.set('propertyType', propertyType);
     if (petAllowed) params.set('petAllowed', 'true');
     if (electricVehicle) params.set('electricVehicle', 'true');
@@ -192,6 +197,7 @@ export function SearchFilterBar({
   function handleReset() {
     setKeyword('');
     setLocationWard('');
+    setUniversitySlug('');
     setPropertyType('');
     setPetAllowed(false);
     setElectricVehicle(false);
@@ -214,6 +220,7 @@ export function SearchFilterBar({
   let activeFilterCount = 0;
   if (keyword.trim()) activeFilterCount++;
   if (locationWard) activeFilterCount++;
+  if (universitySlug) activeFilterCount++;
   if (propertyType) activeFilterCount++;
   if (minPrice > 0 || maxPrice < MAX_PRICE_LIMIT) activeFilterCount++;
   if (petAllowed) activeFilterCount++;
@@ -222,6 +229,19 @@ export function SearchFilterBar({
   const isPriceActive = minPrice > 0 || maxPrice < MAX_PRICE_LIMIT;
   const minPercent = (minPrice / MAX_PRICE_LIMIT) * 100;
   const maxPercent = (maxPrice / MAX_PRICE_LIMIT) * 100;
+
+  // Phân chia trường Đại học & Học viện vs Trường Cao đẳng tại Hà Nội
+  const hanoiUnis = universities.filter((u) => {
+    const isHanoi = u.region ? u.region === 'Hà Nội' : true;
+    const isCĐ = u.category === 'cao_dang' || u.name.toLowerCase().includes('cao đẳng');
+    return isHanoi && !isCĐ;
+  });
+
+  const hanoiColleges = universities.filter((u) => {
+    const isHanoi = u.region ? u.region === 'Hà Nội' : true;
+    const isCĐ = u.category === 'cao_dang' || u.name.toLowerCase().includes('cao đẳng');
+    return isHanoi && isCĐ;
+  });
 
   return (
     <form
@@ -238,10 +258,10 @@ export function SearchFilterBar({
         </p>
       </div>
 
-      {/* Hàng tìm kiếm chính: Bỏ ô diện tích, Giữ Search, Khu vực, Loại phòng, Thanh kéo khoảng giá & Nút Tìm phòng */}
-      <div className="grid grid-cols-2 lg:flex lg:items-center gap-3">
+      {/* Hàng tìm kiếm chính: Search, Khu vực, Gần trường ĐH / CĐ, Loại phòng, Khoảng giá & Nút Tìm phòng */}
+      <div className="grid grid-cols-2 lg:flex lg:items-center gap-2.5 sm:gap-3">
         {/* Search Input lớn nổi bật */}
-        <div className="relative col-span-2 lg:flex-[1.6] lg:min-w-[240px]">
+        <div className="relative col-span-2 lg:flex-[1.35] lg:min-w-[195px]">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -277,7 +297,7 @@ export function SearchFilterBar({
         </div>
 
         {/* Dropdown 1: Khu vực — Tất cả các phường thuộc thành phố Hà Nội */}
-        <div className="relative col-span-1 lg:flex-[1.2] lg:min-w-[170px]">
+        <div className="relative col-span-1 lg:flex-[1.05] lg:min-w-[140px]">
           <select
             value={locationWard}
             onChange={(e) => setLocationWard(e.target.value)}
@@ -305,8 +325,54 @@ export function SearchFilterBar({
           </div>
         </div>
 
-        {/* Dropdown 2: Loại phòng */}
-        <div className="relative col-span-1 lg:flex-1 lg:min-w-[140px]">
+        {/* Dropdown 2: Gần trường ĐH / CĐ — Toàn bộ các trường ĐH, Học viện & CĐ tại Hà Nội */}
+        <div className="relative col-span-1 lg:flex-[1.25] lg:min-w-[170px]">
+          <select
+            value={universitySlug}
+            onChange={(e) => setUniversitySlug(e.target.value)}
+            aria-label="Gần trường ĐH / CĐ"
+            className={`h-12 w-full appearance-none rounded-xl border bg-white pl-3.5 pr-8 text-sm sm:text-[14.5px] outline-none transition-all duration-150 focus:border-brand focus:ring-2 focus:ring-brand/20 hover:border-slate-300 cursor-pointer text-ellipsis overflow-hidden ${
+              universitySlug
+                ? 'border-brand/50 text-brand font-medium bg-teal-50/20'
+                : 'border-slate-200 text-slate-700'
+            }`}
+          >
+            <option value="">Gần trường ĐH / CĐ</option>
+            {hanoiUnis.length > 0 && (
+              <optgroup label="── ĐẠI HỌC & HỌC VIỆN TẠI HÀ NỘI ──">
+                {hanoiUnis.map((uni) => (
+                  <option key={uni.slug} value={uni.slug}>
+                    {uni.abbreviation ? `[${uni.abbreviation}] ${uni.name}` : uni.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {hanoiColleges.length > 0 && (
+              <optgroup label="── TRƯỜNG CAO ĐẲNG TẠI HÀ NỘI ──">
+                {hanoiColleges.map((col) => (
+                  <option key={col.slug} value={col.slug}>
+                    {col.abbreviation ? `[${col.abbreviation}] ${col.name}` : col.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {hanoiUnis.length === 0 && hanoiColleges.length === 0 && (
+              universities.map((uni) => (
+                <option key={uni.slug} value={uni.slug}>
+                  {uni.abbreviation ? `[${uni.abbreviation}] ${uni.name}` : uni.name}
+                </option>
+              ))
+            )}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Dropdown 3: Loại phòng */}
+        <div className="relative col-span-1 lg:flex-1 lg:min-w-[130px]">
           <select
             value={propertyType}
             onChange={(e) => setPropertyType(e.target.value)}
@@ -478,7 +544,7 @@ export function SearchFilterBar({
         </div>
 
         {/* CTA: Nút Tìm phòng đồng bộ chiều cao và nằm cùng hàng trên desktop */}
-        <div className="col-span-1 lg:shrink-0">
+        <div className="col-span-2 lg:col-span-1 lg:shrink-0">
           <button
             type="submit"
             disabled={isPending}

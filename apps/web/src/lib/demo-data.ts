@@ -3,7 +3,7 @@ import { Listing } from './api';
 export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
   {
     id: '3',
-    title: '[MẪU] Phòng trọ có gác lửng, máy lạnh mới 100% gần ĐH Tôn Đức Thắng & RMIT',
+    title: 'Phòng trọ có gác lửng, máy lạnh mới 100% gần ĐH Tôn Đức Thắng & RMIT',
     slug: 'mau-phong-tro-gac-lung-gan-tdtu-id3',
     description:
       'Phòng trọ sinh viên mới xây sạch sẽ, giờ giấc tự do không chung chủ. Đầy đủ tiện nghi: máy lạnh inverter tiết kiệm điện, gác lửng đúc cao 2m đứng thẳng, kệ bếp nấu ăn, wifi cáp quang riêng từng tầng. Đi bộ 5 phút sang ĐH Tôn Đức Thắng, 7 phút sang ĐH Cảnh Sát Nhân Dân',
@@ -32,6 +32,8 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_6_thang',
     addressDetail: 'Đường số 10, Phường Tân Phong, Quận 7, TP.HCM',
+    lat: 10.7328,
+    lng: 106.7028,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 420,
@@ -58,7 +60,7 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
   },
   {
     id: '1',
-    title: '[MẪU] Phòng trọ khép kín có gác lửng, máy lạnh gần ĐH Tôn Đức Thắng & RMIT',
+    title: 'Phòng trọ khép kín có gác lửng, máy lạnh gần ĐH Tôn Đức Thắng & RMIT',
     slug: 'mau-phong-tro-gac-lung-gan-tdtu-id1',
     description:
       'Phòng trọ sinh viên mới xây sạch sẽ, giờ giấc tự do không chung chủ. Đầy đủ tiện nghi: máy lạnh, gác lửng đúc kiên cố, kệ bếp nấu ăn, wifi cáp quang tốc độ cao. Ra ĐH Tôn Đức Thắng chỉ 5 phút đi bộ',
@@ -87,6 +89,8 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_6_thang',
     addressDetail: 'Đường số 10, Phường Tân Phong, Quận 7, TP.HCM',
+    lat: 10.7335,
+    lng: 106.7032,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 450,
@@ -107,7 +111,7 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
   },
   {
     id: '5',
-    title: '[MẪU] Ký túc xá cao cấp Sleepbox riêng tư Cầu Giấy — Bao trọn gói điện nước wifi',
+    title: 'Ký túc xá cao cấp Sleepbox riêng tư Cầu Giấy — Bao trọn gói điện nước wifi',
     slug: 'mau-sleepbox-cau-giay-bao-tron-goi-id5',
     description:
       'Mô hình phòng ktx sleepbox cao cấp trang bị cửa kéo riêng tư, đệm êm, bàn học, đèn đọc sách, ổ cắm điện. Khu vực bếp nấu, tủ lạnh, máy giặt dùng chung thoải mái. Giá thuê đã BAO TRỌN GÓI điện, nước, điều hòa, wifi, dọn vệ sinh hàng tuần',
@@ -133,6 +137,8 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_linh_hoat',
     addressDetail: 'Ngõ 165 Cầu Giấy, Phường Dịch Vọng, Cầu Giấy, Hà Nội',
+    lat: 21.0336,
+    lng: 105.7978,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 380,
@@ -158,7 +164,7 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
   },
   {
     id: '31',
-    title: '[MẪU] Phòng cao cấp gác lửng mới 100%, full nội thất Cầu Giấy',
+    title: 'Phòng cao cấp gác lửng mới 100%, full nội thất Cầu Giấy',
     slug: 'phong-cao-cap-gac-lung-moi-cau-giay-id31',
     description:
       'Phòng trọ cao cấp gác lửng đúc kiên cố cao 2m, không chung chủ, giờ giấc tự do 100% bằng khóa vân tay. Tiện nghi trong phòng: máy lạnh Inverter, bình nóng lạnh, tủ lạnh 2 cánh, gác lửng gỗ sồi, kệ bếp chậu rửa inox cao cấp, bàn học làm việc, tủ quần áo 3 cánh. Tòa nhà thang máy tốc độ cao, máy giặt chung miễn phí tầng thượng',
@@ -187,6 +193,8 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_6_thang',
     addressDetail: 'Số 18 Ngõ 165 Cầu Giấy, Phường Dịch Vọng, Quận Cầu Giấy, Hà Nội',
+    lat: 21.0340,
+    lng: 105.7982,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 310,
@@ -211,7 +219,7 @@ export const DEMO_ROOM_RENT_LISTINGS: Listing[] = [
 export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
   {
     id: '2',
-    title: '[MẪU] Căn hộ Studio ban công thoáng gió full nội thất trung tâm Quận 1',
+    title: 'Căn hộ Studio ban công thoáng gió full nội thất trung tâm Quận 1',
     slug: 'mau-can-ho-studio-quan-1-id2',
     description:
       'Studio thiết kế phong cách Bắc Âu hiện đại, ngập tràn ánh sáng tự nhiên. Đầy đủ trang thiết bị: smart TV 50 inch, tủ lạnh 2 cánh, máy giặt riêng trong phòng, sofa thư giãn, khóa cửa vân tay. Khu dân cư an ninh, phù hợp chuyên gia trẻ hoặc người đi làm',
@@ -240,6 +248,8 @@ export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_1_nam',
     addressDetail: 'Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM',
+    lat: 10.7686,
+    lng: 106.6917,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 295,
@@ -260,7 +270,7 @@ export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
   },
   {
     id: '13',
-    title: '[MẪU] Studio duplex gác lửng trần cao có ban công riêng Quận Cầu Giấy',
+    title: 'Studio duplex gác lửng trần cao có ban công riêng Quận Cầu Giấy',
     slug: 'mau-studio-duplex-gac-lung-cau-giay-id13',
     description:
       'Studio thiết kế gác lửng trần cao 3m thoáng mát, không gian tiếp khách và giường ngủ tách biệt. Ban công đón nắng sớm, đầy đủ máy giặt, điều hòa, tủ lạnh, bếp từ âm. Khóa cửa vân tay từng phòng, an ninh tuyệt đối',
@@ -287,6 +297,8 @@ export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_1_nam',
     addressDetail: 'Ngõ 20 Hồ Tùng Mậu, Mai Dịch, Cầu Giấy, Hà Nội',
+    lat: 21.0392,
+    lng: 105.7681,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 310,
@@ -307,7 +319,7 @@ export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
   },
   {
     id: '38',
-    title: '[MẪU] Studio duplex gác lửng cao cấp ban công riêng gần ĐH Tôn Đức Thắng',
+    title: 'Studio duplex gác lửng cao cấp ban công riêng gần ĐH Tôn Đức Thắng',
     slug: 'studio-duplex-gac-lung-ban-cong-rieng-tdtu-id38',
     description:
       'Studio Duplex gác lửng đúc cao, ban công cửa kính lớn thoáng mát ngập tràn ánh nắng, view thoáng đãng không bị che khuất. Nội thất cao cấp: máy lạnh Inverter, tủ lạnh 2 cánh đời mới, gác lửng nệm cao su êm ái, tủ đồ âm tường, kệ bếp nấu ăn có máy hút mùi, bàn làm việc và ghế xoay êm ái. Chỉ 400m sang ĐH Tôn Đức Thắng, 1km sang RMIT',
@@ -335,6 +347,8 @@ export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_6_thang',
     addressDetail: 'Đường Lê Văn Lương, Phường Tân Phong, Quận 7, TP.HCM',
+    lat: 10.7350,
+    lng: 106.7040,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 285,
@@ -359,7 +373,7 @@ export const DEMO_STUDIO_RENT_LISTINGS: Listing[] = [
 export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
   {
     id: '10',
-    title: '[MẪU] Cho thuê căn hộ chung cư 2PN Masteri Thảo Điền, view Landmark 81',
+    title: 'Cho thuê căn hộ chung cư 2PN Masteri Thảo Điền, view Landmark 81',
     slug: 'cho-thue-can-ho-masteri-thao-dien-2pn-id10',
     description:
       'Căn hộ tầng 18 view thoáng mát nhìn sang Landmark 81. Nội thất trang bị đầy đủ không thiếu thứ gì: sofa da, TV 65 inch, tủ lạnh 2 cánh, máy giặt sấy. Phù hợp gia đình trẻ hoặc chuyên gia nước ngoài thuê dài hạn',
@@ -388,6 +402,8 @@ export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
     bathrooms: 2,
     legalStatus: 'hop_dong_chinh_chu',
     addressDetail: '159 Xa Lộ Hà Nội, Thảo Điền, TP. Thủ Đức, TP.HCM',
+    lat: 10.8035,
+    lng: 106.7378,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 220,
@@ -401,7 +417,7 @@ export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
   },
   {
     id: '12',
-    title: '[MẪU] Cho thuê căn hộ dịch vụ 1PN tách bếp cao cấp Quận Bình Thạnh',
+    title: 'Cho thuê căn hộ dịch vụ 1PN tách bếp cao cấp Quận Bình Thạnh',
     slug: 'cho-thue-can-ho-dich-vu-1pn-binh-thanh-id12',
     description:
       'Căn hộ dịch vụ cao cấp, phòng ngủ riêng biệt tách bếp, có ban công thoáng sáng. Đã bao gồm dọn phòng tuần 2 lần, nước sinh hoạt, wifi tốc độ cao. Giờ giấc tự do, bảo vệ 24/7',
@@ -428,6 +444,8 @@ export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_1_nam',
     addressDetail: 'Đường Điện Biên Phủ, Phường 25, Bình Thạnh, TP.HCM',
+    lat: 10.8005,
+    lng: 106.7165,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 180,
@@ -441,7 +459,7 @@ export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
   },
   {
     id: '14',
-    title: '[MẪU] Căn hộ mini mới xây full đồ thang máy khép kín Quận Đống Đa',
+    title: 'Căn hộ mini mới xây full đồ thang máy khép kín Quận Đống Đa',
     slug: 'can-ho-mini-moi-xay-thang-may-dong-da-id14',
     description:
       'Căn hộ mini tầng 4 toà nhà 7 tầng có thang máy thẻ từ, bảo vệ trực 24/24. Phòng trang bị đầy đủ: điều hòa Inverter, nóng lạnh, giường tủ, máy giặt chung sân thượng rộng rãi',
@@ -465,6 +483,8 @@ export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_1_nam',
     addressDetail: 'Ngõ 119 Chùa Láng, Láng Thượng, Đống Đa, Hà Nội',
+    lat: 21.0232,
+    lng: 105.8049,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 240,
@@ -480,7 +500,7 @@ export const DEMO_CAN_HO_RENT_LISTINGS: Listing[] = [
 
 export const DEMO_HOUSE_RENT_LISTING: Listing = {
   id: '11',
-  title: '[MẪU] Cho thuê nhà nguyên căn 3 tầng ngõ ô tô Quận Cầu Giấy',
+  title: 'Cho thuê nhà nguyên căn 3 tầng ngõ ô tô Quận Cầu Giấy',
   slug: 'cho-thue-nha-nguyen-can-cau-giay-id11',
   description:
     'Nhà 3 tầng sạch sẽ kiên cố, diện tích mỗi sàn 55m2, gồm 3 phòng ngủ thoáng mát, sân phơi, bếp riêng. Phù hợp vừa ở vừa làm văn phòng công ty nhỏ hoặc nhóm sinh viên ở ghép',
@@ -501,6 +521,8 @@ export const DEMO_HOUSE_RENT_LISTING: Listing = {
   bathrooms: 3,
   legalStatus: 'hop_dong_1_nam',
   addressDetail: 'Ngõ 68 Cầu Giấy, Phường Quan Hoa, Cầu Giấy, Hà Nội',
+  lat: 21.0345,
+  lng: 105.8005,
   status: 'active',
   publishedAt: new Date().toISOString(),
   viewCount: 175,
@@ -516,7 +538,7 @@ export const DEMO_HOUSE_RENT_LISTING: Listing = {
 export const DEMO_SPACE_RENT_LISTINGS: Listing[] = [
   {
     id: '4',
-    title: '[MẪU] Cho thuê mặt bằng kinh doanh phố lớn Nguyễn Trãi, mặt tiền 6m',
+    title: 'Cho thuê mặt bằng kinh doanh phố lớn Nguyễn Trãi, mặt tiền 6m',
     slug: 'cho-thue-mat-bang-kinh-doanh-pho-lon-id4',
     description:
       'Vị trí đắc địa ngay tuyến phố sầm uất, mặt tiền rộng 6m thông thoáng, vỉa hè rộng để xe thoải mái. Thích hợp kinh doanh cafe, showroom, văn phòng, nha khoa. Hợp đồng dài hạn trực tiếp bên cho thuê',
@@ -531,6 +553,8 @@ export const DEMO_SPACE_RENT_LISTINGS: Listing[] = [
     bathrooms: 1,
     legalStatus: 'hop_dong_dai_han',
     addressDetail: 'Mặt phố Nguyễn Trãi, Thanh Xuân, Hà Nội',
+    lat: 20.9988,
+    lng: 105.8083,
     status: 'active',
     publishedAt: new Date().toISOString(),
     viewCount: 195,

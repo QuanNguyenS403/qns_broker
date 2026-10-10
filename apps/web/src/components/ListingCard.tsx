@@ -19,8 +19,8 @@ export function ListingCard({ listing }: { listing: Listing }) {
   const rawCover = listing.images?.[0]?.imageUrl;
   const cover = (!rawCover || rawCover.startsWith('blob:')) ? DEFAULT_ROOM_FALLBACK_IMAGES[0] : rawCover;
   const timeLabel = formatTimeAgo(listing.publishedAt);
-  const isSample = listing.title?.startsWith('[MẪU]');
-  const displayTitle = isSample ? listing.title.replace(/^\[MẪU\]\s*/, '') : (listing.title ?? 'Phòng cho thuê');
+  const rawTitle = listing.title ?? 'Phòng cho thuê';
+  const displayTitle = rawTitle.replace(/^\[MẪU\]\s*/i, '').replace(/\[MẪU\]/gi, '').trim();
   const nearestUni = listing.nearbyUniversities?.[0];
 
   return (

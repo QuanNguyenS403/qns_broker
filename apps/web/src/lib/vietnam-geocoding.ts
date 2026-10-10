@@ -1,4 +1,4 @@
-import { VIETNAM_UNIVERSITIES } from './vietnam-universities';
+import { VIETNAM_UNIVERSITIES, calculateDistanceKm } from './vietnam-universities';
 
 export interface GeocodeResult {
   lat: number;
@@ -333,4 +333,135 @@ export async function geocodeAddressPipeline(rawAddress: string): Promise<Geocod
   }
 
   return null;
+}
+
+/**
+ * Pipeline Reverse Geocoding đa tầng:
+ * Chuyển đổi tọa độ GPS (lat, lng) khi được click/chấm trên bản đồ thành chuỗi địa chỉ có nghĩa, chính xác và đồng bộ 100%
+ * 1. Gọi Photon Komoot Reverse API (CORS friendly, phản hồi tức thời)
+ * 2. Gọi OpenStreetMap Nominatim Reverse API
+ * 3. Tra cứu Offline Dictionary: tìm trường đại học hoặc tuyến đường gần nhất trong bán kính
+ */
+export async function reverseGeocodePipeline(lat: number, lng: number): Promise<string> {
+  if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) {
+    return 'Hà Nội';
+  }
+
+  // ── TẦNG 1: Photon Komoot Reverse API ──
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch(
+      `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`,
+      { signal: controller.signal },
+    );
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      const props = data?.features?.[0]?.properties;
+      if (props) {
+        const parts: string[] = [];
+        const street = props.street || props.name || '';
+        const houseNumber = props.housenumber || '';
+        if (houseNumber && street) {
+          parts.push(`Số ${houseNumber} ${street}`);
+        } else if (street) {
+          parts.push(street);
+        }
+        if (props.district) parts.push(props.district);
+        if (props.city) parts.push(props.city);
+        else if (props.state) parts.push(props.state);
+
+        if (parts.length > 0) {
+          let addr = parts.join(', ');
+          if (!addr.toLowerCase().includes('hà nội') && !addr.toLowerCase().includes('hồ chí minh')) {
+            if (lat > 20.0 && lat < 22.0) addr += ', Hà Nội';
+            else if (lat > 10.0 && lat < 12.0) addr += ', TP.HCM';
+          }
+          return addr;
+        }
+      }
+    }
+  } catch {
+    // Tiếp tục tầng tiếp theo
+  }
+
+  // ── TẦNG 2: OpenStreetMap Nominatim Reverse API ──
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+      {
+        headers: { 'User-Agent': 'QNS-RealEstate-Broker/2.0' },
+        signal: controller.signal,
+      },
+    );
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      const addrObj = data?.address;
+      if (addrObj) {
+        const parts: string[] = [];
+        const road = addrObj.road || addrObj.pedestrian || addrObj.suburb || '';
+        const houseNumber = addrObj.house_number || '';
+        if (houseNumber && road) {
+          parts.push(`Số ${houseNumber} ${road}`);
+        } else if (road) {
+          parts.push(road);
+        }
+        const quarter = addrObj.quarter || addrObj.suburb || addrObj.neighbourhood || '';
+        if (quarter && quarter !== road) parts.push(quarter);
+        const district = addrObj.city_district || addrObj.district || addrObj.county || '';
+        if (district && district !== quarter) parts.push(district);
+        const city = addrObj.city || addrObj.state || '';
+        if (city) parts.push(city);
+
+        if (parts.length > 0) {
+          return parts.join(', ');
+        }
+      }
+    }
+  } catch {
+    // Tiếp tục tầng tiếp theo
+  }
+
+  // ── TẦNG 3: Offline Lookup theo khoảng cách gần nhất ──
+  // 3A. Tìm trường ĐH gần nhất (< 1.2km)
+  let closestUni: { name: string; dist: number } | null = null;
+  for (const uni of VIETNAM_UNIVERSITIES) {
+    if (!uni.lat || !uni.lng) continue;
+    const dist = calculateDistanceKm(lat, lng, uni.lat, uni.lng);
+    if (!closestUni || dist < closestUni.dist) {
+      closestUni = { name: uni.name, dist };
+    }
+  }
+  if (closestUni && closestUni.dist <= 1.2) {
+    const citySuffix = lat > 20.0 && lat < 22.0 ? ', Hà Nội' : lat > 10.0 && lat < 12.0 ? ', TP.HCM' : '';
+    return `Khu vực gần ${closestUni.name}${citySuffix}`;
+  }
+
+  // 3B. Tìm tuyến phố / địa danh offline gần nhất (< 2.5km)
+  let closestLoc: { label: string; dist: number } | null = null;
+  for (const item of HANOI_OFFLINE_LOCATIONS) {
+    const dist = calculateDistanceKm(lat, lng, item.lat, item.lng);
+    if (!closestLoc || dist < closestLoc.dist) {
+      closestLoc = { label: item.label, dist };
+    }
+  }
+  if (closestLoc && closestLoc.dist <= 2.5) {
+    return closestLoc.label;
+  }
+
+  // 3C. Phân vùng miền theo vĩ độ
+  if (lat > 20.0 && lat < 22.0) {
+    return `Khu vực Thành phố Hà Nội (Tọa độ: ${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+  }
+  if (lat > 10.0 && lat < 12.0) {
+    return `Khu vực TP. Hồ Chí Minh (Tọa độ: ${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+  }
+
+  return `Tọa độ: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }

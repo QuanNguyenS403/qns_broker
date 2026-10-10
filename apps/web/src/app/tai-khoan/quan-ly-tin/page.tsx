@@ -3,13 +3,19 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { authFetch, isLoggedIn } from '@/lib/auth-client';
+import {
+  authFetch,
+  isLoggedIn,
+  getCurrentUser,
+  getAccountCustomListings,
+  updateAccountListingStatus,
+} from '@/lib/auth-client';
 import { formatPrice, Listing, ListingListResponse } from '@/lib/api';
 import { healCustomListingsInLocalStorage, sanitizeListingImages, DEFAULT_ROOM_FALLBACK_IMAGES } from '@/lib/image-compressor';
 
 /**
- * Trang "Quản lý tin đăng" — đóng lại vòng lặp "Đăng tin → Quản lý tin"
- * cho người dùng xem lại tin của chính mình và biết tin đã được duyệt hay chưa
+ * Trang "Quản lý tin đăng" — lưu trữ riêng biệt theo từng tài khoản,
+ * không liên quan hay đồng bộ chéo giữa các tài khoản khác nhau
  */
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
@@ -46,8 +52,16 @@ export default function QuanLyTinPage() {
     setLoading(true);
     setError(null);
 
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      setListings([]);
+      setLoading(false);
+      return;
+    }
+
     let apiItems: Listing[] = [];
 
+    // 1. Nạp từ Backend API chính xác cho tài khoản này
     try {
       const statusParam = status ? `status=${status}&` : '';
       const query = `?${statusParam}page=${targetPage}&pageSize=50`;
@@ -66,32 +80,52 @@ export default function QuanLyTinPage() {
       // Bỏ qua lỗi kết nối máy chủ để tự động chuyển sang lưu trữ an toàn
     }
 
-    // Luôn nạp và đồng bộ danh sách tin đăng từ bộ nhớ cục bộ
+    // 2. Nạp từ Server Next.js CHỈ cho tài khoản này (lọc đúng theo ownerId / ownerEmail)
+    let serverCustomItems: any[] = [];
+    try {
+      const ownerParam = `ownerId=${encodeURIComponent(currentUser.id || '')}&ownerEmail=${encodeURIComponent(currentUser.email || '')}`;
+      const sRes = await fetch(`/api/custom-listings?${ownerParam}`);
+      if (sRes.ok) {
+        const sData = await sRes.json();
+        if (Array.isArray(sData.items)) {
+          serverCustomItems = sData.items.map((item: any) => ({
+            ...item,
+            images: sanitizeListingImages(item.images),
+          }));
+        }
+      }
+    } catch {}
+
+    // 3. Nạp từ bộ nhớ cục bộ CỦA CHÍNH TÀI KHOẢN NÀY (cô lập hoàn toàn, không lấy tin tài khoản khác)
     let localListings: any[] = [];
     if (typeof window !== 'undefined') {
       try {
         healCustomListingsInLocalStorage();
-        const raw = localStorage.getItem('qns_custom_listings');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            localListings = parsed.map((item) => ({
-              ...item,
-              images: sanitizeListingImages(item.images),
-            }));
-          }
+        const rawAccountItems = getAccountCustomListings(currentUser);
+        if (Array.isArray(rawAccountItems)) {
+          localListings = rawAccountItems.map((item) => ({
+            ...item,
+            images: sanitizeListingImages(item.images),
+          }));
         }
       } catch {}
     }
 
-    // Hợp nhất danh sách từ API và dữ liệu cục bộ (loại bỏ trùng lặp id)
-    const existingIds = new Set(apiItems.map((item) => String(item.id)));
-    const allMerged: any[] = [...apiItems];
-    for (const localItem of localListings) {
-      if (!existingIds.has(String(localItem.id))) {
-        allMerged.push(localItem);
+    // 4. Hợp nhất danh sách của DUY NHẤT tài khoản này (loại bỏ trùng lặp id)
+    const existingIds = new Set<string>();
+    const allMerged: any[] = [];
+
+    const addUnique = (item: any) => {
+      const idStr = String(item.id);
+      if (!existingIds.has(idStr)) {
+        existingIds.add(idStr);
+        allMerged.push(item);
       }
-    }
+    };
+
+    for (const item of apiItems) addUnique(item);
+    for (const item of serverCustomItems) addUnique(item);
+    for (const item of localListings) addUnique(item);
 
     // Lọc theo trạng thái tab nếu có yêu cầu
     const filtered = status
@@ -130,22 +164,26 @@ export default function QuanLyTinPage() {
   }, [load, statusFilter, page]);
 
   async function handleMarkRented(listingId: string) {
-    if (!confirm('Xác nhận phòng này ĐÃ CHO THUÊ THÀNH CÔNG? Tin sẽ được chuyển sang trạng thái Đã cho thuê và tạm ẩn khỏi sàn')) {
+    if (!confirm('Xác nhận phòng này đã cho thuê thành công? Bài đăng sẽ tự động được gỡ khỏi danh sách tìm phòng của khách hàng để tránh khách đặt lịch đi xem phòng')) {
       return;
     }
     try {
+      const currentUser = getCurrentUser();
+
+      // 1. Gửi cập nhật lên backend NestJS
       await authFetch(`/listings/${listingId}/rented`, { method: 'PATCH' }).catch(() => undefined);
-      if (typeof window !== 'undefined') {
-        const raw = localStorage.getItem('qns_custom_listings');
-        if (raw) {
-          const list = JSON.parse(raw);
-          const updated = list.map((item: any) =>
-            String(item.id) === String(listingId) ? { ...item, status: 'rented' } : item
-          );
-          localStorage.setItem('qns_custom_listings', JSON.stringify(updated));
-          window.dispatchEvent(new Event('qns_listings_updated'));
-        }
-      }
+
+      // 2. Gửi cập nhật lên máy chủ Next.js (file JSON)
+      await fetch('/api/custom-listings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: listingId, status: 'rented' }),
+      }).catch(() => undefined);
+
+      // 3. Cập nhật kho lưu trữ tài khoản và kho chung
+      updateAccountListingStatus(listingId, 'rented', currentUser);
+
+      alert('Đã cập nhật trạng thái phòng đã cho thuê thành công và tự động gỡ phòng khỏi danh sách tìm phòng của khách hàng');
       load(statusFilter, page);
     } catch (err) {
       alert((err as Error).message);
@@ -184,18 +222,22 @@ export default function QuanLyTinPage() {
       return;
     }
     try {
+      const currentUser = getCurrentUser();
+
+      // 1. Gửi xóa lên backend NestJS
       await authFetch(`/listings/${listingId}`, { method: 'DELETE' }).catch(() => undefined);
-      if (typeof window !== 'undefined') {
-        const raw = localStorage.getItem('qns_custom_listings');
-        if (raw) {
-          const list = JSON.parse(raw);
-          const updated = list.map((item: any) =>
-            String(item.id) === String(listingId) ? { ...item, status: 'removed' } : item
-          );
-          localStorage.setItem('qns_custom_listings', JSON.stringify(updated));
-          window.dispatchEvent(new Event('qns_listings_updated'));
-        }
-      }
+
+      // 2. Gửi cập nhật trạng thái gỡ lên máy chủ Next.js
+      await fetch('/api/custom-listings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: listingId, status: 'removed' }),
+      }).catch(() => undefined);
+
+      // 3. Cập nhật kho lưu trữ
+      updateAccountListingStatus(listingId, 'removed', currentUser);
+
+      alert('Đã gỡ bài đăng phòng thành công');
       load(statusFilter, page);
     } catch (err) {
       alert((err as Error).message);
@@ -354,9 +396,9 @@ export default function QuanLyTinPage() {
                               type="button"
                               onClick={() => handleMarkRented(listing.id)}
                               className="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200"
-                              title="Đánh dấu phòng đã cho thuê thành công"
+                              title="Đánh dấu phòng đã cho thuê thành công và tự động gỡ bài đăng"
                             >
-                              Đã thuê
+                              Đã cho thuê
                             </button>
                           </>
                         )}

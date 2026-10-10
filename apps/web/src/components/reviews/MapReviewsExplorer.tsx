@@ -22,80 +22,107 @@ export function MapReviewsExplorer() {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // 1. Tải toàn bộ phòng trọ từ dữ liệu máy chủ + localStorage client
+  // 1. Tải toàn bộ phòng trọ từ dữ liệu máy chủ + localStorage client (chỉ lấy phòng active, loại bỏ phòng đã cho thuê)
   useEffect(() => {
-    const baseRooms = getAllMapRooms();
+    function refreshMapRooms() {
+      const baseRooms = getAllMapRooms();
+      const inactiveKeys = new Set<string>();
 
-    // Đọc thêm tin vừa đăng từ localStorage phía client nếu có
-    try {
-      const localCustom = localStorage.getItem('qns_custom_listings');
-      if (localCustom) {
-        const parsed = JSON.parse(localCustom);
-        if (Array.isArray(parsed)) {
-          parsed.forEach((item: any, idx: number) => {
-            if (!item.lat || !item.lng) return;
-            const exists = baseRooms.some((r) => r.id === String(item.id));
-            if (!exists) {
-              const priceNum = parseInt(String(item.price || '3500000'), 10) || 3500000;
-              const depositNum = parseInt(String(item.depositAmount || '2000000'), 10) || 2000000;
-              baseRooms.unshift({
-                id: String(item.id || `local-${idx}`),
-                slug: item.slug || `tin-moi-${item.id}`,
-                title: item.title || 'Phòng cho thuê mới đăng',
-                maskedAddress: maskListingAddress(item.addressDetail, '', '', 'Hà Nội'),
-                rawAddress: item.addressDetail || '',
-                lat: Number(item.lat),
-                lng: Number(item.lng),
-                price: priceNum,
-                depositAmount: depositNum,
-                areaM2: parseInt(String(item.areaM2 || '25'), 10) || 25,
-                propertyType: item.propertyType || 'phong_tro',
-                district: item.location?.name || 'Hà Nội',
-                ward: '',
-                city: 'Hà Nội',
-                images: Array.isArray(item.images) && item.images.length > 0
-                  ? item.images.map((img: any) => typeof img === 'string' ? img : img.imageUrl).filter(Boolean)
-                  : ['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&auto=format&fit=crop&q=75'],
-                rating: 5.0,
-                reviewCount: 1,
-                reviews: [
-                  {
-                    id: `rev-local-${idx}`,
-                    authorName: 'Khách thuê mới',
-                    authorRole: 'Khách thuê thực tế',
-                    rating: 5,
-                    content: 'Phòng mới đăng, thông tin đầy đủ, hỗ trợ dẫn xem nhanh chóng',
-                    createdAt: new Date().toISOString().slice(0, 10),
-                    isWarning: false,
+      // Đọc thêm tin vừa đăng từ localStorage phía client nếu có
+      try {
+        const localCustom = localStorage.getItem('qns_custom_listings');
+        if (localCustom) {
+          const parsed = JSON.parse(localCustom);
+          if (Array.isArray(parsed)) {
+            // Xác định các tin đã cho thuê (rented) hoặc đã gỡ (removed)
+            parsed.forEach((item: any) => {
+              const st = (item.status || 'pending').toLowerCase();
+              if (st === 'rented' || st === 'removed' || st === 'rejected') {
+                if (item.id) inactiveKeys.add(String(item.id).toLowerCase());
+                if (item.slug) inactiveKeys.add(String(item.slug).toLowerCase());
+              }
+            });
+
+            // Thêm các tin active mới
+            parsed.forEach((item: any, idx: number) => {
+              if (!item.lat || !item.lng) return;
+              const st = (item.status || 'pending').toLowerCase();
+              if (st !== 'active') return;
+
+              const exists = baseRooms.some((r) => r.id === String(item.id) || r.slug === item.slug);
+              if (!exists) {
+                const priceNum = parseInt(String(item.price || '3500000'), 10) || 3500000;
+                const depositNum = parseInt(String(item.depositAmount || '2000000'), 10) || 2000000;
+                baseRooms.unshift({
+                  id: String(item.id || `local-${idx}`),
+                  slug: item.slug || `tin-moi-${item.id}`,
+                  title: (item.title || 'Phòng cho thuê mới đăng').replace(/^\[MẪU\]\s*/i, '').replace(/\[MẪU\]/gi, '').trim(),
+                  maskedAddress: maskListingAddress(item.addressDetail, '', '', 'Hà Nội'),
+                  rawAddress: item.addressDetail || '',
+                  lat: Number(item.lat),
+                  lng: Number(item.lng),
+                  price: priceNum,
+                  depositAmount: depositNum,
+                  areaM2: parseInt(String(item.areaM2 || '25'), 10) || 25,
+                  propertyType: item.propertyType || 'phong_tro',
+                  district: item.location?.name || 'Hà Nội',
+                  ward: '',
+                  city: 'Hà Nội',
+                  images: Array.isArray(item.images) && item.images.length > 0
+                    ? item.images.map((img: any) => typeof img === 'string' ? img : img.imageUrl).filter(Boolean)
+                    : ['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&auto=format&fit=crop&q=75'],
+                  rating: 5.0,
+                  reviewCount: 1,
+                  reviews: [
+                    {
+                      id: `rev-local-${idx}`,
+                      authorName: 'Khách thuê mới',
+                      authorRole: 'Khách thuê thực tế',
+                      rating: 5,
+                      content: 'Phòng mới đăng, thông tin đầy đủ, hỗ trợ dẫn xem nhanh chóng',
+                      createdAt: new Date().toISOString().slice(0, 10),
+                      isWarning: false,
+                    },
+                  ],
+                  amenities: {
+                    wifi: true,
+                    airConditioner: Boolean(item.amenities?.dieuHoa ?? true),
+                    waterHeater: Boolean(item.amenities?.nongLanh ?? true),
+                    mezzanine: Boolean(item.amenities?.gacXep),
+                    elevator: Boolean(item.amenities?.thangMay),
+                    balcony: Boolean(item.amenities?.banCong ?? true),
+                    petsAllowed: Boolean(item.amenities?.thuCung),
+                    electricVehicle: Boolean(item.amenities?.xeDien),
+                    freeTime: Boolean(item.amenities?.gioTuDo ?? true),
+                    securityCamera: true,
+                    privateBathroom: true,
                   },
-                ],
-                amenities: {
-                  wifi: true,
-                  airConditioner: Boolean(item.amenities?.dieuHoa ?? true),
-                  waterHeater: Boolean(item.amenities?.nongLanh ?? true),
-                  mezzanine: Boolean(item.amenities?.gacXep),
-                  elevator: Boolean(item.amenities?.thangMay),
-                  balcony: Boolean(item.amenities?.banCong ?? true),
-                  petsAllowed: Boolean(item.amenities?.thuCung),
-                  electricVehicle: Boolean(item.amenities?.xeDien),
-                  freeTime: Boolean(item.amenities?.gioTuDo ?? true),
-                  securityCamera: true,
-                  privateBathroom: true,
-                },
-                electricityPricePerKwh: item.electricityPricePerKwh || 3500,
-                waterPrice: item.waterPriceFlat ? `${item.waterPriceFlat.toLocaleString('vi-VN')} đ/người` : '25.000 đ/m³',
-                isCustom: true,
-              });
-            }
-          });
+                  electricityPricePerKwh: item.electricityPricePerKwh || 3500,
+                  waterPrice: item.waterPriceFlat ? `${item.waterPriceFlat.toLocaleString('vi-VN')} đ/người` : '25.000 đ/m³',
+                  isCustom: true,
+                });
+              }
+            });
+          }
         }
+      } catch (e) {
+        console.warn('Lỗi đọc custom listings localStorage:', e);
       }
-    } catch (e) {
-      console.warn('Lỗi đọc custom listings localStorage:', e);
+
+      // Lọc bỏ triệt để mọi phòng đã cho thuê khỏi danh sách hiển thị trên bản đồ
+      const cleanRooms = baseRooms.filter((room) => {
+        const idKey = room.id.toLowerCase();
+        const slugKey = room.slug.toLowerCase();
+        return !inactiveKeys.has(idKey) && !inactiveKeys.has(slugKey);
+      });
+
+      setAllRooms(cleanRooms);
+      setIsDataLoaded(true);
     }
 
-    setAllRooms(baseRooms);
-    setIsDataLoaded(true);
+    refreshMapRooms();
+    window.addEventListener('qns_listings_updated', refreshMapRooms);
+    return () => window.removeEventListener('qns_listings_updated', refreshMapRooms);
   }, []);
 
   // 2. Lọc phòng theo các tiêu chí từ thanh tìm kiếm
@@ -179,8 +206,8 @@ export function MapReviewsExplorer() {
   }, []);
 
   return (
-    <div className="relative w-full h-[620px] sm:h-[720px] md:h-[780px] lg:h-[840px] overflow-hidden rounded-3xl border border-slate-200/90 shadow-2xl bg-slate-900">
-      {/* BẢN ĐỒ GOOGLE MAPS PHỦ TOÀN BỘ KHUNG NHÌN (ẢNH 1) */}
+    <div className="relative w-full h-full min-h-[580px] sm:min-h-[640px] overflow-hidden bg-slate-900">
+      {/* BẢN ĐỒ GOOGLE MAPS PHỦ TOÀN BỘ KHUNG NHÌN TRÀN MÀN HÌNH */}
       <div className="absolute inset-0 w-full h-full z-10">
         <MapRoomCanvas
           rooms={filteredRooms}
@@ -193,8 +220,8 @@ export function MapReviewsExplorer() {
         />
       </div>
 
-      {/* KHỐI NỔI ĐÈ LÊN PHÍA TRÊN GOOGLE MAPS (ẢNH 2 + LỊCH SỬ TÌM KIẾM ẢNH 1) */}
-      <div className="absolute top-3 sm:top-5 left-3 sm:left-6 right-3 sm:right-6 md:left-8 md:right-auto md:w-[760px] lg:w-[820px] z-30 pointer-events-none">
+      {/* KHỐI NỔI ĐÈ LÊN PHÍA TRÊN GOOGLE MAPS (CHUẨN FORM COMPACT ẢNH 1) */}
+      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 md:left-6 z-30 pointer-events-none w-[calc(100%-24px)] sm:w-[440px] md:w-[450px]">
         <div className="pointer-events-auto">
           <MapFloatingSearchBar
             onSearch={handleSearch}

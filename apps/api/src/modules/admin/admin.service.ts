@@ -544,7 +544,7 @@ export class AdminService {
 
       if (currentActiveCount >= maxAllowedListings) {
         throw new BadRequestException(
-          `Tài khoản đã đạt hạn mức tối đa ${maxAllowedListings} tin đăng đồng thời, vui lòng liên hệ chuyên viên Đức Quân để hỗ trợ kiểm duyệt thêm`,
+          `Tài khoản đã đạt hạn mức tối đa ${maxAllowedListings} tin đăng đồng thời, vui lòng liên hệ Chủ nhà để hỗ trợ kiểm duyệt thêm`,
         );
       }
 

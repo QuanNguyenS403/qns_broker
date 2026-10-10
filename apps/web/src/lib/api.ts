@@ -114,16 +114,27 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   }
 }
 
-export function fetchListings(searchParams: Record<string, string | undefined>) {
+export async function fetchListings(searchParams: Record<string, string | undefined>) {
   const query = new URLSearchParams();
   Object.entries(searchParams).forEach(([key, value]) => {
     if (value) query.set(key, value);
   });
-  return apiFetch<ListingListResponse>(`/listings?${query.toString()}`);
+  const res = await apiFetch<ListingListResponse>(`/listings?${query.toString()}`);
+  if (res && Array.isArray(res.items)) {
+    res.items = res.items.map((item) => ({
+      ...item,
+      title: item.title ? item.title.replace(/^\[MẪU\]\s*/i, '').replace(/\[MẪU\]/gi, '').trim() : item.title,
+    }));
+  }
+  return res;
 }
 
-export function fetchListingBySlug(slug: string) {
-  return apiFetch<Listing>(`/listings/${slug}`);
+export async function fetchListingBySlug(slug: string) {
+  const res = await apiFetch<Listing>(`/listings/${slug}`);
+  if (res && res.title) {
+    res.title = res.title.replace(/^\[MẪU\]\s*/i, '').replace(/\[MẪU\]/gi, '').trim();
+  }
+  return res;
 }
 
 export function fetchUniversities(params?: { locationSlug?: string; keyword?: string }) {

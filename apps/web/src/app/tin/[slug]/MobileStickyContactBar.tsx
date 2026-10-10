@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { ContactBrokerModal } from '@/components/ContactBrokerModal';
 import { RevealPhoneButton } from './RevealPhoneButton';
 import { AuthModal } from '@/components/AuthModal';
@@ -11,6 +12,7 @@ interface MobileStickyContactBarProps {
   listingTitle: string;
   priceFormatted: string;
   depositFormatted?: string;
+  isRented?: boolean;
 }
 
 export function MobileStickyContactBar({
@@ -18,6 +20,7 @@ export function MobileStickyContactBar({
   listingTitle,
   priceFormatted,
   depositFormatted,
+  isRented = false,
 }: MobileStickyContactBarProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -61,14 +64,23 @@ export function MobileStickyContactBar({
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-              aria-label="Đặt lịch xem phòng"
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-brand hover:bg-brand-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
-            >
-              <span>Đặt lịch xem phòng</span>
-            </button>
+            {isRented ? (
+              <Link
+                href="/thue"
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-all"
+              >
+                <span>Phòng đã cho thuê</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                aria-label="Đặt lịch xem phòng"
+                className="flex items-center justify-center gap-1.5 rounded-xl bg-brand hover:bg-brand-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
+              >
+                <span>Đặt lịch xem phòng</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

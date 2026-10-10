@@ -12,6 +12,71 @@ interface ContactBrokerModalProps {
   listingTitle?: string;
 }
 
+/**
+ * Lấy thông tin thời gian hiện tại chuẩn xác theo múi giờ Việt Nam (GMT+7)
+ */
+function getVietnamDateTime() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(now);
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value || '00';
+  const year = get('year');
+  const month = get('month');
+  const day = get('day');
+  const hour = parseInt(get('hour'), 10);
+  const minute = parseInt(get('minute'), 10);
+
+  const todayStr = `${year}-${month}-${day}`;
+
+  // Tính ngày mai theo GMT+7
+  const baseDate = new Date(`${year}-${month}-${day}T12:00:00+07:00`);
+  const tomorrowDate = new Date(baseDate.getTime() + 24 * 60 * 60 * 1000);
+  const tomParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(tomorrowDate);
+  const getTom = (type: string) => tomParts.find((p) => p.type === type)?.value || '00';
+  const tomorrowStr = `${getTom('year')}-${getTom('month')}-${getTom('day')}`;
+
+  // Sau 20:00 tối (khung giờ xem phòng cuối ngày đã qua), ngày sớm nhất có thể đặt là ngày mai
+  const minDate = hour >= 20 ? tomorrowStr : todayStr;
+
+  // Gợi ý ngày đặt mặc định: sau 18:00 gợi ý ngày mai để chủ nhà có thời gian chuẩn bị
+  const defaultDate = hour >= 18 ? tomorrowStr : todayStr;
+
+  // Khung giờ mặc định theo thời điểm hiện tại
+  let defaultTimeSlot = 'sang';
+  if (hour < 11) {
+    defaultTimeSlot = 'sang';
+  } else if (hour < 17) {
+    defaultTimeSlot = 'chieu';
+  } else if (hour < 20) {
+    defaultTimeSlot = 'toi';
+  } else {
+    defaultTimeSlot = 'sang';
+  }
+
+  return {
+    todayStr,
+    tomorrowStr,
+    minDate,
+    defaultDate,
+    defaultTimeSlot,
+    hour,
+    minute,
+  };
+}
+
 export function ContactBrokerModal({
   isOpen,
   onClose,
@@ -23,7 +88,7 @@ export function ContactBrokerModal({
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [preferredDate, setPreferredDate] = useState('');
-  const [preferredTime, setPreferredTime] = useState('chieu');
+  const [preferredTime, setPreferredTime] = useState('sang');
   const [note, setNote] = useState('');
   const [consent, setConsent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -35,9 +100,15 @@ export function ContactBrokerModal({
     setMounted(true);
   }, []);
 
-  // Tự động nạp thông tin nếu người dùng đã đăng nhập hoặc đã lưu trước đó
+  // Tự động nạp thông tin nếu người dùng đã đăng nhập hoặc đã lưu trước đó và khởi tạo ngày giờ hợp lý theo GMT+7
   useEffect(() => {
     if (isOpen) {
+      const vnTime = getVietnamDateTime();
+      if (!preferredDate || preferredDate < vnTime.minDate) {
+        setPreferredDate(vnTime.defaultDate);
+        setPreferredTime(vnTime.defaultTimeSlot);
+      }
+
       const user = getCurrentUser();
       if (user?.fullName && !fullName) setFullName(user.fullName);
       if (user?.phone && !phone) setPhone(user.phone);
@@ -56,6 +127,22 @@ export function ContactBrokerModal({
     onClose();
   }, [onClose]);
 
+  const vnTime = getVietnamDateTime();
+  const isSelectedToday = preferredDate === vnTime.todayStr;
+  const isMorningDisabled = isSelectedToday && vnTime.hour >= 12;
+  const isAfternoonDisabled = isSelectedToday && vnTime.hour >= 18;
+
+  const handleDateChange = (newDate: string) => {
+    setPreferredDate(newDate);
+    if (newDate === vnTime.todayStr) {
+      if (vnTime.hour >= 18 && preferredTime !== 'toi') {
+        setPreferredTime('toi');
+      } else if (vnTime.hour >= 12 && preferredTime === 'sang') {
+        setPreferredTime('chieu');
+      }
+    }
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage(null);
@@ -70,9 +157,52 @@ export function ContactBrokerModal({
       return;
     }
 
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setErrorMessage('Vui lòng nhập địa chỉ email');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setErrorMessage('Địa chỉ email không hợp lệ, vui lòng kiểm tra lại');
+      return;
+    }
+
+    const currentVn = getVietnamDateTime();
+    if (!preferredDate) {
+      setErrorMessage('Vui lòng chọn ngày xem phòng');
+      return;
+    }
+    if (preferredDate < currentVn.minDate) {
+      setErrorMessage(
+        'Ngày xem phòng không thể trước thời điểm hiện tại, vui lòng chọn lại',
+      );
+      return;
+    }
+    if (preferredDate === currentVn.todayStr) {
+      if (preferredTime === 'sang' && currentVn.hour >= 12) {
+        setErrorMessage(
+          'Khung giờ sáng hôm nay đã qua, vui lòng chọn khung giờ khác hoặc ngày khác',
+        );
+        return;
+      }
+      if (preferredTime === 'chieu' && currentVn.hour >= 18) {
+        setErrorMessage(
+          'Khung giờ chiều hôm nay đã qua, vui lòng chọn khung giờ tối hoặc ngày khác',
+        );
+        return;
+      }
+      if (preferredTime === 'toi' && currentVn.hour >= 20) {
+        setErrorMessage(
+          'Khung giờ tối hôm nay đã kết thúc, vui lòng chọn từ ngày mai trở đi',
+        );
+        return;
+      }
+    }
+
     if (!consent) {
       setErrorMessage(
-        'Bạn cần đồng ý để người tư vấn và dẫn xem liên hệ hỗ trợ bạn',
+        'Bạn cần đồng ý với Điều khoản sử dụng và Chính sách bảo mật để tiếp tục',
       );
       return;
     }
@@ -97,8 +227,12 @@ export function ContactBrokerModal({
             ? 'Buổi chiều (13:30 - 17:30)'
             : 'Buổi tối (18:00 - 20:00)';
 
+      const formattedDateVN = preferredDate.includes('-')
+        ? preferredDate.split('-').reverse().join('/')
+        : preferredDate;
+
       const fullMessage = [
-        preferredDate ? `Ngày mong muốn xem: ${preferredDate}` : null,
+        preferredDate ? `Ngày mong muốn xem: ${formattedDateVN}` : null,
         `Khung giờ: ${timeSlotText}`,
         note.trim() ? `Ghi chú thêm: ${note.trim()}` : null,
       ]
@@ -111,6 +245,8 @@ export function ContactBrokerModal({
       let respMsg = '';
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const res = await fetch(`${apiUrl}/leads`, {
           method: 'POST',
           headers,
@@ -119,12 +255,14 @@ export function ContactBrokerModal({
             listingTitle: resolvedTitle,
             fullName: fullName.trim(),
             phone: cleanPhone,
-            email: email.trim() || undefined,
+            email: cleanEmail,
             message: fullMessage,
             channel: 'web_form',
             consent: true,
           }),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
 
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
@@ -138,7 +276,7 @@ export function ContactBrokerModal({
           }
         }
       } catch (fetchErr: any) {
-        if (fetchErr.message && !fetchErr.message.includes('fetch') && !fetchErr.message.includes('kết nối')) {
+        if (fetchErr.message && !fetchErr.message.includes('fetch') && !fetchErr.message.includes('kết nối') && !fetchErr.message.includes('abort')) {
           throw fetchErr;
         }
       }
@@ -146,6 +284,7 @@ export function ContactBrokerModal({
       // Lưu trữ lịch hẹn vào danh sách cục bộ để đảm bảo 100% không bao giờ mất thông tin
       if (typeof window !== 'undefined') {
         try {
+          localStorage.setItem('qns_remember_email', cleanEmail);
           const storedRaw = localStorage.getItem('qns_booked_appointments');
           const stored = storedRaw ? JSON.parse(storedRaw) : [];
           stored.unshift({
@@ -154,7 +293,7 @@ export function ContactBrokerModal({
             listingTitle: resolvedTitle,
             fullName: fullName.trim(),
             phone: cleanPhone,
-            email: email.trim(),
+            email: cleanEmail,
             preferredDate,
             preferredTime: timeSlotText,
             note: note.trim(),
@@ -165,19 +304,23 @@ export function ContactBrokerModal({
       }
 
       setSubmitted(true);
-      const emailNotice = email.trim()
-        ? `Email xác nhận đã được gửi đến ${email.trim()} và ${SITE_CONFIG.agentName} sẽ sớm liên hệ xác nhận lịch với bạn`
-        : `${SITE_CONFIG.agentName} sẽ sớm liên hệ qua số điện thoại để xác nhận lịch với bạn`;
+      const emailNotice = `thư xác nhận đã được gửi đến ${cleanEmail} và ${SITE_CONFIG.agentName} sẽ sớm liên hệ xác nhận lịch với bạn`;
+      const cleanRespMsg = respMsg ? respMsg.replace(/\.+$/, '') : '';
 
-      setSuccessMessage(respMsg || `Đã đặt lịch xem phòng thành công! ${emailNotice}`);
+      setSuccessMessage(
+        success
+          ? (cleanRespMsg || `Đã đặt lịch xem phòng thành công, ${emailNotice}`)
+          : `Yêu cầu đặt lịch đã được lưu trữ an toàn, thư xác nhận sẽ được gửi đến ${cleanEmail} và ${SITE_CONFIG.agentName} sẽ sớm liên hệ qua số điện thoại ${cleanPhone} để xác nhận lịch với bạn`
+      );
 
       setTimeout(() => {
         setSubmitted(false);
         onClose();
       }, 4000);
     } catch (err: any) {
+      const friendlyErr = err.message ? String(err.message).replace(/\.+$/, '') : '';
       setErrorMessage(
-        err.message || 'Không thể gửi yêu cầu lúc này, vui lòng kiểm tra lại thông tin hoặc thử lại sau',
+        friendlyErr || 'Không thể gửi yêu cầu lúc này, vui lòng kiểm tra lại thông tin hoặc thử lại sau'
       );
     } finally {
       setLoading(false);
@@ -291,13 +434,14 @@ export function ContactBrokerModal({
               />
             </div>
 
-            {/* Email nhận thư xác nhận */}
+            {/* Email */}
             <div>
               <label className="block text-[12px] font-bold text-slate-700 mb-1">
-                Email nhận thư xác nhận <span className="text-slate-400 font-normal">(để nhận email xác nhận lịch hẹn)</span>
+                Email <span className="text-rose-500">*</span>
               </label>
               <input
                 type="email"
+                required
                 placeholder="Ví dụ: your-email@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -309,13 +453,14 @@ export function ContactBrokerModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[12px] font-bold text-slate-700 mb-1">
-                  Ngày xem phòng
+                  Ngày xem phòng <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="date"
+                  required
                   value={preferredDate}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setPreferredDate(e.target.value)}
+                  min={vnTime.minDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/40 px-3 py-2 text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 transition-all shadow-2xs"
                 />
               </div>
@@ -329,8 +474,12 @@ export function ContactBrokerModal({
                   onChange={(e) => setPreferredTime(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/40 px-3 py-2 text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 transition-all shadow-2xs"
                 >
-                  <option value="sang">Sáng (08:30 - 11:30)</option>
-                  <option value="chieu">Chiều (13:30 - 17:30)</option>
+                  <option value="sang" disabled={isMorningDisabled}>
+                    Sáng (08:30 - 11:30) {isMorningDisabled ? '- Đã qua' : ''}
+                  </option>
+                  <option value="chieu" disabled={isAfternoonDisabled}>
+                    Chiều (13:30 - 17:30) {isAfternoonDisabled ? '- Đã qua' : ''}
+                  </option>
                   <option value="toi">Tối (18:00 - 20:00)</option>
                 </select>
               </div>
@@ -355,12 +504,33 @@ export function ContactBrokerModal({
               <input
                 type="checkbox"
                 id="lead-consent"
+                required
                 checked={consent}
                 onChange={(e) => setConsent(e.target.checked)}
                 className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-brand focus:ring-brand cursor-pointer"
               />
               <label htmlFor="lead-consent" className="text-xs sm:text-[12.5px] text-slate-600 leading-snug cursor-pointer select-none">
-                Tôi đồng ý cung cấp thông tin liên hệ để người tư vấn và trực tiếp dẫn xem ({SITE_CONFIG.agentName}) liên hệ xác nhận lịch
+                Tôi hoàn toàn đồng ý và chấp nhận với{' '}
+                <a
+                  href="/dieu-khoan"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-brand font-medium hover:underline cursor-pointer"
+                >
+                  Điều khoản sử dụng
+                </a>{' '}
+                và{' '}
+                <a
+                  href="/chinh-sach"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-brand font-medium hover:underline cursor-pointer"
+                >
+                  Chính sách bảo mật
+                </a>{' '}
+                của QNS BROKER
               </label>
             </div>
 

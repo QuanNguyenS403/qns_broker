@@ -119,19 +119,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <p className="text-sm text-gray-600 mb-6 leading-relaxed">
             Khu vực này chỉ dành riêng cho Ban Quản trị hệ thống QNS BROKER — bạn cần đăng nhập bằng tài khoản có vai trò Quản trị (Admin) để tiếp tục
           </p>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col gap-2.5">
             <Link
-              href="/dang-nhap?redirect=/admin"
-              className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-medium py-2.5 px-4 rounded-xl text-sm transition-colors text-center shadow-sm"
+              href="/qnsbroker/admin"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-colors text-center shadow-md flex items-center justify-center gap-2"
             >
-              Đăng nhập Quản trị
+              <span>Vào Cổng Quản trị qnsbroker/admin</span>
+              <span>→</span>
             </Link>
-            <Link
-              href="/"
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-xl text-sm transition-colors text-center"
-            >
-              Về Trang chủ
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <Link
+                href="/dang-nhap?redirect=/admin"
+                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-3 rounded-xl text-xs transition-colors text-center shadow-sm"
+              >
+                Đăng nhập Quản trị hệ thống
+              </Link>
+              <Link
+                href="/"
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-3 rounded-xl text-xs transition-colors text-center"
+              >
+                Về Trang chủ
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -58,19 +58,35 @@
     @apply transition-colors duration-200;
   }
 
-  /* Scrollbar nhỏ gọn cho webkit browsers */
+  /* Scrollbar hiện đại với kích thước vừa vặn và màu chủ đạo website */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #0d9488 transparent;
+  }
+
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
   }
   ::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-slate-300;
+    @apply rounded-full bg-brand;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400;
+    @apply bg-brand-700;
+  }
+  ::-webkit-scrollbar-thumb:active {
+    @apply bg-brand-800;
+  }
+  ::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  ::-webkit-scrollbar-corner {
+    @apply bg-transparent;
   }
 }
 

@@ -37,7 +37,7 @@ export function ReportListingModal({ listingId }: { listingId: string }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (listingId.startsWith('demo-')) {
-      setError('Đây là tin mẫu thử nghiệm, không thể gửi báo cáo vi phạm');
+      setError('Đây là tin thử nghiệm, không thể gửi báo cáo vi phạm');
       return;
     }
     setLoading(true);

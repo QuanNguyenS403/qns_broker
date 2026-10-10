@@ -79,9 +79,31 @@ export function MapRoomCanvas({
     const L = (window as any).L;
     if (!L) return;
 
+    // Bảo vệ phòng ngừa Leaflet đọc _leaflet_pos khi phần tử đang unmount hoặc _mapPane bị null
+    if (L.DomUtil && !L.DomUtil._safePositionPatched) {
+      const origGetPosition = L.DomUtil.getPosition;
+      L.DomUtil.getPosition = function (el: any) {
+        if (!el) {
+          return (L.Point ? new L.Point(0, 0) : { x: 0, y: 0 }) as any;
+        }
+        return origGetPosition.call(this, el);
+      };
+      L.DomUtil._safePositionPatched = true;
+    }
+
+    if (L.Map && L.Map.prototype && !(L.Map.prototype as any)._safePanePosPatched) {
+      const origGetMapPanePos = L.Map.prototype._getMapPanePos;
+      L.Map.prototype._getMapPanePos = function () {
+        if (!this._mapPane) {
+          return (L.Point ? new L.Point(0, 0) : { x: 0, y: 0 }) as any;
+        }
+        return origGetMapPanePos ? origGetMapPanePos.call(this) : ((L.Point ? new L.Point(0, 0) : { x: 0, y: 0 }) as any);
+      };
+      (L.Map.prototype as any)._safePanePosPatched = true;
+    }
+
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
+      return;
     }
 
     const startLat = centerCoords?.lat ?? DEFAULT_LAT;
@@ -131,9 +153,26 @@ export function MapRoomCanvas({
     markersLayerRef.current = markersLayer;
     mapInstanceRef.current = map;
 
+    // Đảm bảo Leaflet map lấp đầy toàn bộ khung nhìn khi màn hình co giãn hoặc render lần đầu
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    window.addEventListener('resize', handleResize);
+
     return () => {
+      window.removeEventListener('resize', handleResize);
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.stop?.();
+          mapInstanceRef.current.scrollWheelZoom?.disable();
+          mapInstanceRef.current.remove();
+        } catch (err) {
+          console.warn('Leaflet cleanup warning:', err);
+        }
         mapInstanceRef.current = null;
       }
     };
@@ -225,12 +264,30 @@ export function MapRoomCanvas({
     });
   }, [clusteredRooms, selectedRoom, isLeafletReady, onSelectRoom, currentZoom]);
 
+  const prevRoomIdRef = useRef<string | null>(null);
+  const prevCenterKeyRef = useRef<string | null>(null);
+
   // 5. Cập nhật tâm bản đồ khi centerCoords hoặc selectedRoom thay đổi
   useEffect(() => {
     if (!mapInstanceRef.current) return;
-    if (centerCoords?.lat && centerCoords?.lng) {
+    const currentCenterKey = centerCoords ? `${centerCoords.lat}_${centerCoords.lng}` : null;
+    const currentRoomId = selectedRoom?.id ?? null;
+
+    // Ưu tiên bay tới phòng được chọn nếu vừa có sự kiện chọn phòng
+    if (currentRoomId && currentRoomId !== prevRoomIdRef.current && selectedRoom?.lat && selectedRoom?.lng) {
+      prevRoomIdRef.current = currentRoomId;
+      mapInstanceRef.current.flyTo([selectedRoom.lat, selectedRoom.lng], 16, { duration: 0.8 });
+      return;
+    }
+
+    // Bay tới tọa độ tìm kiếm nếu người dùng vừa tìm kiếm địa chỉ mới
+    if (currentCenterKey && currentCenterKey !== prevCenterKeyRef.current && centerCoords?.lat && centerCoords?.lng) {
+      prevCenterKeyRef.current = currentCenterKey;
       mapInstanceRef.current.flyTo([centerCoords.lat, centerCoords.lng], 15, { duration: 0.8 });
-    } else if (selectedRoom?.lat && selectedRoom?.lng) {
+      return;
+    }
+
+    if (selectedRoom?.lat && selectedRoom?.lng) {
       mapInstanceRef.current.flyTo([selectedRoom.lat, selectedRoom.lng], 16, { duration: 0.8 });
     }
   }, [centerCoords, selectedRoom]);
@@ -259,14 +316,14 @@ export function MapRoomCanvas({
   };
 
   return (
-    <div className="relative w-full h-full min-h-[540px] sm:min-h-[640px] lg:min-h-[720px] bg-slate-100 overflow-hidden">
+    <div className="relative w-full h-full bg-slate-100 overflow-hidden">
       {/* Container Leaflet Google Maps */}
       <div ref={containerRef} className="absolute inset-0 z-0 w-full h-full" />
 
-      {/* Huy hiệu tổng số phòng ở góc trên (Ảnh 1: 820 phòng) */}
+      {/* Huy hiệu tổng số phòng ở góc trên — Màu xanh ngọc Teal (#0d9488) chủ đạo website */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#52296b]/90 backdrop-blur-md text-white text-xs sm:text-sm font-black shadow-lg border border-white/30">
-          <span className="flex h-2 w-2 rounded-full bg-teal-400 animate-pulse" />
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand/95 backdrop-blur-md text-white text-xs sm:text-sm font-bold shadow-lg shadow-brand/20 border border-white/30">
+          <span className="flex h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
           <span>{rooms.length} phòng đang hiển thị</span>
         </div>
       </div>

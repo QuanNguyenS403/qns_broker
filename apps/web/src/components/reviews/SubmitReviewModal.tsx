@@ -81,7 +81,7 @@ export function SubmitReviewModal({ isOpen, onClose, onSuccess }: SubmitReviewMo
           type="button"
           onClick={onClose}
           className="absolute right-5 top-5 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
-          aria-label="Đóng biểu mẫu"
+          aria-label="Đóng cửa sổ đánh giá"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

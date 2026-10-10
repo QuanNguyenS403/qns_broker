@@ -5,6 +5,7 @@ import { ListingCard } from '@/components/ListingCard';
 import { Pagination } from '@/components/Pagination';
 import { SearchFilterBar } from '@/components/SearchFilterBar';
 import { findHanoiWard } from '@/lib/hanoi-wards';
+import { VIETNAM_UNIVERSITIES, calculateDistanceKm } from '@/lib/vietnam-universities';
 import { DEMO_SPACE_RENT_LISTINGS } from '@/lib/demo-data';
 
 export const metadata: Metadata = {
@@ -199,9 +200,30 @@ export default async function ChoThueMatBangPage({ searchParams }: Props) {
     });
   }
   if (searchParams.universitySlug) {
-    displayItems = displayItems.filter((it) =>
-      it.nearbyUniversities?.some((u) => u.university.slug === searchParams.universitySlug)
-    );
+    const targetSlug = searchParams.universitySlug;
+    const targetUni = VIETNAM_UNIVERSITIES.find((u) => u.slug === targetSlug);
+    const targetKeywords = targetUni
+      ? [
+          targetUni.abbreviation?.toLowerCase(),
+          targetUni.name.toLowerCase(),
+          targetSlug.replace(/-/g, ' '),
+        ].filter(Boolean) as string[]
+      : [targetSlug.replace(/-/g, ' ')];
+
+    displayItems = displayItems.filter((it) => {
+      // 1. Khớp theo nearbyUniversities có sẵn trong tin đăng
+      if (it.nearbyUniversities?.some((u) => u.university.slug === targetSlug)) {
+        return true;
+      }
+      // 2. Tính khoảng cách địa lý theo tọa độ GPS (bán kính <= 4.5km)
+      if (targetUni && it.lat != null && it.lng != null && !isNaN(it.lat) && !isNaN(it.lng)) {
+        const dist = calculateDistanceKm(it.lat, it.lng, targetUni.lat, targetUni.lng);
+        if (dist <= 4.5) return true;
+      }
+      // 3. Khớp theo từ khóa tên trường / tên viết tắt trong tiêu đề, địa chỉ hoặc mô tả
+      const text = `${it.title} ${it.description || ''} ${it.addressDetail || ''} ${it.location?.name || ''}`.toLowerCase();
+      return targetKeywords.some((kw) => kw && text.includes(kw));
+    });
   }
   if (searchParams.utilitiesIncluded === 'true') {
     displayItems = displayItems.filter((it) => it.utilitiesIncluded);
@@ -235,6 +257,18 @@ export default async function ChoThueMatBangPage({ searchParams }: Props) {
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
   const pagedItems = displayItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+  const selectedUni = searchParams.universitySlug
+    ? VIETNAM_UNIVERSITIES.find((u) => u.slug === searchParams.universitySlug)
+    : null;
+
+  const filterSummary = searchParams.keyword
+    ? ` — "${searchParams.keyword}"`
+    : selectedUni
+      ? ` — Gần ${selectedUni.abbreviation ? `${selectedUni.abbreviation} (${selectedUni.name})` : selectedUni.name}`
+      : searchParams.universitySlug
+        ? ` — Gần ${searchParams.universitySlug.replace(/-/g, ' ').toUpperCase()}`
+        : '';
+
   return (
     <div className="min-h-screen bg-surface-muted">
       <div className="container-max py-8 sm:py-10 md:py-12">
@@ -258,7 +292,7 @@ export default async function ChoThueMatBangPage({ searchParams }: Props) {
               <span>Chuyên mục Mặt bằng kinh doanh</span>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-3.5xl font-bold text-text-primary">
-              Cho thuê mặt bằng kinh doanh{searchParams.keyword ? ` — "${searchParams.keyword}"` : ''} mới nhất
+              Cho thuê mặt bằng kinh doanh{filterSummary} mới nhất
             </h1>
             <p className="mt-1.5 sm:mt-2 text-sm sm:text-base text-text-muted">
               {totalCount.toLocaleString('vi-VN')} mặt bằng, cửa hàng, shophouse vị trí đẹp đang cho thuê

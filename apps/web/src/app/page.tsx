@@ -31,7 +31,7 @@ const VALUE_PROPOSITIONS = [
   },
   {
     title: 'Tư vấn và trực tiếp dẫn xem',
-    desc: 'Chuyên viên Đức Quân tiếp nhận nhu cầu, tư vấn chi tiết và trực tiếp dẫn xem phòng',
+    desc: 'Chủ nhà tiếp nhận nhu cầu, tư vấn chi tiết và trực tiếp dẫn xem phòng',
     color: 'from-amber-500/10 to-amber-500/5',
     border: 'border-amber-200',
   },

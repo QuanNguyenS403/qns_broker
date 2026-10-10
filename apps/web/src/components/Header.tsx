@@ -150,6 +150,10 @@ export function Header() {
   const initials = user ? (user.fullName ?? user.email ?? user.phone ?? 'U').charAt(0).toUpperCase() : '';
   const avatarUrl = user?.avatarUrl || user?.picture || user?.image || null;
 
+  if (pathname?.startsWith('/qnsbroker/admin')) {
+    return null;
+  }
+
   return (
     <header
       className={`sticky top-0 z-50 bg-brand text-white transition-shadow duration-200 ${

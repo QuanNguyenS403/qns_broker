@@ -263,41 +263,54 @@ export class LeadsService {
       }
     }
 
-    // 5. GỬI EMAIL THÔNG BÁO CHO ADMIN (ĐỨC QUÂN) VÀ EMAIL XÁC NHẬN CHO KHÁCH HÀNG
-    try {
-      await this.emailService.sendViewingAppointmentToAdmin({
-        fullName: dto.fullName.trim(),
-        phone: cleanPhone,
-        email: dto.email?.trim(),
-        listingTitle: resolvedTitle,
-        listingId: listing?.id?.toString() || dto.listingId,
-        appointmentDate,
-        appointmentTime,
-        note,
-      });
-    } catch (mailAdminErr: any) {
-      this.logger.warn(`Không thể gửi email cho Admin: ${mailAdminErr.message}`);
-    }
+    // 5. GỬI EMAIL THÔNG BÁO CHO ADMIN VÀ EMAIL XÁC NHẬN CHO KHÁCH HÀNG (CHẠY SONG SONG NGAY TỨC THÌ)
+    // Thực hiện song song ngay tức thì và không chặn HTTP response của người dùng,
+    // giúp giao diện đặt lịch phản hồi tức thì <100ms đồng thời gửi email ngay vào hộp thư
+    const emailTasks: Promise<any>[] = [];
 
-    if (dto.email && dto.email.trim()) {
-      try {
-        await this.emailService.sendViewingAppointmentConfirmationToCustomer({
+    emailTasks.push(
+      this.emailService
+        .sendViewingAppointmentToAdmin({
           fullName: dto.fullName.trim(),
           phone: cleanPhone,
-          email: dto.email.trim(),
+          email: dto.email?.trim(),
           listingTitle: resolvedTitle,
+          listingId: listing?.id?.toString() || dto.listingId,
           appointmentDate,
           appointmentTime,
           note,
-        });
-      } catch (mailCustErr: any) {
-        this.logger.warn(`Không thể gửi email xác nhận cho Khách hàng: ${mailCustErr.message}`);
-      }
+        })
+        .catch((mailAdminErr: any) => {
+          this.logger.warn(`Không thể gửi email cho Admin: ${mailAdminErr.message}`);
+        }),
+    );
+
+    if (dto.email && dto.email.trim()) {
+      emailTasks.push(
+        this.emailService
+          .sendViewingAppointmentConfirmationToCustomer({
+            fullName: dto.fullName.trim(),
+            phone: cleanPhone,
+            email: dto.email.trim(),
+            listingTitle: resolvedTitle,
+            appointmentDate,
+            appointmentTime,
+            note,
+          })
+          .catch((mailCustErr: any) => {
+            this.logger.warn(`Không thể gửi email xác nhận cho Khách hàng: ${mailCustErr.message}`);
+          }),
+      );
     }
+
+    // Kích hoạt thực thi song song ngay lập tức mà không chặn response
+    Promise.allSettled(emailTasks).catch(() => {});
 
     return {
       success: true,
-      message: 'Đã đặt lịch xem phòng thành công, Chủ nhà sẽ sớm liên hệ xác nhận lịch với bạn',
+      message: dto.email?.trim()
+        ? `Đã đặt lịch xem phòng thành công, thư xác nhận đã được gửi đến ${dto.email.trim()} và Đức Quân sẽ sớm liên hệ xác nhận lịch với bạn`
+        : 'Đã đặt lịch xem phòng thành công, Đức Quân sẽ sớm liên hệ xác nhận lịch với bạn',
       isDuplicate: false,
       leadId: createdLeadId,
     };

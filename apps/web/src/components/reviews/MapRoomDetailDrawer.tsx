@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import type { MapRoom, RoomReview } from '@/lib/map-rooms-data';
-import { getGoogleMapsDirectionsUrl } from '@/lib/vietnam-universities';
+import { mapRoomToListing } from '@/lib/map-rooms-data';
+import { findDemoListing } from '@/lib/demo-data';
+import { extractListingFurnitureList } from '@/lib/furniture-utils';
+import { ContactBrokerModal } from '@/components/ContactBrokerModal';
 
 interface MapRoomDetailDrawerProps {
   room: MapRoom | null;
@@ -22,11 +25,94 @@ export function MapRoomDetailDrawer({
 }: MapRoomDetailDrawerProps) {
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [newRating, setNewRating] = useState(5);
   const [newAuthorName, setNewAuthorName] = useState('');
   const [newContent, setNewContent] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [submitSuccessNotice, setSubmitSuccessNotice] = useState<string | null>(null);
+
+  // Khi room thay đổi (chọn phòng khác hoặc đổi phòng trong cụm), reset ảnh về 0
+  useEffect(() => {
+    setActiveImageIdx(0);
+    setShowReviewForm(false);
+  }, [room?.id]);
+
+  // Lắng nghe phím Escape để đóng nhanh
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  // Đồng bộ 100% dữ liệu với tin đăng thật / trang chi tiết phòng
+  const matchedListing = useMemo(() => {
+    if (!room) return null;
+    // 1. Thử tìm trong kho demo bằng slug hoặc id
+    const demo = findDemoListing(room.slug) || findDemoListing(room.id);
+    if (demo) return demo;
+
+    // 2. Thử tìm trong localStorage nếu người dùng có tin tự đăng
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('qns_custom_listings');
+        if (raw) {
+          const list: any[] = JSON.parse(raw);
+          if (Array.isArray(list)) {
+            const found = list.find((it) => it.slug === room.slug || String(it.id) === String(room.id));
+            if (found) return found;
+          }
+        }
+      } catch {}
+    }
+
+    // 3. Fallback sang listing chuẩn hóa từ room
+    return mapRoomToListing(room);
+  }, [room]);
+
+  const displayTitle = useMemo(() => {
+    const raw = matchedListing?.title || room?.title || 'Phòng cho thuê';
+    return raw.replace(/^\[MẪU\]\s*/i, '').replace(/\[MẪU\]/gi, '').trim();
+  }, [matchedListing, room]);
+
+  // Danh sách hình ảnh đồng bộ
+  const displayImages = useMemo(() => {
+    if (matchedListing?.images && matchedListing.images.length > 0) {
+      return matchedListing.images
+        .map((img: any) => typeof img === 'string' ? img : img.imageUrl)
+        .filter(Boolean);
+    }
+    return room?.images && room.images.length > 0 ? room.images : [];
+  }, [matchedListing, room]);
+
+  // Giá thuê, cọc, diện tích, điện đồng bộ với trang chi tiết
+  const displayPrice = matchedListing?.price
+    ? parseInt(String(matchedListing.price), 10)
+    : (room?.price || 0);
+
+  const displayDeposit = matchedListing?.depositAmount
+    ? parseInt(String(matchedListing.depositAmount), 10)
+    : (room?.depositAmount || displayPrice);
+
+  const displayArea = matchedListing?.areaM2
+    ? parseInt(String(matchedListing.areaM2), 10)
+    : (room?.areaM2 || 25);
+
+  const displayElectricity = matchedListing?.electricityPricePerKwh
+    || room?.electricityPricePerKwh
+    || 3500;
+
+  // Danh sách nội thất & tiện nghi đồng bộ 100% với mục "Nội Thất" trên trang chi tiết
+  const furnitureList = useMemo(() => {
+    return extractListingFurnitureList(matchedListing || room);
+  }, [matchedListing, room]);
+
+  const targetSlug = matchedListing?.slug || room?.slug || '';
+  const targetId = matchedListing?.id || room?.id || '';
 
   if (!room) return null;
 
@@ -73,96 +159,52 @@ export function MapRoomDetailDrawer({
     }
   };
 
-  const directionsUrl = getGoogleMapsDirectionsUrl({
-    lat: room.lat,
-    lng: room.lng,
-    address: room.maskedAddress,
-  });
-
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full sm:max-w-lg md:max-w-xl bg-white shadow-2xl flex flex-col border-l border-slate-200 transition-all duration-300">
-      {/* Header thanh tiêu đề */}
-      <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
-        <div className="min-w-0 pr-3">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Phòng có dữ liệu đánh giá</span>
-          </span>
-          <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate mt-1">
-            {room.title}
-          </h3>
+    <div className="absolute top-3 bottom-3 right-3 sm:top-4 sm:bottom-4 sm:right-4 z-40 w-[calc(100%-24px)] sm:w-[350px] md:w-[360px] max-h-[calc(100%-24px)] sm:max-h-[calc(100%-32px)] bg-white rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col border border-slate-200/90 overflow-hidden transition-all duration-300">
+      {/* Thanh tiêu đề cố định ở trên cùng có nút Thoát nổi bật — Giúp khách thoát phòng này tức thì để chọn phòng khác */}
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-slate-100 bg-white shrink-0 z-30">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+          <span className="w-2 h-2 rounded-full bg-brand" />
+          <span>Chi tiết phòng trọ</span>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="w-9 h-9 rounded-full flex items-center justify-center bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 shadow-xs transition-colors shrink-0"
-          title="Đóng chi tiết"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 text-xs font-bold transition-all cursor-pointer border border-slate-200/80 active:scale-95"
+          title="Thoát phòng này để chọn phòng khác"
+          aria-label="Thoát xem phòng"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <span>Thoát</span>
+          <span className="text-sm leading-none font-bold">✕</span>
         </button>
       </div>
 
-      {/* Bộ chọn chuyển đổi giữa các phòng trong cùng cụm vị trí nếu có nhiều hơn 1 phòng */}
-      {clusterRooms && clusterRooms.length > 1 && (
-        <div className="px-4 py-2 bg-purple-50/70 border-b border-purple-100 flex items-center justify-between gap-2 shrink-0">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-purple-900">
-            <span className="w-2 h-2 rounded-full bg-purple-600" />
-            <span>Khu vực này có {clusterRooms.length} phòng cho thuê:</span>
-          </div>
-          <div className="flex items-center gap-1 overflow-x-auto py-0.5 max-w-[55%]">
-            {clusterRooms.map((clRoom, cIdx) => (
-              <button
-                key={clRoom.id}
-                type="button"
-                onClick={() => {
-                  onSelectClusterRoom?.(clRoom);
-                  setActiveImageIdx(0);
-                }}
-                className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all shrink-0 ${
-                  clRoom.id === room.id
-                    ? 'bg-purple-700 text-white shadow-xs'
-                    : 'bg-white text-purple-800 border border-purple-200 hover:bg-purple-100'
-                }`}
-              >
-                Phòng {cIdx + 1}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Nội dung cuộn chính */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-3.5 space-y-3 sm:space-y-3.5">
         {/* Gallery ảnh phòng */}
-        <div className="relative rounded-2xl overflow-hidden bg-slate-100 aspect-16/10 shadow-sm border border-slate-200">
+        <div className="relative rounded-xl overflow-hidden bg-slate-100 h-40 sm:h-44 w-full shadow-xs border border-slate-200">
           <img
-            src={room.images[activeImageIdx] || room.images[0]}
-            alt={room.title}
+            src={displayImages[activeImageIdx] || displayImages[0]}
+            alt={displayTitle}
             className="w-full h-full object-cover transition-all duration-300"
           />
-          <div className="absolute top-3 left-3">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white text-xs font-semibold">
-              <span>Đã kiểm tra thực tế</span>
-            </span>
-          </div>
-          {room.images.length > 1 && (
-            <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white text-xs font-medium">
-              {activeImageIdx + 1} / {room.images.length}
+
+          {displayImages.length > 1 && (
+            <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white text-xs font-medium">
+              {activeImageIdx + 1} / {displayImages.length}
             </div>
           )}
         </div>
 
         {/* Thumbnail chọn ảnh nếu có nhiều hơn 1 ảnh */}
-        {room.images.length > 1 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {room.images.map((img, idx) => (
+        {displayImages.length > 1 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            {displayImages.map((img: string, idx: number) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => setActiveImageIdx(idx)}
-                className={`relative w-16 h-12 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
+                className={`relative w-14 h-10 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
                   activeImageIdx === idx ? 'border-brand scale-105' : 'border-transparent opacity-70 hover:opacity-100'
                 }`}
               >
@@ -172,115 +214,115 @@ export function MapRoomDetailDrawer({
           </div>
         )}
 
-        {/* Khối Địa chỉ bảo mật — Nghiêm ngặt chỉ hiện ngõ, phường, quận, thành phố */}
-        <div className="rounded-2xl bg-teal-50/70 border border-teal-200/80 p-4">
-          <div className="flex items-start gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+        {/* Tiêu đề phòng — Đồng bộ hiển thị sạch đẹp */}
+        <div>
+          <h3 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
+            {displayTitle}
+          </h3>
+        </div>
+
+        {/* Địa chỉ phòng cho thuê đồng bộ chuẩn xác với chấm trên bản đồ */}
+        <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-teal-50/80 border border-teal-100 text-slate-700 shadow-2xs">
+          <div className="w-6 h-6 rounded-lg bg-teal-600/10 flex items-center justify-center text-teal-700 shrink-0 mt-0.5">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800">Địa chỉ trên bản đồ</span>
+              {room.lat != null && room.lng != null && (
+                <span className="text-[10px] font-mono text-teal-700 font-semibold bg-white/80 px-1.5 py-0.5 rounded border border-teal-200/60">
+                  {room.lat.toFixed(4)}, {room.lng.toFixed(4)}
+                </span>
+              )}
             </div>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-teal-800">
-                Vị trí bảo mật (Đã ẩn số nhà chi tiết)
-              </div>
-              <div className="text-sm sm:text-base font-black text-slate-900 mt-0.5">
-                {room.maskedAddress}
-              </div>
-              <p className="text-[11px] text-teal-900/80 mt-1 leading-relaxed">
-                Để bảo vệ quyền riêng tư theo tiêu chuẩn an toàn, website chỉ hiển thị ngõ, phường, quận. Chuyên viên QNS sẽ trực tiếp dẫn bạn vào xem tận nơi
-              </p>
-            </div>
+            <p className="text-xs sm:text-[13px] font-bold text-slate-900 mt-0.5 leading-snug">
+              {room.maskedAddress || room.rawAddress || matchedListing?.addressDetail || 'Khu vực đang cập nhật địa chỉ'}
+            </p>
           </div>
         </div>
 
-        {/* Khối Giá & Chi phí minh bạch */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3 text-center">
+        {/* Bộ chọn chuyển đổi giữa các phòng trong cùng cụm vị trí nếu có nhiều hơn 1 phòng */}
+        {clusterRooms && clusterRooms.length > 1 && (
+          <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-100 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-purple-900">
+              <span className="w-2 h-2 rounded-full bg-purple-600" />
+              <span>Khu vực này có {clusterRooms.length} phòng cho thuê:</span>
+            </div>
+            <div className="flex items-center gap-1 overflow-x-auto py-0.5 max-w-[55%]">
+              {clusterRooms.map((clRoom, cIdx) => (
+                <button
+                  key={clRoom.id}
+                  type="button"
+                  onClick={() => {
+                    onSelectClusterRoom?.(clRoom);
+                    setActiveImageIdx(0);
+                  }}
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all shrink-0 ${
+                    clRoom.id === room.id
+                      ? 'bg-purple-700 text-white shadow-xs'
+                      : 'bg-white text-purple-800 border border-purple-200 hover:bg-purple-100'
+                  }`}
+                >
+                  Phòng {cIdx + 1}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Khối Giá & Chi phí minh bạch — Đồng bộ 100% với trang chi tiết */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-2.5 text-center">
             <div className="text-[11px] font-medium text-slate-500">Giá thuê</div>
             <div className="text-sm sm:text-base font-black text-brand mt-0.5">
-              {room.price.toLocaleString('vi-VN')} đ
+              {displayPrice.toLocaleString('vi-VN')} đ
             </div>
             <div className="text-[10px] text-slate-400">tháng</div>
           </div>
 
-          <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3 text-center">
+          <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-2.5 text-center">
             <div className="text-[11px] font-medium text-slate-500">Tiền cọc</div>
             <div className="text-sm sm:text-base font-black text-slate-800 mt-0.5">
-              {room.depositAmount.toLocaleString('vi-VN')} đ
+              {displayDeposit ? `${displayDeposit.toLocaleString('vi-VN')} đ` : '1 tháng tiền thuê'}
             </div>
             <div className="text-[10px] text-slate-400">1 tháng</div>
           </div>
 
-          <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3 text-center">
+          <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-2.5 text-center">
             <div className="text-[11px] font-medium text-slate-500">Diện tích</div>
             <div className="text-sm sm:text-base font-black text-slate-800 mt-0.5">
-              {room.areaM2} m²
+              {displayArea} m²
             </div>
             <div className="text-[10px] text-slate-400">rộng rãi</div>
           </div>
 
-          <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3 text-center">
+          <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-2.5 text-center">
             <div className="text-[11px] font-medium text-slate-500">Tiền điện</div>
             <div className="text-sm sm:text-base font-black text-amber-600 mt-0.5">
-              {room.electricityPricePerKwh ? `${room.electricityPricePerKwh.toLocaleString('vi-VN')} đ` : '3.500 đ'}
+              {displayElectricity ? `${displayElectricity.toLocaleString('vi-VN')} đ` : '4.000 đ'}
             </div>
             <div className="text-[10px] text-slate-400">kWh</div>
           </div>
         </div>
 
-        {/* Tiện nghi phòng */}
+        {/* Nội thất & Tiện nghi có sẵn — Đồng bộ 100% với mục Nội Thất trên trang chi tiết */}
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-            Tiện nghi có sẵn
+            Nội thất & Tiện nghi có sẵn
           </h4>
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
-            {room.amenities.airConditioner && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
-                ❄️ Điều hòa
+            {furnitureList.map((item) => (
+              <span
+                key={item}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200/60"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-600 shrink-0" />
+                <span>{item}</span>
               </span>
-            )}
-            {room.amenities.waterHeater && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
-                🔥 Nóng lạnh
-              </span>
-            )}
-            {room.amenities.mezzanine && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
-                🪜 Gác lửng
-              </span>
-            )}
-            {room.amenities.balcony && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
-                🌿 Ban công
-              </span>
-            )}
-            {room.amenities.elevator && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
-                🛗 Thang máy
-              </span>
-            )}
-            {room.amenities.petsAllowed && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-medium">
-                🐾 Cho nuôi thú cưng
-              </span>
-            )}
-            {room.amenities.electricVehicle && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 border border-teal-200 text-xs font-medium">
-                ⚡ Sạc xe điện
-              </span>
-            )}
-            {room.amenities.freeTime && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
-                ⏰ Giờ giấc tự do
-              </span>
-            )}
-            {room.amenities.securityCamera && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
-                📹 Camera an ninh
-              </span>
-            )}
+            ))}
           </div>
         </div>
 
@@ -369,7 +411,7 @@ export function MapRoomDetailDrawer({
                   rows={3}
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
-                  placeholder="Chia sẻ trải nghiệm thực tế về phòng trọ này để giúp các bạn sinh viên sau..."
+                  placeholder="Chia sẻ trải nghiệm thực tế về phòng trọ này để giúp các bạn sinh viên sau"
                   className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 outline-none focus:border-brand"
                 />
               </div>
@@ -387,7 +429,7 @@ export function MapRoomDetailDrawer({
                   disabled={submittingReview}
                   className="px-4 py-1.5 rounded-lg bg-brand text-white text-xs font-bold shadow-xs hover:bg-brand-700 disabled:opacity-50"
                 >
-                  {submittingReview ? 'Đang gửi...' : 'Gửi đánh giá ngay'}
+                  {submittingReview ? 'Đang gửi' : 'Gửi đánh giá ngay'}
                 </button>
               </div>
             </form>
@@ -436,41 +478,39 @@ export function MapRoomDetailDrawer({
         </div>
       </div>
 
-      {/* Footer các nút hành động */}
-      <div className="p-4 border-t border-slate-100 bg-white grid grid-cols-1 sm:grid-cols-3 gap-2 shrink-0">
-        <a
-          href="tel:0981753082"
-          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-brand hover:bg-brand-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-brand/20 transition-all text-center"
+      {/* Footer các nút hành động — 2 nút cân đối: Đặt lịch & Xem bài */}
+      <div className="p-2.5 sm:p-3 border-t border-slate-100 bg-white grid grid-cols-2 gap-2 shrink-0">
+        <button
+          type="button"
+          onClick={() => setIsBookingModalOpen(true)}
+          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-brand hover:bg-brand-700 active:scale-[0.98] text-white text-xs sm:text-[13px] font-bold shadow-md shadow-brand/20 transition-all text-center cursor-pointer whitespace-nowrap"
+          title="Đặt lịch xem phòng này"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <span>Dẫn xem phòng</span>
-        </a>
+          <span>Đặt lịch</span>
+        </button>
 
         <Link
-          href={`/tin/${room.slug}`}
-          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold shadow-sm transition-all text-center"
+          href={`/tin/${targetSlug || room.slug}`}
+          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white text-xs sm:text-[13px] font-bold shadow-sm transition-all text-center whitespace-nowrap"
+          title="Xem chi tiết bài đăng"
         >
-          <span>Xem bài đăng</span>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <span>Xem bài</span>
+          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
         </Link>
-
-        <a
-          href={directionsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-bold transition-all text-center"
-        >
-          <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <span>Chỉ đường</span>
-        </a>
       </div>
+
+      {/* Modal Đặt lịch xem phòng — Form chuẩn giống hệt form Đặt lịch xem phòng trên website */}
+      <ContactBrokerModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        listingId={targetId || room.id}
+        listingTitle={displayTitle}
+      />
     </div>
   );
 }

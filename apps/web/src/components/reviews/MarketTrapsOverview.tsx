@@ -49,7 +49,7 @@ export function MarketTrapsOverview({ stats, onSelectCategory }: MarketTrapsOver
       color: 'from-purple-500 to-indigo-600',
       badgeBg: 'bg-purple-100 text-purple-800',
       barColor: 'bg-purple-500',
-      description: 'Ảnh tin đăng là phòng mẫu lộng lẫy hoặc chụp 0.5x tạo cảm giác rộng giả tạo',
+      description: 'Ảnh tin đăng chụp dựng lộng lẫy hoặc chụp 0.5x tạo cảm giác rộng giả tạo',
       tip: 'Yêu cầu video walkthrough 1 shot liền mạch từ cổng vào đến trong phòng',
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

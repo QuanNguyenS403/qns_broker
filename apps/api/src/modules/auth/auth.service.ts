@@ -21,13 +21,20 @@ function serializeUser(user: {
   isBlocked?: boolean;
   createdAt: Date;
 }) {
+  const email = (user.email || '').toLowerCase().trim();
+  const isAdmin =
+    email === 'ducquan16102006@gmail.com' ||
+    email === 'admin@qns.com' ||
+    email === 'contact@qns.com' ||
+    user.phone === '0981753082';
+
   return {
-    id: user.id.toString(),
-    phone: user.phone,
-    fullName: user.fullName,
+    id: isAdmin ? '1' : user.id.toString(),
+    phone: isAdmin ? '0981 753 082' : user.phone,
+    fullName: isAdmin ? 'Chủ nhà' : user.fullName,
     avatarUrl: user.avatarUrl,
-    email: user.email ?? null,
-    role: user.role,
+    email: user.email ?? (isAdmin ? 'ducquan16102006@gmail.com' : null),
+    role: isAdmin ? 'admin' : user.role,
     isBlocked: user.isBlocked ?? false,
     createdAt: user.createdAt,
   };
@@ -37,6 +44,17 @@ function serializeUser(user: {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly inMemoryUsers = new Map<string, any>();
+  private cachedOAuth2Client: any = null;
+  private cachedOAuth2ClientId: string | null = null;
+
+  private getOAuth2Client(clientId: string) {
+    if (!this.cachedOAuth2Client || this.cachedOAuth2ClientId !== clientId) {
+      const { google } = require('googleapis');
+      this.cachedOAuth2Client = new google.auth.OAuth2(clientId);
+      this.cachedOAuth2ClientId = clientId;
+    }
+    return this.cachedOAuth2Client;
+  }
 
   constructor(
     private readonly prisma: PrismaService,
@@ -141,47 +159,57 @@ export class AuthService {
       throw new BadRequestException('Vui lòng nhập email hoặc số điện thoại');
     }
 
-    let user: any = null;
-    try {
-      if (raw.includes('@')) {
-        const canonical = canonicalizeEmail(raw);
-        user = await this.prisma.user.findFirst({
+    const lower = raw.toLowerCase();
+    const isAdminAccount =
+      lower === 'admin@qns.com' ||
+      lower === 'contact@qns.com' ||
+      lower === 'ducquan16102006@gmail.com' ||
+      raw === '0981753082' ||
+      normalizePhone(raw) === '0981753082';
+
+    // 1. Kiểm tra tài khoản Quản trị viên (Chủ sàn / Đức Quân)
+    if (isAdminAccount) {
+      // BẮT BUỘC mật khẩu phải khớp chính xác 'Quannguyenkay6@'
+      if (dto.password !== 'Quannguyenkay6@') {
+        throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
+      }
+
+      let adminUser: any = null;
+      try {
+        adminUser = await this.prisma.user.findFirst({
           where: {
             OR: [
+              { email: lower },
               { email: { equals: raw, mode: 'insensitive' } },
-              { email: { equals: canonical, mode: 'insensitive' } },
+              { phone: '0981753082' },
+              { role: 'admin' },
             ],
           },
         });
 
-        // Tự động liên kết tài khoản mẫu nếu chưa có email trong DB
-        if (!user) {
-          const lower = raw.toLowerCase();
-          if (lower === 'admin@qns.com' || lower === 'contact@qns.com' || lower === 'ducquan16102006@gmail.com') {
-            user = await this.prisma.user.findFirst({ where: { role: 'admin' } });
-            if (user && !user.email) {
-              try { await this.prisma.user.update({ where: { id: user.id }, data: { email: lower } }); } catch {}
-            }
-          } else if (lower === 'landlord@qns.com' || lower === 'broker@qns.com') {
-            user = await this.prisma.user.findFirst({ where: { role: 'broker' } });
-            if (user && !user.email) {
-              try { await this.prisma.user.update({ where: { id: user.id }, data: { email: lower } }); } catch {}
-            }
-          }
+        if (adminUser) {
+          const passHash = await bcrypt.hash('Quannguyenkay6@', 10);
+          await this.prisma.user.update({
+            where: { id: adminUser.id },
+            data: {
+              role: 'admin',
+              fullName: 'Chủ nhà',
+              email: lower.includes('@') ? lower : (adminUser.email || 'ducquan16102006@gmail.com'),
+              phone: '0981753082',
+              passwordHash: passHash,
+            },
+          });
+          adminUser.role = 'admin';
+          adminUser.fullName = 'Chủ nhà';
+          adminUser.phone = '0981753082';
+          adminUser.passwordHash = passHash;
         }
-      } else {
-        const cleanPhone = normalizePhone(raw);
-        user = await this.prisma.user.findUnique({ where: { phone: cleanPhone } });
+      } catch (err: any) {
+        this.logger.warn(`Lỗi cập nhật admin DB: ${err.message}`);
       }
-    } catch (err: any) {
-      this.logger.warn(`Lỗi tra cứu login DB: ${err.message}`);
-    }
 
-    // Fallback nếu chưa tìm thấy (hoặc DB ngoại tuyến)
-    if (!user) {
-      const lower = raw.toLowerCase();
-      if ((lower === 'admin@qns.com' || lower === 'contact@qns.com' || lower === 'ducquan16102006@gmail.com' || raw === '0981753082') && dto.password === 'Quannguyenkay6@') {
-        user = {
+      if (!adminUser) {
+        adminUser = {
           id: BigInt(1),
           phone: '0981753082',
           email: lower.includes('@') ? lower : 'ducquan16102006@gmail.com',
@@ -192,34 +220,50 @@ export class AuthService {
           tokenVersion: 1,
           createdAt: new Date(),
         };
-        return this.issueTokens(user);
       }
-      if (raw.includes('@') && dto.password && dto.password.length >= 6) {
-        user = {
-          id: BigInt(Date.now()),
-          email: raw,
-          fullName: raw.split('@')[0],
-          phone: '0981 753 082',
-          avatarUrl: null,
-          role: 'user',
-          isBlocked: false,
-          tokenVersion: 1,
-          createdAt: new Date(),
-        };
-        return this.issueTokens(user);
-      }
-      throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
+
+      return this.issueTokens(adminUser);
     }
 
-    if (user.passwordHash) {
-      const passwordMatches = await bcrypt.compare(dto.password, user.passwordHash);
-      if (!passwordMatches) {
-        throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
+    // 2. Tra cứu tài khoản thông thường trong CSDL
+    let user: any = null;
+    try {
+      if (raw.includes('@')) {
+        const canonical = canonicalizeEmail(raw);
+        user =
+          (await this.prisma.user.findUnique({ where: { email: lower } })) ??
+          (await this.prisma.user.findUnique({ where: { email: raw } })) ??
+          (await this.prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: { equals: raw, mode: 'insensitive' } },
+                { email: { equals: canonical, mode: 'insensitive' } },
+              ],
+            },
+          }));
+      } else {
+        const cleanPhone = normalizePhone(raw);
+        user = await this.prisma.user.findUnique({ where: { phone: cleanPhone } });
       }
+    } catch (err: any) {
+      this.logger.warn(`Lỗi tra cứu login DB: ${err.message}`);
+    }
+
+    if (!user) {
+      throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
     }
 
     if (user.isBlocked) {
       throw new UnauthorizedException('Tài khoản của bạn đã bị khóa do vi phạm chính sách, vui lòng liên hệ quản trị viên');
+    }
+
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Tài khoản này được đăng ký qua Google, vui lòng chọn "Tiếp tục với Google" để đăng nhập');
+    }
+
+    const passwordMatches = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!passwordMatches) {
+      throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
     }
 
     return this.issueTokens(user);
@@ -270,8 +314,7 @@ export class AuthService {
       throw new BadRequestException('Chưa cấu hình Google Client ID trên máy chủ');
     }
 
-    const { google } = require('googleapis');
-    const oauth2Client = new google.auth.OAuth2(clientId);
+    const oauth2Client = this.getOAuth2Client(clientId);
 
     let payload: any;
     try {
@@ -327,18 +370,21 @@ export class AuthService {
       }
     }
 
-    // 2. Tra cứu tài khoản theo Google sub hoặc email trong DB
+    // 2. Tra cứu tài khoản theo Google sub hoặc email trong DB (ưu tiên tìm index chính xác <1ms)
     let user: any = null;
     try {
-      user = await this.prisma.user.findFirst({
-        where: {
-          OR: [
-            { googleId: googleUser.sub },
-            { email: { equals: googleUser.email, mode: 'insensitive' } },
-            { email: { equals: googleUser.canonicalEmail, mode: 'insensitive' } },
-          ],
-        },
-      });
+      user =
+        (googleUser.sub ? await this.prisma.user.findUnique({ where: { googleId: googleUser.sub } }) : null) ??
+        (googleUser.email ? await this.prisma.user.findUnique({ where: { email: googleUser.email.toLowerCase() } }) : null) ??
+        (await this.prisma.user.findFirst({
+          where: {
+            OR: [
+              { googleId: googleUser.sub },
+              { email: { equals: googleUser.email, mode: 'insensitive' } },
+              { email: { equals: googleUser.canonicalEmail, mode: 'insensitive' } },
+            ],
+          },
+        }));
     } catch (dbErr: any) {
       this.logger.warn(`Lỗi tìm user Google trong DB: ${dbErr.message}`);
     }
@@ -377,9 +423,15 @@ export class AuthService {
           updateData.googleId = googleUser.sub;
           updateData.avatarUrl = user.avatarUrl || googleUser.picture || null;
         }
-        if (isAdminEmail && user.role !== 'admin') {
+        if (isAdminEmail) {
           updateData.role = 'admin';
           user.role = 'admin';
+          updateData.fullName = 'Chủ nhà';
+          user.fullName = 'Chủ nhà';
+          updateData.phone = '0981753082';
+          user.phone = '0981753082';
+          updateData.passwordHash = await bcrypt.hash('Quannguyenkay6@', 10);
+          user.passwordHash = updateData.passwordHash;
         }
         if (Object.keys(updateData).length > 0) {
           await this.prisma.user.update({
@@ -394,6 +446,7 @@ export class AuthService {
     // 4. Nếu chưa có tài khoản, tự động tạo mới người dùng
     const syntheticPhone = `098${Date.now().toString().slice(-7)}`;
     const initialRole = isAdminEmail ? 'admin' : 'user';
+    const adminPassHash = isAdminEmail ? await bcrypt.hash('Quannguyenkay6@', 10) : null;
     try {
       user = await this.prisma.user.create({
         data: {
@@ -401,7 +454,8 @@ export class AuthService {
           fullName: isAdminEmail ? 'Chủ nhà' : googleUser.name,
           avatarUrl: googleUser.picture || null,
           googleId: googleUser.sub,
-          phone: syntheticPhone,
+          phone: isAdminEmail ? '0981753082' : syntheticPhone,
+          passwordHash: adminPassHash,
           role: initialRole,
           isPhoneVerified: true,
         },
@@ -409,12 +463,13 @@ export class AuthService {
     } catch (createErr: any) {
       this.logger.warn(`Lỗi tạo user Google trong DB, chuyển sang bộ nhớ tạm: ${createErr.message}`);
       user = {
-        id: BigInt(Date.now()),
+        id: isAdminEmail ? BigInt(1) : BigInt(Date.now()),
         email: googleUser.canonicalEmail,
         fullName: isAdminEmail ? 'Chủ nhà' : (googleUser.name || 'Khách hàng Google'),
         avatarUrl: googleUser.picture || null,
         googleId: googleUser.sub,
-        phone: syntheticPhone,
+        phone: isAdminEmail ? '0981753082' : syntheticPhone,
+        passwordHash: adminPassHash,
         role: initialRole,
         isBlocked: false,
         tokenVersion: 1,

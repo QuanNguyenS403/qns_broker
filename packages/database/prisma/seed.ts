@@ -271,7 +271,7 @@ async function main() {
       locationId: phuongTanPhong.id,
       transactionType: TransactionType.rent,
       propertyType: 'phong-tro-sinh-vien',
-      title: '[MẪU] Phòng trọ khép kín có gác lửng, máy lạnh gần ĐH Tôn Đức Thắng & RMIT',
+      title: 'Phòng trọ khép kín có gác lửng, máy lạnh gần ĐH Tôn Đức Thắng & RMIT',
       slug: 'mau-phong-tro-gac-lung-gan-tdtu-id1',
       description:
         'Phòng trọ sinh viên mới xây sạch sẽ, giờ giấc tự do không chung chủ. Đầy đủ tiện nghi: máy lạnh, gác lửng đúc kiên cố, kệ bếp nấu ăn, wifi cáp quang tốc độ cao. Ra ĐH Tôn Đức Thắng chỉ 5 phút đi bộ.',
@@ -326,7 +326,7 @@ async function main() {
       locationId: quan1.id,
       transactionType: TransactionType.rent,
       propertyType: 'can_ho_mini',
-      title: '[MẪU] Căn hộ Studio Quận 1 full nội thất cao cấp gần ĐH Kinh Tế UEH',
+      title: 'Căn hộ Studio Quận 1 full nội thất cao cấp gần ĐH Kinh Tế UEH',
       slug: 'mau-can-ho-studio-quan-1-full-noi-that-id2',
       description:
         'Căn hộ mini studio trung tâm Quận 1, ban công thoáng mát, cửa sổ lớn đón nắng. Tòa nhà có thang máy, bảo vệ 24/7, hầm để xe rộng rãi. Nội thất gỗ sồi cao cấp: giường đệm, tủ quần áo âm tường, bàn làm việc, máy giặt riêng, bếp từ âm.',

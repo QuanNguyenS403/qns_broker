@@ -58,6 +58,8 @@ export interface MapFilterParams {
   khuVuc?: string;
   loaiPhong?: string;
   giaThue?: string;
+  minPrice?: number;
+  maxPrice?: number;
   amenities?: {
     petsAllowed?: boolean;
     electricVehicle?: boolean;
@@ -154,10 +156,12 @@ export function getAllMapRooms(): MapRoom[] {
   const rooms: MapRoom[] = [];
   const processedKeys = new Set<string>();
 
-  // 1. Thêm các tin tự đăng từ máy chủ Next.js và localStorage
+  // 1. Thêm các tin tự đăng từ máy chủ Next.js và localStorage (chỉ thêm tin active, bỏ qua phòng đã cho thuê)
   const customList: any[] = Array.isArray(customListingsData) ? customListingsData : [];
   customList.forEach((item, idx) => {
     if (!item.lat || !item.lng) return;
+    const st = (item.status || 'active').toLowerCase();
+    if (st === 'rented' || st === 'removed' || st === 'rejected') return;
     const masked = maskListingAddress(item.addressDetail, '', '', 'Hà Nội');
     const key = `${Number(item.lat).toFixed(4)}_${Number(item.lng).toFixed(4)}`;
     processedKeys.add(key);
@@ -169,7 +173,7 @@ export function getAllMapRooms(): MapRoom[] {
     rooms.push({
       id: String(item.id || `custom-${idx}`),
       slug: item.slug || `tin-dang-${item.id}`,
-      title: item.title || 'Phòng cho thuê chất lượng cao',
+      title: (item.title || 'Phòng cho thuê chất lượng cao').replace(/^\[MẪU\]\s*/i, '').replace(/\[MẪU\]/gi, '').trim(),
       maskedAddress: masked,
       rawAddress: item.addressDetail || '',
       lat: Number(item.lat),
@@ -227,24 +231,34 @@ export function getAllMapRooms(): MapRoom[] {
     });
   });
 
-  // 2. Thêm các tin mẫu demo có sẵn
+  // 2. Thêm các tin demo có sẵn — Đồng bộ 100% với danh mục Listing thật
   ALL_DEMO_LISTINGS.forEach((item, idx) => {
-    // Tọa độ ngầm định trung tâm Hà Nội nếu demo chưa có tọa độ
-    const demoLat = item.lat || (21.002 + (idx % 8) * 0.015 - ((idx % 3) * 0.008));
-    const demoLng = item.lng || (105.815 + (idx % 7) * 0.018 - ((idx % 4) * 0.006));
+    // Tọa độ ngầm định nếu demo chưa có tọa độ
+    const isHcm = item.addressDetail?.toLowerCase().includes('hcm') ||
+      item.addressDetail?.toLowerCase().includes('hồ chí minh') ||
+      item.location?.name?.toLowerCase().includes('hcm') ||
+      item.location?.name?.toLowerCase().includes('quận 7') ||
+      item.location?.name?.toLowerCase().includes('bình thạnh');
+
+    const defaultCity = isHcm ? 'TP. Hồ Chí Minh' : 'Hà Nội';
+    const demoLat = item.lat != null ? item.lat : (isHcm ? 10.732 : 21.0285);
+    const demoLng = item.lng != null ? item.lng : (isHcm ? 106.702 : 105.8542);
     const key = `${demoLat.toFixed(4)}_${demoLng.toFixed(4)}`;
     if (processedKeys.has(key)) return;
     processedKeys.add(key);
 
-    const masked = maskListingAddress(item.addressDetail, '', item.location?.name, 'Hà Nội');
+    const masked = maskListingAddress(item.addressDetail, '', item.location?.name, defaultCity);
     const priceNum = parseInt(String(item.price || '3500000'), 10) || 3500000;
-    const depositNum = parseInt(String(item.depositAmount || '2000000'), 10) || 2000000;
+    const depositNum = parseInt(String(item.depositAmount || item.price || '2000000'), 10) || priceNum;
     const areaNum = parseInt(String(item.areaM2 || '24'), 10) || 24;
+
+    const desc = (item.description || '').toLowerCase();
+    const am = item.amenities || {};
 
     rooms.push({
       id: item.id,
       slug: item.slug,
-      title: item.title,
+      title: item.title.replace(/^\[MẪU\]\s*/i, '').replace(/\[MẪU\]/gi, '').trim(),
       maskedAddress: masked,
       rawAddress: item.addressDetail || '',
       lat: demoLat,
@@ -253,13 +267,13 @@ export function getAllMapRooms(): MapRoom[] {
       depositAmount: depositNum,
       areaM2: areaNum,
       propertyType: (item.propertyType as any) || 'phong_tro',
-      district: item.location?.name || 'Hà Nội',
+      district: item.location?.name || defaultCity,
       ward: '',
-      city: 'Hà Nội',
+      city: defaultCity,
       images: item.images && item.images.length > 0
         ? item.images.map((img) => img.imageUrl)
         : [DEFAULT_ROOM_IMAGES[idx % DEFAULT_ROOM_IMAGES.length]],
-      rating: 4.7,
+      rating: 4.8,
       reviewCount: 4,
       reviews: [
         {
@@ -284,20 +298,24 @@ export function getAllMapRooms(): MapRoom[] {
         },
       ],
       amenities: {
-        wifi: true,
-        airConditioner: true,
-        waterHeater: true,
-        mezzanine: Boolean(item.amenities?.mezzanine),
-        elevator: false,
-        balcony: true,
-        petsAllowed: Boolean(item.amenities?.thuCung),
-        electricVehicle: Boolean(item.amenities?.xeDien),
-        freeTime: true,
-        securityCamera: true,
+        wifi: Boolean(am.wifi ?? true),
+        airConditioner: Boolean(am.airConditioner ?? am.dieuHoa ?? (desc.includes('máy lạnh') || desc.includes('điều hòa'))),
+        waterHeater: Boolean(am.waterHeater ?? am.nongLanh ?? desc.includes('nóng lạnh')),
+        mezzanine: Boolean(am.mezzanine ?? am.gacLung ?? desc.includes('gác lửng')),
+        elevator: Boolean(am.elevator ?? am.thangMay ?? desc.includes('thang máy')),
+        balcony: Boolean(am.balcony ?? am.banCong ?? desc.includes('ban công')),
+        petsAllowed: Boolean(am.petsAllowed ?? am.thuCung ?? desc.includes('thú cưng')),
+        electricVehicle: Boolean(am.electricVehicle ?? am.xeDien ?? desc.includes('xe điện')),
+        freeTime: Boolean(am.freeTime ?? am.gioTuDo ?? desc.includes('giờ giấc tự do')),
+        securityCamera: Boolean(am.securityCamera ?? true),
         privateBathroom: true,
       },
       electricityPricePerKwh: item.electricityPricePerKwh || 3500,
-      waterPrice: '25.000 đ/m³',
+      waterPrice: item.waterPriceFlat
+        ? `${item.waterPriceFlat.toLocaleString('vi-VN')} đ/người`
+        : item.waterPricePerM3
+          ? `${item.waterPricePerM3.toLocaleString('vi-VN')} đ/m³`
+          : '25.000 đ/m³',
       isDemo: true,
     });
   });
@@ -450,15 +468,25 @@ export function filterMapRooms(rooms: MapRoom[], params: MapFilterParams): MapRo
     result = result.filter((r) => {
       if (lpVal === 'phong_tro') return r.propertyType === 'phong_tro';
       if (lpVal === 'chung_cu_mini') return r.propertyType === 'chung_cu_mini';
-      if (lpVal === 'can_ho') return r.propertyType === 'can_ho';
-      if (lpVal === 'nha_nguyen_can') return r.propertyType === 'nha_nguyen_can';
-      if (lpVal === 'o_ghep') return r.propertyType === 'o_ghep';
+      if (lpVal === 'chung_cu' || lpVal === 'can_ho') return r.propertyType === 'can_ho';
+      if (lpVal === 'mat_bang' || lpVal === 'nha_nguyen_can') return r.propertyType === 'nha_nguyen_can';
       return true;
     });
   }
 
-  // 4. Lọc theo Giá thuê
-  if (params.giaThue && params.giaThue !== 'all' && params.giaThue !== 'Giá thuê') {
+  // 4. Lọc theo Giá thuê (hỗ trợ cả thanh kéo khoảng giá kép minPrice/maxPrice và danh mục nhanh)
+  if (params.minPrice !== undefined || params.maxPrice !== undefined) {
+    const minP = params.minPrice ?? 0;
+    const maxP = params.maxPrice ?? 30000000;
+    if (minP > 0 || maxP < 30000000) {
+      result = result.filter((r) => {
+        if (maxP >= 30000000) {
+          return r.price >= minP;
+        }
+        return r.price >= minP && r.price <= maxP;
+      });
+    }
+  } else if (params.giaThue && params.giaThue !== 'all' && params.giaThue !== 'Giá thuê') {
     const gtVal = params.giaThue;
     result = result.filter((r) => {
       if (gtVal === 'under_3m') return r.price < 3000000;
@@ -494,7 +522,7 @@ export function getSearchHistory(): string[] {
   try {
     const raw = localStorage.getItem(SEARCH_HISTORY_STORAGE_KEY);
     if (raw === null) {
-      // Chỉ khởi tạo từ khóa gợi ý mẫu ở lần truy cập đầu tiên duy nhất
+      // Chỉ khởi tạo từ khóa gợi ý mặc định ở lần truy cập đầu tiên duy nhất
       const initialHistory = ['Ngõ 177 Định Công', 'Quận Thanh Xuân', 'Phố Chùa Láng', 'Đường Cầu Giấy'];
       localStorage.setItem(SEARCH_HISTORY_STORAGE_KEY, JSON.stringify(initialHistory));
       return initialHistory;
@@ -538,7 +566,7 @@ export function removeSearchHistory(term: string): string[] {
 export function clearSearchHistory(): void {
   if (typeof window === 'undefined') return;
   try {
-    // Lưu mảng rỗng để ghi nhận trạng thái đã xóa, không tự ý reseed lại từ khóa mẫu
+    // Lưu mảng rỗng để ghi nhận trạng thái đã xóa, không tự ý reseed lại từ khóa mặc định
     localStorage.setItem(SEARCH_HISTORY_STORAGE_KEY, JSON.stringify([]));
   } catch {
     // ignore
@@ -627,7 +655,7 @@ export function mapRoomToListing(room: MapRoom): any {
     project: null,
     owner: {
       id: 'owner-qns',
-      fullName: 'QNS Broker - Dẫn xem miễn phí',
+      fullName: 'Chủ nhà',
       phone: '0981753082',
       email: 'contact@qns.com',
       avatarUrl: null,

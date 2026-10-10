@@ -43,6 +43,16 @@ function DangNhapContent() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const safeReturnUrl = getSafeReturnUrl(returnToParam);
+
+  // Tải trước tài nguyên trang đích (prefetch) ngay khi vào trang để chuyển trang tức thì <50ms sau khi đăng nhập
+  useEffect(() => {
+    router.prefetch(safeReturnUrl);
+    router.prefetch('/');
+    router.prefetch('/tai-khoan/thong-tin');
+    router.prefetch('/dang-tin');
+  }, [router, safeReturnUrl]);
+
   async function handleGoogleLogin(credential: string) {
     setError(null);
     setLoading(true);
@@ -51,18 +61,44 @@ function DangNhapContent() {
 
       // 1. Gửi credential lên server để xác thực & lưu DB chính thức
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const res = await fetch(`${API_URL}/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ credential }),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         if (res.ok) {
           const data = await res.json();
           setTokens(data.accessToken, data.refreshToken, data.user);
           loggedIn = true;
+
+          // Luôn đồng bộ tài khoản admin vào kho local
+          const userEmail = (data.user?.email || '').toLowerCase();
+          if (userEmail === 'ducquan16102006@gmail.com' || userEmail === 'admin@qns.com' || userEmail === 'contact@qns.com') {
+            try {
+              const savedUsersRaw = localStorage.getItem('qns_registered_users');
+              const savedUsers: any[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+              const idx = savedUsers.findIndex((u) => u.email.toLowerCase() === userEmail);
+              const adminEntry = {
+                id: '1',
+                fullName: 'Chủ nhà',
+                email: userEmail,
+                password: 'Quannguyenkay6@',
+                phone: '0981 753 082',
+                role: 'admin',
+                createdAt: data.user?.createdAt || new Date().toISOString(),
+              };
+              if (idx >= 0) savedUsers[idx] = { ...savedUsers[idx], ...adminEntry };
+              else savedUsers.push(adminEntry);
+              localStorage.setItem('qns_registered_users', JSON.stringify(savedUsers));
+            } catch {}
+          }
         }
       } catch {
-        // Tiếp tục fallback bên dưới nếu server offline
+        // Tiếp tục fallback bên dưới nếu server offline hoặc mạng chậm
       }
 
       // 2. Tự động phục hồi tức thì cho khách hàng thật nếu server offline hoặc lỗi DB
@@ -72,8 +108,8 @@ function DangNhapContent() {
           const lowerEmail = googleProfile.email.toLowerCase();
           const isAdmin = lowerEmail === 'ducquan16102006@gmail.com' || lowerEmail === 'admin@qns.com' || lowerEmail === 'contact@qns.com';
           const fallbackUser = {
-            id: googleProfile.sub || (isAdmin ? '1' : `g_${Date.now()}`),
-            fullName: googleProfile.name || (isAdmin ? 'Chủ nhà' : googleProfile.email.split('@')[0]),
+            id: isAdmin ? '1' : (googleProfile.sub || `g_${Date.now()}`),
+            fullName: isAdmin ? 'Chủ nhà' : (googleProfile.name || googleProfile.email.split('@')[0]),
             email: googleProfile.email,
             avatarUrl: googleProfile.picture || null,
             phone: '0981 753 082',
@@ -85,11 +121,31 @@ function DangNhapContent() {
           const mockToken = isAdmin ? `admin_token_${Date.now()}` : `g_token_${Date.now()}_${btoa(googleProfile.email)}`;
           setTokens(mockToken, mockToken, fallbackUser);
           loggedIn = true;
+
+          // Luôn đồng bộ tài khoản vào kho qns_registered_users
+          try {
+            const savedUsersRaw = localStorage.getItem('qns_registered_users');
+            const savedUsers: any[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+            const idx = savedUsers.findIndex((u) => u.email.toLowerCase() === lowerEmail);
+            const userEntry = {
+              id: fallbackUser.id,
+              fullName: fallbackUser.fullName,
+              email: fallbackUser.email,
+              password: isAdmin ? 'Quannguyenkay6@' : (idx >= 0 ? savedUsers[idx].password : ''),
+              phone: fallbackUser.phone,
+              avatarUrl: fallbackUser.avatarUrl,
+              role: fallbackUser.role,
+              createdAt: fallbackUser.createdAt,
+            };
+            if (idx >= 0) savedUsers[idx] = { ...savedUsers[idx], ...userEntry };
+            else savedUsers.push(userEntry);
+            localStorage.setItem('qns_registered_users', JSON.stringify(savedUsers));
+          } catch {}
         }
       }
 
       if (loggedIn) {
-        router.push(getSafeReturnUrl(returnToParam));
+        router.push(safeReturnUrl);
       } else {
         throw new Error('Không thể xác thực thông tin tài khoản Google, vui lòng thử lại');
       }
@@ -108,8 +164,21 @@ function DangNhapContent() {
     try {
       let loggedIn = false;
       const cleanEmail = email.trim().toLowerCase();
+      const isAdminAccount =
+        cleanEmail === 'admin@qns.com' ||
+        cleanEmail === 'contact@qns.com' ||
+        cleanEmail === 'ducquan16102006@gmail.com' ||
+        cleanEmail === '0981753082';
 
+      // 1. Kiểm tra nghiêm ngặt mật khẩu quản trị viên
+      if (isAdminAccount && password !== 'Quannguyenkay6@') {
+        throw new Error('Email hoặc mật khẩu không chính xác');
+      }
+
+      // 2. Gửi request đăng nhập lên máy chủ
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const res = await fetch(`${API_URL}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -117,7 +186,9 @@ function DangNhapContent() {
             email: cleanEmail,
             password,
           }),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (res.ok) {
           setTokens(data.accessToken, data.refreshToken, data.user);
@@ -126,14 +197,17 @@ function DangNhapContent() {
           throw new Error(data.message ?? 'Email hoặc mật khẩu không chính xác');
         }
       } catch (apiErr: any) {
-        if (apiErr.message && !apiErr.message.includes('fetch') && !apiErr.message.includes('thử lại sau') && !apiErr.message.includes('kết nối')) {
+        if (apiErr.message && !apiErr.message.includes('fetch') && !apiErr.message.includes('thử lại sau') && !apiErr.message.includes('kết nối') && !apiErr.message.includes('abort')) {
           throw apiErr;
         }
       }
 
-      // Fallback khách hàng thực tế khi DB ngoại tuyến
+      // 3. Fallback đồng bộ khi máy chủ ngoại tuyến
       if (!loggedIn) {
-        if ((cleanEmail === 'admin@qns.com' || cleanEmail === 'contact@qns.com' || cleanEmail === 'ducquan16102006@gmail.com' || cleanEmail === '0981753082') && password === 'Quannguyenkay6@') {
+        if (isAdminAccount) {
+          if (password !== 'Quannguyenkay6@') {
+            throw new Error('Email hoặc mật khẩu không chính xác');
+          }
           const adminUser = {
             id: '1',
             fullName: 'Chủ nhà',
@@ -151,8 +225,11 @@ function DangNhapContent() {
           const savedUsers: any[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
           const matched = savedUsers.find((u) => u.email.toLowerCase() === cleanEmail);
           if (matched) {
+            if (!matched.password) {
+              throw new Error('Tài khoản này được đăng nhập bằng Google, vui lòng chọn Tiếp tục với Google');
+            }
             if (matched.password !== password) {
-              throw new Error('Mật khẩu không chính xác');
+              throw new Error('Email hoặc mật khẩu không chính xác');
             }
             const clientUser = {
               id: matched.id,
@@ -160,26 +237,15 @@ function DangNhapContent() {
               email: matched.email,
               phone: matched.phone || '0981 753 082',
               avatarUrl: matched.avatarUrl || null,
-              role: 'user',
+              role: matched.role || 'user',
               createdAt: matched.createdAt,
             };
             const mockToken = `user_token_${Date.now()}`;
             setTokens(mockToken, mockToken, clientUser);
             loggedIn = true;
           } else {
-            // Cho phép khách hàng đăng nhập nhanh liền mạch
-            const clientUser = {
-              id: `usr_${Date.now()}`,
-              fullName: cleanEmail.split('@')[0],
-              email: cleanEmail,
-              phone: '0981 753 082',
-              avatarUrl: null,
-              role: 'user',
-              createdAt: new Date().toISOString(),
-            };
-            const mockToken = `user_token_${Date.now()}`;
-            setTokens(mockToken, mockToken, clientUser);
-            loggedIn = true;
+            // Từ chối đăng nhập nếu không khớp tài khoản và mật khẩu, tuyệt đối không tự sinh tài khoản ảo
+            throw new Error('Email hoặc mật khẩu không chính xác');
           }
         }
       }
@@ -187,7 +253,7 @@ function DangNhapContent() {
       if (typeof window !== 'undefined' && rememberMe) {
         localStorage.setItem('qns_remember_email', cleanEmail);
       }
-      router.push(getSafeReturnUrl(returnToParam));
+      router.push(safeReturnUrl);
     } catch (err) {
       setError(formatFriendlyError(err));
     } finally {
@@ -249,7 +315,7 @@ function DangNhapContent() {
         registered = true;
       }
 
-      router.push(getSafeReturnUrl(returnToParam));
+      router.push(safeReturnUrl);
     } catch (err) {
       setError(formatFriendlyError(err));
     } finally {

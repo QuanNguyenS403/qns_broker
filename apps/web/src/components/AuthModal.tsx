@@ -12,6 +12,7 @@ interface AuthModalProps {
   onSuccess?: () => void;
   title?: string;
   subtitle?: string;
+  inline?: boolean;
 }
 
 type ViewMode = 'login' | 'register' | 'forgot';
@@ -33,6 +34,7 @@ export function AuthModal({
   onSuccess,
   title,
   subtitle,
+  inline = false,
 }: AuthModalProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('login');
   const [email, setEmail] = useState('');
@@ -62,18 +64,44 @@ export function AuthModal({
 
       // 1. Gửi credential lên server để xác thực & lưu DB
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const res = await fetch(`${API_URL}/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ credential }),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         if (res.ok) {
           const data = await res.json();
           setTokens(data.accessToken, data.refreshToken, data.user);
           loggedIn = true;
+
+          // Luôn đồng bộ tài khoản admin vào kho local
+          const userEmail = (data.user?.email || '').toLowerCase();
+          if (userEmail === 'ducquan16102006@gmail.com' || userEmail === 'admin@qns.com' || userEmail === 'contact@qns.com') {
+            try {
+              const savedUsersRaw = localStorage.getItem('qns_registered_users');
+              const savedUsers: any[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+              const idx = savedUsers.findIndex((u) => u.email.toLowerCase() === userEmail);
+              const adminEntry = {
+                id: '1',
+                fullName: 'Chủ nhà',
+                email: userEmail,
+                password: 'Quannguyenkay6@',
+                phone: '0981 753 082',
+                role: 'admin',
+                createdAt: data.user?.createdAt || new Date().toISOString(),
+              };
+              if (idx >= 0) savedUsers[idx] = { ...savedUsers[idx], ...adminEntry };
+              else savedUsers.push(adminEntry);
+              localStorage.setItem('qns_registered_users', JSON.stringify(savedUsers));
+            } catch {}
+          }
         }
       } catch {
-        // Fallback bên dưới nếu server offline
+        // Fallback bên dưới nếu server offline hoặc mạng chậm
       }
 
       // 2. Tự động phục hồi tức thì cho khách hàng thật nếu server offline hoặc lỗi DB
@@ -83,8 +111,8 @@ export function AuthModal({
           const lowerEmail = googleProfile.email.toLowerCase();
           const isAdmin = lowerEmail === 'ducquan16102006@gmail.com' || lowerEmail === 'admin@qns.com' || lowerEmail === 'contact@qns.com';
           const fallbackUser = {
-            id: googleProfile.sub || (isAdmin ? '1' : `g_${Date.now()}`),
-            fullName: googleProfile.name || (isAdmin ? 'Chủ nhà' : googleProfile.email.split('@')[0]),
+            id: isAdmin ? '1' : (googleProfile.sub || `g_${Date.now()}`),
+            fullName: isAdmin ? 'Chủ nhà' : (googleProfile.name || googleProfile.email.split('@')[0]),
             email: googleProfile.email,
             avatarUrl: googleProfile.picture || null,
             phone: '0981 753 082',
@@ -96,6 +124,26 @@ export function AuthModal({
           const mockToken = isAdmin ? `admin_token_${Date.now()}` : `g_token_${Date.now()}_${btoa(googleProfile.email)}`;
           setTokens(mockToken, mockToken, fallbackUser);
           loggedIn = true;
+
+          // Luôn đồng bộ tài khoản vào kho qns_registered_users
+          try {
+            const savedUsersRaw = localStorage.getItem('qns_registered_users');
+            const savedUsers: any[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+            const idx = savedUsers.findIndex((u) => u.email.toLowerCase() === lowerEmail);
+            const userEntry = {
+              id: fallbackUser.id,
+              fullName: fallbackUser.fullName,
+              email: fallbackUser.email,
+              password: isAdmin ? 'Quannguyenkay6@' : (idx >= 0 ? savedUsers[idx].password : ''),
+              phone: fallbackUser.phone,
+              avatarUrl: fallbackUser.avatarUrl,
+              role: fallbackUser.role,
+              createdAt: fallbackUser.createdAt,
+            };
+            if (idx >= 0) savedUsers[idx] = { ...savedUsers[idx], ...userEntry };
+            else savedUsers.push(userEntry);
+            localStorage.setItem('qns_registered_users', JSON.stringify(savedUsers));
+          } catch {}
         }
       }
 
@@ -133,8 +181,21 @@ export function AuthModal({
     try {
       let loggedIn = false;
       const cleanEmail = email.trim().toLowerCase();
+      const isAdminAccount =
+        cleanEmail === 'admin@qns.com' ||
+        cleanEmail === 'contact@qns.com' ||
+        cleanEmail === 'ducquan16102006@gmail.com' ||
+        cleanEmail === '0981753082';
 
+      // 1. Kiểm tra nghiêm ngặt mật khẩu quản trị viên
+      if (isAdminAccount && password !== 'Quannguyenkay6@') {
+        throw new Error('Email hoặc mật khẩu không chính xác');
+      }
+
+      // 2. Gửi request đăng nhập lên máy chủ
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const res = await fetch(`${API_URL}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -142,7 +203,9 @@ export function AuthModal({
             email: cleanEmail,
             password,
           }),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (res.ok) {
           setTokens(data.accessToken, data.refreshToken, data.user);
@@ -151,14 +214,17 @@ export function AuthModal({
           throw new Error(data.message ?? 'Email hoặc mật khẩu không chính xác');
         }
       } catch (apiErr: any) {
-        if (apiErr.message && !apiErr.message.includes('fetch') && !apiErr.message.includes('thử lại sau') && !apiErr.message.includes('kết nối')) {
+        if (apiErr.message && !apiErr.message.includes('fetch') && !apiErr.message.includes('thử lại sau') && !apiErr.message.includes('kết nối') && !apiErr.message.includes('abort')) {
           throw apiErr;
         }
       }
 
-      // Fallback khách hàng thực tế khi DB ngoại tuyến
+      // 3. Fallback đồng bộ khi máy chủ ngoại tuyến
       if (!loggedIn) {
-        if ((cleanEmail === 'admin@qns.com' || cleanEmail === 'contact@qns.com' || cleanEmail === 'ducquan16102006@gmail.com' || cleanEmail === '0981753082') && password === 'Quannguyenkay6@') {
+        if (isAdminAccount) {
+          if (password !== 'Quannguyenkay6@') {
+            throw new Error('Email hoặc mật khẩu không chính xác');
+          }
           const adminUser = {
             id: '1',
             fullName: 'Chủ nhà',
@@ -176,8 +242,11 @@ export function AuthModal({
           const savedUsers: any[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
           const matched = savedUsers.find((u) => u.email.toLowerCase() === cleanEmail);
           if (matched) {
+            if (!matched.password) {
+              throw new Error('Tài khoản này được đăng nhập bằng Google, vui lòng chọn Tiếp tục với Google');
+            }
             if (matched.password !== password) {
-              throw new Error('Mật khẩu không chính xác');
+              throw new Error('Email hoặc mật khẩu không chính xác');
             }
             const clientUser = {
               id: matched.id,
@@ -185,26 +254,15 @@ export function AuthModal({
               email: matched.email,
               phone: matched.phone || '0981 753 082',
               avatarUrl: matched.avatarUrl || null,
-              role: 'user',
+              role: matched.role || 'user',
               createdAt: matched.createdAt,
             };
             const mockToken = `user_token_${Date.now()}`;
             setTokens(mockToken, mockToken, clientUser);
             loggedIn = true;
           } else {
-            // Cho phép khách hàng đăng nhập nhanh liền mạch
-            const clientUser = {
-              id: `usr_${Date.now()}`,
-              fullName: cleanEmail.split('@')[0],
-              email: cleanEmail,
-              phone: '0981 753 082',
-              avatarUrl: null,
-              role: 'user',
-              createdAt: new Date().toISOString(),
-            };
-            const mockToken = `user_token_${Date.now()}`;
-            setTokens(mockToken, mockToken, clientUser);
-            loggedIn = true;
+            // Từ chối đăng nhập nếu không khớp tài khoản và mật khẩu, tuyệt đối không tự sinh tài khoản ảo
+            throw new Error('Email hoặc mật khẩu không chính xác');
           }
         }
       }
@@ -232,6 +290,8 @@ export function AuthModal({
       const cleanEmail = email.trim().toLowerCase();
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const res = await fetch(`${API_URL}/auth/register-email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -240,7 +300,9 @@ export function AuthModal({
             fullName: fullName.trim() || 'Người dùng',
             password,
           }),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (res.ok) {
           setTokens(data.accessToken, data.refreshToken, data.user);
@@ -249,7 +311,7 @@ export function AuthModal({
           throw new Error('Email này đã được đăng ký, vui lòng đăng nhập');
         }
       } catch (apiErr: any) {
-        if (apiErr.message && !apiErr.message.includes('fetch') && !apiErr.message.includes('thử lại sau') && !apiErr.message.includes('kết nối')) {
+        if (apiErr.message && !apiErr.message.includes('fetch') && !apiErr.message.includes('thử lại sau') && !apiErr.message.includes('kết nối') && !apiErr.message.includes('abort')) {
           throw apiErr;
         }
       }
@@ -300,14 +362,8 @@ export function AuthModal({
 
   if (!isOpen) return null;
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) handleClose();
-      }}
-    >
-      <div className="relative w-full max-w-[440px] rounded-2xl sm:rounded-[22px] border border-slate-200/80 bg-white p-6 sm:p-8 shadow-2xl transition-all max-h-[92vh] overflow-y-auto">
+  const card = (
+    <div className={`relative w-full max-w-[440px] rounded-2xl sm:rounded-[22px] border border-slate-200/80 bg-white p-6 sm:p-8 shadow-2xl transition-all ${inline ? '' : 'max-h-[92vh] overflow-y-auto'}`}>
         {/* Nút đóng góc trên bên phải */}
         <button
           type="button"
@@ -664,6 +720,20 @@ export function AuthModal({
           </form>
         )}
       </div>
+    );
+
+  if (inline) {
+    return card;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+    >
+      {card}
     </div>
   );
 }
